@@ -190,6 +190,7 @@ class ShelbyAgent:
             response = openai.ChatCompletion.create(
                 model=self.agent_config.llm_model,
                 messages=prompt,
+                max_tokens=self.agent_config.max_response_tokens
             )
             return response['choices'][0]['message']['content']
         except Exception as e:

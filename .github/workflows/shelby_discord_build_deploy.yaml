@@ -19,6 +19,7 @@ jobs:
         WORKLOAD_NAME: shelby-sprite
         WORKLOAD_SLUG: discord-bot
         PINECONE_INDEX: shelby-as-a-service
+        MAX_RESPONSE_TOKENS: 1500
 
     steps:
     - name: Checkout code
