@@ -10,6 +10,7 @@ jobs:
         STACKPATH_API_CLIENT_SECRET: ${{ secrets.STACKPATH_API_CLIENT_SECRET }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
         SLACK_BOT_TOKEN: ${{ secrets.TATUM_SPRITE_SLACK_BOT_TOKEN }}
