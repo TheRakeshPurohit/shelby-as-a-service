@@ -15,12 +15,12 @@ logger = setup_logger('discord_bot', 'discord_bot.log', level=logging.DEBUG)
 load_dotenv()
 
 # Use this for local testing
-bot_token = os.getenv('SHELBY_SPRITE_DISCORD_TOKEN')
-channel_id = int(os.environ['SHELBY_SPRITE_DISCORD_CHANNEL_ID'])
+# bot_token = os.getenv('SHELBY_SPRITE_DISCORD_TOKEN')
+# channel_id = int(os.environ['SHELBY_SPRITE_DISCORD_CHANNEL_ID'])
 
 # Use this for container deployments 
-# bot_token = os.getenv('DISCORD_TOKEN')
-# channel_id = int(os.environ['DISCORD_CHANNEL_ID'])
+bot_token = os.getenv('DISCORD_TOKEN')
+channel_id = int(os.environ['DISCORD_CHANNEL_ID'])
 
 message_start = "Running query. Relax, chill, and vibe a minute."
 
