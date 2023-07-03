@@ -39,7 +39,7 @@ with open('app/slack/sp-2_slack.json') as f:
     config = json.load(f)
 
 # Add config to JSON
-config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['password'] = os.getenv('DOCKER_PASSWORD')
+config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['password'] = os.getenv('DOCKER_TOKEN')
 config['payload']['workload']['name'] = os.getenv('WORKLOAD_NAME')
 config['payload']['workload']['slug'] = os.getenv('WORKLOAD_SLUG')
 

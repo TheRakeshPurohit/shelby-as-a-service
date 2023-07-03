@@ -38,7 +38,7 @@ print(stack_id)
 with open('app/discord/sp-2_discord.json') as f:
     config = json.load(f)
 
-config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['password'] = os.getenv('DOCKER_PASSWORD')
+config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['password'] = os.getenv('DOCKER_TOKEN')
 config['payload']['workload']['name'] = os.getenv('WORKLOAD_NAME')
 config['payload']['workload']['slug'] = os.getenv('WORKLOAD_SLUG')
 

@@ -11,7 +11,7 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
         DISCORD_TOKEN: ${{ secrets.TATUM_SPRITE_DISCORD_TOKEN }}
         DISCORD_CHANNEL_ID: ${{ secrets.TATUM_SPRITE_DISCORD_CHANNEL_ID }}
