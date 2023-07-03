@@ -55,10 +55,10 @@ config['payload']['workload']['spec']['containers']['webserver']['env'] = {
     'PINECONE_INDEX': {
         'value': os.getenv('PINECONE_INDEX')
     },
-    'DISCORD_TOKEN': {
+    'SLACK_BOT_TOKEN': {
         'value': os.getenv('SLACK_BOT_TOKEN')
     },
-    'DISCORD_CHANNEL_ID': {
+    'SLACK_APP_TOKEN': {
         'value': os.getenv('SLACK_APP_TOKEN')
     }
 }

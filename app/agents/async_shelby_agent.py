@@ -59,7 +59,7 @@ class ShelbyAgent:
                 sparse_vector=sparse_embedding
             )
             hard_query_response = index.query(
-                top_k=2,
+                top_k=self.agent_config.vectorstore_top_k,
                 include_values=False,
                 namespace=self.agent_config.vectorstore_namespace,
                 include_metadata=True,
@@ -147,10 +147,28 @@ class ShelbyAgent:
                             hard_count -= 1
                             break
                 embeddings_tokens = docs_tiktoken_len(sorted_documents)
-                self.logger.debug("removed lowest scoring embedding doc.")
+                self.logger.debug("removed lowest scoring embedding doc .")
                 self.logger.info(f"embedding docs token count: {embeddings_tokens}")
                 iterations += 1
             self.logger.debug(f"number of embedding docs now: {len(sorted_documents)}")
+            # Same as above but removes based on total count of docs instead of token count.
+            while len(sorted_documents) > self.agent_config.max_docs_used:
+                if soft_count > 1:
+                    for idx, document in reversed(list(enumerate(sorted_documents))):
+                        if document['doc_type'] == 'soft':
+                            sorted_documents.pop(idx)
+                            soft_count -= 1
+                            break
+                elif hard_count > 1:
+                    for idx, document in reversed(list(enumerate(sorted_documents))):
+                        if document['doc_type'] == 'hard':
+                            sorted_documents.pop(idx)
+                            hard_count -= 1
+                            break
+                self.logger.debug("removed lowest scoring embedding doc.")
+
+            self.logger.debug(f"number of embedding docs now: {len(sorted_documents)}")
+            
             for i, document in enumerate(sorted_documents, start=1):
                 document['doc_num'] = i
             return sorted_documents
