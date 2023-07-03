@@ -1,0 +1,7 @@
+.env
+shelby-as-a-sprite.code-workspace
+installed_packages.txt
+logs/
+.devcontainer/
+.vscode/
+**/__pycache__/
