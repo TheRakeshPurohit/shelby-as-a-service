@@ -69,7 +69,7 @@ async def on_message(message):
         # If question is too short
         if len(query.split()) < 4:
             logger.info('Message too short.')
-            await message.channel.send("Ask a longer question please.")
+            await message.channel.send(f"{message.author.name}, brevity is the soul of wit, but not of good queries. Please provide more details in your request.")
             return
         logger.info(f'Message received: {message.content} (From: {message.author.name})')
         # Create thread
