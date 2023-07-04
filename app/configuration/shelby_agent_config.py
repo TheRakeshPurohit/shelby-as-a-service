@@ -18,5 +18,5 @@ class AppConfig(BaseModel):
     max_docs_tokens: int = 5000
     max_docs_used = int(os.getenv('MAX_DOCS_USED', '3'))
     prompt_template_name: Optional[str] = 'prompt_template.yaml'
-    max_response_tokens = int(os.getenv('MAX_RESPONSE_TOKENS', '600'))
+    max_response_tokens = int(os.getenv('MAX_RESPONSE_TOKENS', '400'))
 

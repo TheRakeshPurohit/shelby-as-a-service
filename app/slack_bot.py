@@ -14,14 +14,6 @@ from agents.async_shelby_agent import ShelbyAgent
 
 load_dotenv() 
 
-# Use this for local testing
-# slack_bot_token = os.getenv('TATUM_SPRITE_SLACK_BOT_TOKEN')
-# slack_app_token = os.getenv('TATUM_SPRITE_SLACK_APP_TOKEN')
-
-# Use this for container deployments 
-slack_bot_token = os.getenv('SLACK_BOT_TOKEN')
-slack_app_token = os.getenv('SLACK_APP_TOKEN')
-
 
 logger = setup_logger('slack_bot', 'slack_bot.log', level=logging.DEBUG)
 # set from main and call within a function by instantiating with global bot_user_id and then using variable
@@ -31,7 +23,7 @@ bot_user_id = None
 message_start = "Relax and vibe while your query is embedded, documents are fetched, and the LLM is prompted."
 
 # Initializes your app with your bot token and signing secret
-app = AsyncApp(token='slack_bot_token')
+app = AsyncApp(token=os.environ.get('SLACK_BOT_TOKEN'))
 
 async def get_random_animal():
     animals_txt_path = os.path.join('data', 'animals.txt')
@@ -186,7 +178,7 @@ def parse_slack_markdown(answer_obj):
 
 async def main():
     global bot_user_id
-    handler = AsyncSocketModeHandler(app, slack_app_token)
+    handler = AsyncSocketModeHandler(app, os.environ.get('SLACK_APP_TOKEN'))
     # Use the client attribute to call auth.test
     response = await app.client.auth_test()
     # Get the bot user ID from the response
