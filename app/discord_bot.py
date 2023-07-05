@@ -33,7 +33,7 @@ bot = create_bot()
 
 @bot.event
 async def on_guild_join(guild):
-    if not any(channel.name == channel_id for channel in guild.channels):
+    if not any(channel.id == channel_id for channel in guild.channels):
             logger.info(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
             await guild.leave()
 
@@ -41,7 +41,7 @@ async def on_guild_join(guild):
 async def on_ready():
     logger.info(f'Bot has logged in as {bot.user.name} (ID: {bot.user.id})')
     for guild in bot.guilds:
-        if not any(channel.name == channel_id for channel in guild.channels):
+        if not any(channel.id == channel_id for channel in guild.channels):
             logger.info(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
             await guild.leave()
         
