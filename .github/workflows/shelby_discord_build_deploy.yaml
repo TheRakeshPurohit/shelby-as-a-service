@@ -17,10 +17,10 @@ jobs:
         DISCORD_CHANNEL_ID: ${{ secrets.SHELBY_SPRITE_DISCORD_CHANNEL_ID }}
 
         WORKLOAD_NAME: shelby-discord-sprite
-        WORKLOAD_SLUG: discord-sprite
+        WORKLOAD_SLUG: shelby-discord-sprite
         PINECONE_INDEX: shelby-as-a-service
         NAMESPACES: '{"tatum": "blockchain and web3", "deepgram": "ai speech to text services"}'
-        MAX_RESPONSE_TOKENS: 400
+        MAX_RESPONSE_TOKENS: 300
         MAX_DOCS_USED: 3
 
     steps:
