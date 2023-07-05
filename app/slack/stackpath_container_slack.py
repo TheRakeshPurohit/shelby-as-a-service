@@ -55,6 +55,9 @@ config['payload']['workload']['spec']['containers']['webserver']['env'] = {
     'PINECONE_INDEX': {
         'value': os.getenv('PINECONE_INDEX')
     },
+    'NAMESPACES': {
+        'value': os.getenv('NAMESPACES')
+    },
     'SLACK_BOT_TOKEN': {
         'value': os.getenv('SLACK_BOT_TOKEN')
     },
