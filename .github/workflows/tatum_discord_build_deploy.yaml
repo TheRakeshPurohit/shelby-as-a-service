@@ -16,8 +16,8 @@ jobs:
         DISCORD_TOKEN: ${{ secrets.TATUM_SPRITE_DISCORD_TOKEN }}
         DISCORD_CHANNEL_ID: ${{ secrets.TATUM_SPRITE_DISCORD_CHANNEL_ID }}
         
-        WORKLOAD_NAME: tatum-sprite
-        WORKLOAD_SLUG: discord-bot
+        WORKLOAD_NAME: tatum-discord-sprite
+        WORKLOAD_SLUG: discord-sprite
         PINECONE_INDEX: shelby-as-a-service
         MAX_RESPONSE_TOKENS: 400
         MAX_DOCS_USED: 3
