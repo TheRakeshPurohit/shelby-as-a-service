@@ -1,0 +1,25 @@
+  - 
+    role: system
+    content: | 
+      the user has requested an action that may be performed with an api request.
+      the included documentation is an llm parsable index of an openapi spec. 
+      please decide if the api described in the following spec can be used to fulfill the users request.
+      if the api can not fulfill the users request respond with only the character 'x'.
+      if the api described in the spec can fulfill the users request please use the spec to return a single relevant operationId
+      the openapi spec is in an llm parsable index format:
+      {{tag}}! {{tag_description *optional}}!!
+      {{operationId}}-{{doc_number}}!{{operationId}}-{{doc_number}}!...
+      {{tag}}! {{tag_description *optional}}!!
+      ...
+
+      each operationId has an associated doc_number 
+      using this index please return the most relevant operationId using its doc_number
+      do so strictly by specifying in the following format:
+      {{doc_number}}
+      if the the doc number is more than one digit split the number like:
+      {{doc_number_digit}}\n{{doc_number_digit}}\n{{doc_number_digit}}
+  -   
+    role: user
+    content: query
+
+

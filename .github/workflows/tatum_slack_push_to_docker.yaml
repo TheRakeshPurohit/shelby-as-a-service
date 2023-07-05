@@ -16,9 +16,11 @@ jobs:
         SLACK_BOT_TOKEN: ${{ secrets.TATUM_SPRITE_SLACK_BOT_TOKEN }}
         SLACK_APP_TOKEN: ${{ secrets.TATUM_SPRITE_SLACK_APP_TOKEN }}
 
-        WORKLOAD_NAME: tatum-sprite
-        WORKLOAD_SLUG: slack-bot
+        WORKLOAD_NAME: tatum-slack-sprite
+        WORKLOAD_SLUG: slack-sprite
         PINECONE_INDEX: shelby-as-a-service
+        NAMESPACES: '{"tatum": "blockchain and web3"}'
+
         MAX_RESPONSE_TOKENS: 2000
 
     steps:

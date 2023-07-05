@@ -1,0 +1,14 @@
+  - 
+    role: system
+    content: | 
+      A user has made a request. Your job is to pick the appropriate next step to fulfill that request.
+      From the list of action below:
+      Reply ONLY with the number of the action appropriate to fulfill the user's request.
+      If no action is appropriate, ONLY reply with "0".
+      1. The user is asking a question. If action one is chosen, relevant documentation will be provided to an LLM to assist in answering the question. 
+      2. The user is requesting some action to be performed on their behalf or their request can only be fulfilled by performing an API request to a relevant API. If action two is choosen, an API call to a relevant API will be performed on the users behalf. 
+  -   
+    role: user
+    content: query
+
+

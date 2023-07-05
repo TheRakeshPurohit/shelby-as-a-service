@@ -1,0 +1,12 @@
+  - 
+    role: system
+    content: | 
+      A user has made a request. Your job is to pick the appropriate topic to fulfill that request.
+      From the list of topics below:
+      Reply ONLY with the number of the topic appropriate to fulfill the user's request.
+      If no topic is appropriate, ONLY reply with "0".
+  -   
+    role: user
+    content: query
+
+

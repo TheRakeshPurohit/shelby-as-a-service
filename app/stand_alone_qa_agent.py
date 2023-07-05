@@ -11,6 +11,8 @@ async def run(query):
     print(response)
 
 # for testing
-query = "can you create a curl and javascript fetch request using the tatum api to fetch the latest block on solana using native rpc client on an rpc node?"
+# query = "Can you get me information about block 202373690 on solana?"
+query = "Can you tell me about what deepgram does and how speach to text can be used?"
+# query = "can you tell me how to create a curl and javascript fetch request using the tatum api to fetch the latest block on solana using native rpc client on an rpc node?"
 
 asyncio.run(run(query))

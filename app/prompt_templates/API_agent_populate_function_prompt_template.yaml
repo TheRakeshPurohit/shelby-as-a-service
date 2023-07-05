@@ -1,0 +1,14 @@
+  - 
+    role: system
+    content: | 
+      the user has requested an action that may be performed with an api request.
+      the included function should be properly formatted to the openapi spec.
+      please populate the fields where possible.
+  -   
+    role: user
+    content: query
+  -
+    role: function
+    name: function_name
+
+

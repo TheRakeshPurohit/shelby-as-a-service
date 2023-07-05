@@ -19,6 +19,7 @@ jobs:
         WORKLOAD_NAME: tatum-discord-sprite
         WORKLOAD_SLUG: discord-sprite
         PINECONE_INDEX: shelby-as-a-service
+        NAMESPACES: '{"tatum": "blockchain and web3"}'
         MAX_RESPONSE_TOKENS: 400
         MAX_DOCS_USED: 3
 

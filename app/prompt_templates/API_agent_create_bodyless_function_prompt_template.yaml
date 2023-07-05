@@ -1,0 +1,14 @@
+  - 
+    role: system
+    content: | 
+      the user has requested an action that may be performed with an api request.
+      the included documentation is an operationid from an openapi spec that can fufill the users request.
+      using the openapi spec for the operationid create a url to make a request to.
+      use the user_request to populate fields.
+      important! only respond with the url. please do not provide any additional text.
+
+  -   
+    role: user
+    content: 
+
+
