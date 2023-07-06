@@ -1,4 +1,4 @@
-name: Shelby - Discord - Build and Deploy
+name: Shelby - Discord - Build and Deploy - old
 
 on: workflow_dispatch
 
