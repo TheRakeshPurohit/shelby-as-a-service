@@ -1,3 +1,4 @@
+#region
 import os
 import json
 import openai
@@ -5,7 +6,7 @@ import logging
 import traceback
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from logger import setup_logger
+from agents.logger_agent import LoggerAgent
 import pinecone
 from dotenv import load_dotenv
 import tiktoken
@@ -14,59 +15,71 @@ from configuration.shelby_agent_config import AppConfig
 from langchain.embeddings import OpenAIEmbeddings
 import yaml
 from pinecone_text.sparse import BM25Encoder
+#endregion
 
 class ShelbyAgent:
     def __init__(self):
         load_dotenv()
         openai.api_key = os.getenv("OPENAI_API_KEY")
-        self.logger = setup_logger('ShelbyAgent', 'ShelbyAgent.log', level=logging.DEBUG)
+        self.log_agent = LoggerAgent('ShelbyAgent', 'ShelbyAgent.log', level='INFO')
         self.agent_config = AppConfig() 
-        self.action_agent = self.ActionAgent(self.logger, self.agent_config)
-        self.docs_agent = self.DocsAgent(self.logger, self.agent_config)
-        self.API_agent = self.APIAgent(self.logger, self.agent_config)
+        self.action_agent = self.ActionAgent(self.log_agent, self.agent_config)
+        self.query_agent = self.QueryAgent(self.log_agent, self.agent_config)
+        self.API_agent = self.APIAgent(self.log_agent, self.agent_config)
 
-   
-    def query_thread(self, query):
-        try:
-            # workflow = self.action_agent.action_decision(query)
-            
-            workflow = 1
-            match workflow:
-                # If workflow is 1 run docs agent
-                case 1:
-                    if len(self.agent_config.vectorstore_namespaces) == 1:
-                        topic = next(iter(self.agent_config.vectorstore_namespaces))
-                    else: 
-                        topic = self.action_agent.topic_decision(query)
-                    response= self.docs_agent.run_docs_agent(query, topic)
-                # If workflow is 2 run function agent
-                case 2:
-                    response= self.API_agent.run_API_agent(query)
-                # Else just run the docs agent for now
-                case _:
-                    print("Workflow is something else")
+    def request_thread(self, request):
+        # ActionAgent determines the workflow
+        
+        # workflow = self.action_agent.action_decision(request)
+        # Currently disabled and locked to QueryAgent
+        workflow = 1
+        
+        match workflow:
+            case 1:
+                # Run QueryAgent
+                # If only one topic, then we skip the ActionAgent topic decision.
+                if len(self.agent_config.vectorstore_namespaces) == 1:
+                    topic = next(iter(self.agent_config.vectorstore_namespaces))
+                else: 
+                    topic = self.action_agent.topic_decision(request)
+                if topic == 0:
+                    # If no topic run basic query
+                    # response = self.query_agent.run_basic_query(request)
+                    no_topics = 'Query not related to any supported topics.'
+                    self.log_agent.print_and_log(no_topics)
+                    response = no_topics
+                else:
+                    response = self.query_agent.run_context_enriched_query(request, topic)
+                
+            case 2:
+                # Run APIAgent
+                response= self.API_agent.run_API_agent(request)
+            # Else just run the docs agent for now
+            case _:
+                no_workflow = 'No workflow found for request.'
+                self.log_agent.print_and_log(no_workflow)
+                return no_workflow
 
-            return response
-        except Exception as e:
-            raise e
-     
-    async def run_query(self, query):
+        return response
+
+    async def run_request(self, request):
         try:
             with ThreadPoolExecutor() as executor:
                 loop = asyncio.get_event_loop()
-                response = await loop.run_in_executor(executor, self.query_thread, query)
+                response = await loop.run_in_executor(executor, self.request_thread, request)
                 return response
         except Exception as e:
             tb = traceback.format_exc()
-            self.logger.error(f"An error occurred: {str(e)}. Traceback: {tb}")
+            self.log_agent.print_and_log(f"An error occurred: {str(e)}. Traceback: {tb}")
             raise e
 
     class ActionAgent:
-        def __init__(self, logger, agent_config):
-            self.logger = logger
+        def __init__(self, log_agent, agent_config):
+            self.log_agent = log_agent
             self.agent_config = agent_config
     
-        # Generates multi-line text string with complete prompt
+        # Chooses workflow
+        # Currently disabled
         def action_prompt_template(self, query):
             try:
                 with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_action_prompt_template.yaml'), 'r') as stream:
@@ -80,7 +93,7 @@ class ShelbyAgent:
                 
                 return prompt_template
             except Exception as e:
-                self.logger.error(f"An error occurred in docs_prompt_template: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
                 raise e
             
         def action_prompt_llm(self, prompt, actions):
@@ -99,7 +112,7 @@ class ShelbyAgent:
                 )
                 return response['choices'][0]['message']['content']
             except Exception as e:
-                self.logger.error(f"An error occurred in action_prompt_llm: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in action_prompt_llm: {str(e)}")
                 raise e
             
         def action_decision(self, query):
@@ -108,68 +121,71 @@ class ShelbyAgent:
             workflow = self.action_prompt_llm(prompt_template, actions)
             return workflow 
         
+        # Chooses topic
+        # If no matching topic found, returns 0.
         def topic_prompt_template(self, query):
-            try:
-                with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_topic_prompt_template.yaml'), 'r') as stream:
-                    # Load the YAML data and print the result
-                    prompt_template = yaml.safe_load(stream)
 
-               # Create a list of formatted strings, each with the format "index. key: value"
-                content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.agent_config.vectorstore_namespaces.items())]
+            with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_topic_prompt_template.yaml'), 'r') as stream:
+                prompt_template = yaml.safe_load(stream)
 
-                # Join the strings together with spaces between them
-                topics_str = " ".join(content_strs)
+            # Create a list of formatted strings, each with the format "index. key: value"
+            content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.agent_config.vectorstore_namespaces.items())]
 
-                # Append the documents string to the query
-                prompt_message  = "user query: " + query + " topics: " + topics_str
-                
-                # Loop over the list of dictionaries in data['prompt_template']
-                for role in prompt_template:
-                    if role['role'] == 'user':  
-                        role['content'] = prompt_message  
-                
-                return prompt_template
-            except Exception as e:
-                self.logger.error(f"An error occurred in docs_prompt_template: {str(e)}")
-                raise e
+            # Join the strings together with spaces between them
+            topics_str = " ".join(content_strs)
+
+            # Append the documents string to the query
+            prompt_message  = "user query: " + query + " topics: " + topics_str
             
+            # Loop over the list of dictionaries in data['prompt_template']
+            for role in prompt_template:
+                if role['role'] == 'user':  
+                    role['content'] = prompt_message  
+            
+            return prompt_template
+    
         def topic_prompt_llm(self, prompt):
-            try:
-                # Shamelessly copied from https://github.com/minimaxir/simpleaichat/blob/main/PROMPTS.md#tools
-                # Creates a dic of tokens equivalent to 0-n where n is the number of action items with a logit bias of 100
-                # This forces GPT to choose one.
-                logit_bias_weight = 100
-                logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(self.agent_config.vectorstore_namespaces) + 1)}
 
-                response = openai.ChatCompletion.create(
-                    model=self.agent_config.action_llm_model,
-                    messages=prompt,
-                    max_tokens=1,
-                    logit_bias=logit_bias
-                )
+            # Shamelessly copied from https://github.com/minimaxir/simpleaichat/blob/main/PROMPTS.md#tools
+            # Creates a dic of tokens equivalent to 0-n where n is the number of topics with a logit bias of 100
+            # This forces GPT to choose one.
+            logit_bias_weight = 100
+            logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(self.agent_config.vectorstore_namespaces) + 1)}
+
+            response = openai.ChatCompletion.create(
+                model=self.agent_config.action_llm_model,
+                messages=prompt,
+                max_tokens=1,
+                logit_bias=logit_bias
+            )
+            try:
                 topic_key = int(response['choices'][0]['message']['content'])
-                if topic_key == 0:
-                    return 0
-                topic = list(self.agent_config.vectorstore_namespaces.keys())[topic_key - 1]  # We subtract 1 because list indices start at 0
-                return topic
-            
-            except Exception as e:
-                self.logger.error(f"An error occurred in action_prompt_llm: {str(e)}")
-                raise e
+            except ValueError:
+                # This block will execute if the conversion to int fails.
+                self.log_agent.print_and_log(f"Failed to convert topic_key to int: {response['choices'][0]['message']['content']}")
+                return 0
+            if topic_key == 0:
+                return 0
+            # Otherwise return string with the namespace of the topic in the vectorstore
+            topic = list(self.agent_config.vectorstore_namespaces.keys())[topic_key - 1]  # We subtract 1 because list indices start at 0
+            return topic
             
         def topic_decision(self, query):
             prompt_template = self.topic_prompt_template(query)
             topic = self.topic_prompt_llm(prompt_template)
             return topic 
 
-    class DocsAgent:
-        def __init__(self, logger, agent_config):
-            self.logger = logger
+    class QueryAgent:
+        def __init__(self, log_agent, agent_config):
+            self.log_agent = log_agent
             self.agent_config = agent_config
 
         # Gets embeddings from query string
         def get_query_embeddings(self, query):
             try:
+                
+                self.log_agent.print_and_log(f"embedding query: {query}")
+                
                 embedding_retriever = OpenAIEmbeddings(
                     model=self.agent_config.docs_llm_model,
                     openai_api_key=os.getenv("OPENAI_API_KEY"),
@@ -184,7 +200,7 @@ class ShelbyAgent:
 
                 return dense_embedding, sparse_embedding
             except Exception as e:
-                self.logger.error(f"An error occurred in get_query_embeddings: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in get_query_embeddings: {str(e)}")
                 raise e
 
         def query_vectorstore(self, dense_embedding, sparse_embedding, topic):
@@ -214,7 +230,6 @@ class ShelbyAgent:
                 # Destructures the QueryResponse object the pinecone library generates.
                 documents_list = []
                 for m in soft_query_response.matches:
-                    self.logger.debug(m.metadata['title'])
                     response = {
                         'content': m.metadata['content'],
                         'title': m.metadata['title'],
@@ -225,7 +240,6 @@ class ShelbyAgent:
                     }
                     documents_list.append(response)
                 for m in hard_query_response.matches:
-                    self.logger.debug(m.metadata['title'])
                     response = {
                         'content': m.metadata['content'],
                         'title': m.metadata['title'],
@@ -238,7 +252,7 @@ class ShelbyAgent:
 
                 return documents_list
             except Exception as e:
-                self.logger.error(f"An error occurred in query_vectorstore: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in query_vectorstore: {str(e)}")
                 raise e
         
         # Parses documents into x and prunes the count to meet token threshold
@@ -269,11 +283,12 @@ class ShelbyAgent:
                     document['doc_num'] = i
 
                 embeddings_tokens = docs_tiktoken_len(sorted_documents)
-                self.logger.info(f"embedding docs token count: {embeddings_tokens}")
+                
+                # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
                 iterations = 0
                 while embeddings_tokens > self.agent_config.max_docs_tokens:
                     if iterations > len(sorted_documents):
-                        self.logger.debug(f"Could not reduce tokens under {self.agent_config.max_docs_tokens}.")
+                        self.log_agent.print_and_log(f"Could not reduce tokens under {self.agent_config.max_docs_tokens}.")
                         break
                     # Remove the lowest scoring 'soft' document if there is more than one,
                     # otherwise remove the lowest scoring 'hard' document
@@ -290,10 +305,10 @@ class ShelbyAgent:
                                 hard_count -= 1
                                 break
                     embeddings_tokens = docs_tiktoken_len(sorted_documents)
-                    self.logger.debug("removed lowest scoring embedding doc .")
-                    self.logger.info(f"embedding docs token count: {embeddings_tokens}")
+                    # self.log_agent.print_and_log("removed lowest scoring embedding doc .")
+                    # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
                     iterations += 1
-                self.logger.debug(f"number of embedding docs now: {len(sorted_documents)}")
+                # self.log_agent.print_and_log(f"number of context docs now: {len(sorted_documents)}")
                 # Same as above but removes based on total count of docs instead of token count.
                 while len(sorted_documents) > self.agent_config.max_docs_used:
                     if soft_count > 1:
@@ -308,21 +323,21 @@ class ShelbyAgent:
                                 sorted_documents.pop(idx)
                                 hard_count -= 1
                                 break
-                    self.logger.debug("removed lowest scoring embedding doc.")
+                    # self.log_agent.print_and_log("removed lowest scoring embedding doc.")
 
-                self.logger.debug(f"number of embedding docs now: {len(sorted_documents)}")
+                self.log_agent.print_and_log(f"final number of context docs now: {len(sorted_documents)}")
                 
                 for i, document in enumerate(sorted_documents, start=1):
                     document['doc_num'] = i
                 return sorted_documents
             except Exception as e:
-                self.logger.error(f"An error occurred in parse_documents: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in parse_documents: {str(e)}")
                 raise e
     
         # Generates multi-line text string with complete prompt
         def docs_prompt_template(self, query, documents):
             try:
-                with open(os.path.join(self.agent_config.prompt_template_path, 'docs_agent_prompt_template.yaml'), 'r') as stream:
+                with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_prompt_template.yaml'), 'r') as stream:
                     # Load the YAML data and print the result
                     prompt_template = yaml.safe_load(stream)
 
@@ -338,22 +353,31 @@ class ShelbyAgent:
                 for role in prompt_template:
                     if role['role'] == 'user':  # If the 'role' is 'user'
                         role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
+                        
+                # self.log_agent.print_and_log(f"prepared prompt: {json.dumps(prompt_template, indent=4)}")
                 
                 return prompt_template
+            
             except Exception as e:
-                self.logger.error(f"An error occurred in docs_prompt_template: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
                 raise e
         
         def docs_prompt_llm(self, prompt):
             try:
+                self.log_agent.print_and_log(f"sending prompt to llm")
+                
                 response = openai.ChatCompletion.create(
                     model=self.agent_config.docs_llm_model,
                     messages=prompt,
                     max_tokens=self.agent_config.max_response_tokens
                 )
+                
+                # self.log_agent.print_and_log(response['choices'][0]['message']['content'])
+                
                 return response['choices'][0]['message']['content']
+            
             except Exception as e:
-                self.logger.error(f"An error occurred in docs_prompt_llm: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in docs_prompt_llm: {str(e)}")
                 raise e
 
         def append_meta(self, input_text, parsed_documents):
@@ -370,7 +394,7 @@ class ShelbyAgent:
                 print(matches)
 
                 if not matches:
-                    self.logger.debug("No supporting docs.")
+                    self.log_agent.print_and_log("No supporting docs.")
                     answer_obj = {
                         "answer_text": input_text,
                         "llm": self.agent_config.docs_llm_model,
@@ -402,37 +426,39 @@ class ShelbyAgent:
                             }
                             answer_obj["documents"].append(document)
                         else:
-                            self.logger.debug(f"Document{doc_num} not found in the list.")
+                            self.log_agent.print_and_log(f"Document{doc_num} not found in the list.")
                 return answer_obj
             except Exception as e:
-                self.logger.error(f"An error occurred in append_meta: {str(e)}")
+                self.log_agent.print_and_log(f"An error occurred in append_meta: {str(e)}")
                 raise e
     
-        def run_docs_agent(self, query, topic):
-            self.logger.debug(f"new query:", query)
+        def run_context_enriched_query(self, query, topic):
+            
             dense_embedding, sparse_embedding = self.get_query_embeddings(query)
-            self.logger.debug("embedding retrieved")
+
             returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, topic)
 
             if not returned_documents:
-                self.logger.debug("No supporting documents found!")
+                self.log_agent.print_and_log("No supporting documents found!")
             else:
-                self.logger.debug(f"{len(returned_documents)} documents retrieved")
+                self.log_agent.print_and_log(f"{len(returned_documents)} context docs retrieved")
+                
             parsed_documents = self.parse_documents(returned_documents)
+            
             prompt = self.docs_prompt_template(query, parsed_documents)
-            self.logger.debug("prepared prompt: %s", json.dumps(prompt, indent=4))
-            self.logger.debug("sending prompt to llm")
+
             llm_response = self.docs_prompt_llm(prompt)
-            self.logger.debug(llm_response)
+            
             response = self.append_meta(llm_response, parsed_documents)
-            self.logger.debug("full response: %s", response)
+            
+            self.log_agent.print_and_log(f"response with metadata: {response}")
             
             return response
     
     # Currently under development
     class APIAgent:
-        def __init__(self, logger, agent_config):
-            self.logger = logger
+        def __init__(self, log_agent, agent_config):
+            self.log_agent = log_agent
             self.agent_config = agent_config
         
         # Selects the correct API and endpoint to run action on.
@@ -496,11 +522,11 @@ class ShelbyAgent:
                         if filename.endswith(f"-{number}.json"):
                             with open(os.path.join(directory_path, filename), 'r') as f:
                                 operationID_file = json.load(f)
-                            self.logger.debug(f"operationID_file found: {os.path.join(directory_path, filename)}.")
+                            self.log_agent.print_and_log(f"operationID_file found: {os.path.join(directory_path, filename)}.")
                             break
                     break
             if operationID_file is None:
-                self.logger.debug("No matching operationID found.")
+                self.log_agent.print_and_log("No matching operationID found.")
             return operationID_file
                 
         def create_bodyless_function(self, query, operationID_file):
@@ -525,7 +551,7 @@ class ShelbyAgent:
   
                     
         def run_API_agent(self, query):
-            self.logger.debug(f"new action:", query)
+            self.log_agent.print_and_log(f"new action: {query}")
             operationID_file = self.select_API_operationID(query)
             # Here we need to run a doc_agent query if operationID_file is None
             function = self.create_bodyless_function(query, operationID_file)

@@ -1,5 +1,5 @@
 .env
-shelby-as-a-sprite.code-workspace
+shelby-as-a-service.code-workspace
 installed_packages.txt
 logs/
 .devcontainer/

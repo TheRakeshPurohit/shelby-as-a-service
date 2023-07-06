@@ -8,14 +8,14 @@ from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 
 # imports from bot app
-from logger import setup_logger
+from agents.logger_agent import LoggerAgent
 from agents.async_shelby_agent import ShelbyAgent
 #endregion
 
 load_dotenv() 
 
 
-logger = setup_logger('slack_bot', 'slack_bot.log', level=logging.DEBUG)
+log_agent = LoggerAgent('slack_sprite', 'slack_sprite.log', level='INFO')
 # set from main and call within a function by instantiating with global bot_user_id and then using variable
 bot_user_id = None
 
@@ -59,7 +59,7 @@ async def query_command(ack, body):
         thread_ts = response['ts']
 
         # run query
-        query_response = await agent.run_query(query)
+        query_response = await agent.run_request(query)
 
         parsed_output = parse_slack_markdown(query_response)
 
@@ -74,7 +74,7 @@ async def query_command(ack, body):
         )
     except Exception as e:
         tb = traceback.format_exc()
-        logger.error(f"An error occurred: {str(e)}. Traceback: {tb}")
+        log_agent.logger.error(f"An error occurred: {str(e)}. Traceback: {tb}")
         await app.client.chat_postMessage(
             channel=channel, 
             text=(f"An error occurred: {str(e)}. Traceback: {tb}"), 
@@ -95,7 +95,7 @@ async def help_command(ack):
 
     except Exception as e:
         tb = traceback.format_exc()
-        logger.error(f"An error occurred: {str(e)}. Traceback: {tb}")
+        log_agent.logger.error(f"An error occurred: {str(e)}. Traceback: {tb}")
 
 
 @app.event("app_mention")
@@ -133,7 +133,7 @@ async def bot_mention(ack, event):
         )
      
         # run query
-        query_response = await agent.run_query(query)
+        query_response = await agent.run_request(query)
 
         parsed_output = parse_slack_markdown(query_response)
 
@@ -148,7 +148,7 @@ async def bot_mention(ack, event):
 
     except Exception as e:
         tb = traceback.format_exc()
-        logger.error(f"An error occurred: {str(e)}. Traceback: {tb}")
+        log_agent.logger.error(f"An error occurred: {str(e)}. Traceback: {tb}")
         await app.client.chat_postMessage(
             channel=channel, 
             text=(f"An error occurred: {str(e)}. Traceback: {tb}"), 
