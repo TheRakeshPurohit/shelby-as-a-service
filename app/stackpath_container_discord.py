@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 
 import requests
-# from dotenv import load_dotenv
 import os 
 import json
-# load_dotenv() 
+from dotenv import load_dotenv
+from configuration.shelby_agent_config import AppConfig
+from agents.logger_agent import LoggerAgent
 
+load_dotenv() 
+
+agent_config = AppConfig() 
+log_agent = LoggerAgent('deploy_agent', 'deploy_agent.log', level='INFO')
 
 url = "https://gateway.stackpath.com/identity/v1/oauth2/token"
 
@@ -31,16 +36,32 @@ headers = {
 
 response = requests.get(url, headers=headers)
 stack_id = json.loads(response.text)['id']
-print(stack_id)
 
+
+# Get existing workloads
+url = f'https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads'
+
+response = requests.get(url, headers=headers)
+
+# And delete an existing workload with the same name as the one we're trying to deploy
+if response.status_code == 200:
+    workloads = response.json()
+    for workload in workloads['results']:
+        log_agent.print_and_log(f"Existing workload: {workload['name']}")
+        if workload['name'] == agent_config.WORKLOAD_NAME:
+            workload_id = workload['id']
+            url = f'https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads/{workload_id}'
+            response = requests.delete(url, headers=headers)
+            if response.status_code == 204:
+                log_agent.print_and_log(f"{workload['name']} deleted")
 
 # Load configuration from JSON file
 with open('app/discord/sp-2_discord.json') as f:
     config = json.load(f)
 
 config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['password'] = os.getenv('DOCKER_TOKEN')
-config['payload']['workload']['name'] = os.getenv('WORKLOAD_NAME')
-config['payload']['workload']['slug'] = os.getenv('WORKLOAD_SLUG')
+config['payload']['workload']['name'] = agent_config.WORKLOAD_NAME.lower()
+config['payload']['workload']['slug'] = agent_config.WORKLOAD_SLUG.lower()
 
 # Add secrets to the environment variables of the container
 config['payload']['workload']['spec']['containers']['webserver']['env'] = {
@@ -50,17 +71,17 @@ config['payload']['workload']['spec']['containers']['webserver']['env'] = {
     'PINECONE_API_KEY': {
         'value': os.getenv('PINECONE_API_KEY')
     },
-    'PINECONE_INDEX': {
-        'value': os.getenv('PINECONE_INDEX')
-    },
-    'NAMESPACES': {
-        'value': os.getenv('NAMESPACES')
-    },
     'DISCORD_TOKEN': {
         'value': os.getenv('DISCORD_TOKEN')
     },
     'DISCORD_CHANNEL_ID': {
         'value': os.getenv('DISCORD_CHANNEL_ID')
+    },
+    'VECTORSTORE_INDEX': {
+        'value': agent_config.vectorstore_index
+    },
+    'VECTORSTORE_NAMESPACES': {
+        'value': json.dumps(agent_config.vectorstore_namespaces)
     }
 }
 
@@ -74,7 +95,9 @@ payload = config['payload']
 
 # Make the API call
 response = requests.post(url, json=payload, headers=headers)
+if response.status_code == 200:
+    log_agent.print_and_log(f"{agent_config.WORKLOAD_NAME} created : {response.text}")
+else:
+    log_agent.print_and_log(f"Something went wrong creating the workload: {response.text}")
 
-# Print the response
-print(response.text)
 

@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import requests
-from dotenv import load_dotenv
 import os 
 import json
+from dotenv import load_dotenv
+from configuration.shelby_agent_config import AppConfig
+
 load_dotenv() 
 
-# bearer token
+agent_config = AppConfig() 
 
 url = "https://gateway.stackpath.com/identity/v1/oauth2/token"
 
@@ -41,8 +43,8 @@ with open('app/slack/sp-2_slack.json') as f:
 
 # Add config to JSON
 config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['password'] = os.getenv('DOCKER_TOKEN')
-config['payload']['workload']['name'] = os.getenv('WORKLOAD_NAME')
-config['payload']['workload']['slug'] = os.getenv('WORKLOAD_SLUG')
+config['payload']['workload']['name'] = agent_config.WORKLOAD_NAME
+config['payload']['workload']['slug'] = agent_config.WORKLOAD_SLUG
 
 # Add secrets to the environment variables of the container
 config['payload']['workload']['spec']['containers']['webserver']['env'] = {
@@ -52,17 +54,17 @@ config['payload']['workload']['spec']['containers']['webserver']['env'] = {
     'PINECONE_API_KEY': {
         'value': os.getenv('PINECONE_API_KEY')
     },
-    'PINECONE_INDEX': {
-        'value': os.getenv('PINECONE_INDEX')
-    },
-    'NAMESPACES': {
-        'value': os.getenv('NAMESPACES')
-    },
     'SLACK_BOT_TOKEN': {
         'value': os.getenv('SLACK_BOT_TOKEN')
     },
     'SLACK_APP_TOKEN': {
         'value': os.getenv('SLACK_APP_TOKEN')
+    },
+    'VECTORSTORE_INDEX': {
+        'value': agent_config.vectorstore_index
+    },
+    'NAMESPACES': {
+        'value': agent_config.vectorstore_namespaces
     }
 }
 

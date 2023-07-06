@@ -45,7 +45,9 @@ class ShelbyAgent:
                 if topic == 0:
                     # If no topic run basic query
                     # response = self.query_agent.run_basic_query(request)
-                    no_topics = 'Query not related to any supported topics.'
+                    no_topics = "Query not related to any supported topics. Supported topics are:\n"
+                    for key, value in self.agent_config.vectorstore_namespaces.items():
+                        no_topics += f"{key}: {value}\n"
                     self.log_agent.print_and_log(no_topics)
                     response = no_topics
                 else:
@@ -173,6 +175,9 @@ class ShelbyAgent:
         def topic_decision(self, query):
             prompt_template = self.topic_prompt_template(query)
             topic = self.topic_prompt_llm(prompt_template)
+            
+            self.log_agent.print_and_log(f"{self.agent_config.action_llm_model} chose to fetch context docs from {topic} namespace.")
+            
             return topic 
 
     class QueryAgent:
@@ -187,7 +192,7 @@ class ShelbyAgent:
                 self.log_agent.print_and_log(f"embedding query: {query}")
                 
                 embedding_retriever = OpenAIEmbeddings(
-                    model=self.agent_config.docs_llm_model,
+                    model=self.agent_config.query_llm_model,
                     openai_api_key=os.getenv("OPENAI_API_KEY"),
                     request_timeout=self.agent_config.openai_timeout_seconds
                 )
@@ -342,12 +347,15 @@ class ShelbyAgent:
                     prompt_template = yaml.safe_load(stream)
 
                 # Loop over documents and append them to each other and then adds the query
-                content_strs = []
-                for doc in documents:
-                    doc_num = doc['doc_num']
-                    content_strs.append(f"{doc['content']} doc_num: [{doc_num}]")
-                    documents_str = " ".join(content_strs)
-                prompt_message  = "Query: " + query + " Documents: " + documents_str
+                if documents:
+                    content_strs = []
+                    for doc in documents:
+                        doc_num = doc['doc_num']
+                        content_strs.append(f"{doc['content']} doc_num: [{doc_num}]")
+                        documents_str = " ".join(content_strs)
+                    prompt_message  = "Query: " + query + " Documents: " + documents_str
+                else:
+                    prompt_message  = "Query: " + query
 
                 # Loop over the list of dictionaries in data['prompt_template']
                 for role in prompt_template:
@@ -367,7 +375,7 @@ class ShelbyAgent:
                 self.log_agent.print_and_log(f"sending prompt to llm")
                 
                 response = openai.ChatCompletion.create(
-                    model=self.agent_config.docs_llm_model,
+                    model=self.agent_config.query_llm_model,
                     messages=prompt,
                     max_tokens=self.agent_config.max_response_tokens
                 )
@@ -397,7 +405,7 @@ class ShelbyAgent:
                     self.log_agent.print_and_log("No supporting docs.")
                     answer_obj = {
                         "answer_text": input_text,
-                        "llm": self.agent_config.docs_llm_model,
+                        "llm": self.agent_config.query_llm_model,
                         "documents": []
                     }
                     return answer_obj
@@ -406,7 +414,7 @@ class ShelbyAgent:
                 # Formatted text has all mutations of documents n replaced with [n]
                 answer_obj = {
                         "answer_text": formatted_text,
-                        "llm": self.agent_config.docs_llm_model,
+                        "llm": self.agent_config.query_llm_model,
                         "documents": []
                 }
 
@@ -427,7 +435,11 @@ class ShelbyAgent:
                             answer_obj["documents"].append(document)
                         else:
                             self.log_agent.print_and_log(f"Document{doc_num} not found in the list.")
+                            
+                # self.log_agent.print_and_log(f"response with metadata: {answer_obj}")
+                
                 return answer_obj
+            
             except Exception as e:
                 self.log_agent.print_and_log(f"An error occurred in append_meta: {str(e)}")
                 raise e
@@ -451,7 +463,7 @@ class ShelbyAgent:
             
             response = self.append_meta(llm_response, parsed_documents)
             
-            self.log_agent.print_and_log(f"response with metadata: {response}")
+            
             
             return response
     
