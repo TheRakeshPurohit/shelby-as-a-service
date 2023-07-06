@@ -26,7 +26,7 @@ class AppConfig(BaseModel):
     action_llm_model: str = os.getenv('ACTION_LLM_MODEL', 'gpt-4')
     # QueryAgent
     try:
-        ectorstore_namespaces: Dict[str, str] = json.loads(os.getenv('VECTORSTORE_NAMESPACES'))
+        vectorstore_namespaces: Dict[str, str] = json.loads(os.getenv('VECTORSTORE_NAMESPACES'))
     except (TypeError, json.JSONDecodeError):
         vectorstore_namespaces: Dict[str, str] = namespaces_manual_input
     query_llm_model: str = os.getenv('QUERY_LLM_MODEL', 'gpt-4')
