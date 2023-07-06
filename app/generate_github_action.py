@@ -90,10 +90,10 @@ def generate_workflow():
                       tags: shelbyjenkins/shelby-as-a-service:discord-latest
 
                 - name: Add execute permissions to the script
-                  run: chmod +x app/discord/stackpath_container_discord.py
+                  run: chmod +x app/stackpath_container_discord.py
 
                 - name: Run deployment script
-                  run: app/discord/stackpath_container_discord.py
+                  run: app/stackpath_container_discord.py
     """)
     
     os.makedirs('.github/workflows', exist_ok=True)
