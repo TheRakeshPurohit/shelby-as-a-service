@@ -33,6 +33,7 @@ def generate_workflow():
                 
                 DOCKER_USERNAME: {agent_config.DOCKER_USERNAME}
                 DOCKER_REGISTRY: {agent_config.DOCKER_REGISTRY}
+                DOCKER_SERVER: {agent_config.DOCKER_SERVER}
                 DOCKER_IMAGE_PATH: {agent_config.DOCKER_IMAGE_PATH}
                 
                 STACKPATH_STACK_ID: {agent_config.STACKPATH_STACK_ID}

@@ -16,9 +16,10 @@ class AppConfig(BaseModel):
     # Public configs
     
     # Name your bot/sprite
-    NAME: str = 'shelby' # lowercase
+    NAME: str = 'personal' # lowercase
     # Set sprite type to deploy. "discord" or "slack"
     TYPE: str = 'discord' # lowercase
+    DOCKER_REGISTRY: str = 'docker.io'
     DOCKER_USERNAME: str = 'shelbyjenkins'
     DOCKER_REPO: str = 'shelby-as-a-service'
     STACKPATH_STACK_ID: str = 'shelby-stack-327b67'
@@ -53,7 +54,7 @@ class AppConfig(BaseModel):
     populate_function_llm_model: str = os.getenv('POPULATE_FUNCTION_LLM_MODEL', 'gpt-4')
     
     # This is set with automation
-    DOCKER_REGISTRY: str = f'docker.io/{DOCKER_USERNAME}/{DOCKER_REPO}'
+    DOCKER_SERVER: str = f'docker.io/{DOCKER_USERNAME}/{DOCKER_REPO}'
     DOCKER_IMAGE_PATH: str = f'{DOCKER_USERNAME}/{DOCKER_REPO}:{NAME}-latest'
     GITHUB_ACTION_WORKFLOW_NAME: str = f'{NAME.lower()}_{TYPE.lower()}_build_deploy'
     WORKLOAD_NAME: str = f'{NAME.lower()}-{TYPE.lower()}-sprite'
