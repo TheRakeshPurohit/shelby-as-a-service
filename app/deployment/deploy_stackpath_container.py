@@ -63,7 +63,7 @@ with open('app/deployment/sp-2_container_request_template.json') as f:
 
 # Add env vars to the environment variables of the container
 config['payload']['workload']['spec']['containers']['webserver']['image'] = os.environ.get('DOCKER_IMAGE_PATH')
-config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['server'] = os.environ.get('DOCKER_REGISTRY')
+config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['server'] = os.environ.get('DOCKER_SERVER')
 config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['username'] = os.environ.get('DOCKER_USERNAME')
 config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry']['password'] = os.getenv('DOCKER_TOKEN')
 
