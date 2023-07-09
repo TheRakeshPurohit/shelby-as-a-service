@@ -39,6 +39,7 @@ def generate_workflow():
                 {kvp_1}
                 {kvp_2}
                 
+                # Public configs
                 DOCKER_USERNAME: {agent_config.DOCKER_USERNAME}
                 DOCKER_REGISTRY: {agent_config.DOCKER_REGISTRY}
                 DOCKER_SERVER: {agent_config.DOCKER_SERVER}
@@ -46,12 +47,14 @@ def generate_workflow():
                 
                 STACKPATH_STACK_ID: {agent_config.STACKPATH_STACK_ID}
                 
+                # Configs that may change based on deployment type
                 TYPE: {agent_config.TYPE}
                 WORKLOAD_NAME: {agent_config.WORKLOAD_NAME}
                 WORKLOAD_SLUG: {agent_config.WORKLOAD_SLUG}
-                VECTORSTORE_INDEX: {agent_config.vectorstore_index}
-                VECTORSTORE_NAMESPACES: {repr(json.dumps(agent_config.vectorstore_namespaces))}
                 
+                # Configs to be loaded into container env to overide config_agent
+                VECTORSTORE_INDEX: {agent_config.vectorstore_index}
+                VECTORSTORE_NAMESPACES: {repr(json.dumps(agent_config.vectorstore_namespaces))}               
                 ACTION_LLM_MODEL: {agent_config.action_llm_model}
                 QUERY_LLM_MODEL: {agent_config.query_llm_model}
                 VECTORSTORE_TOP_K: {agent_config.vectorstore_top_k}

@@ -104,6 +104,45 @@ config['payload']['workload']['spec']['containers']['webserver']['env'].update({
     },
     'VECTORSTORE_NAMESPACES': {
         'value': json.dumps(os.environ.get('VECTORSTORE_NAMESPACES'))
+    },
+    'ACTION_LLM_MODEL': {
+        'value': os.environ.get('ACTION_LLM_MODEL')
+    },
+    'QUERY_LLM_MODEL': {
+        'value': os.environ.get('QUERY_LLM_MODEL')
+    },
+    'VECTORSTORE_TOP_K': {
+        'value': os.environ.get('VECTORSTORE_TOP_K')
+    },
+    'OPENAI_TIMEOUT_SECONDS': {
+        'value': os.environ.get('OPENAI_TIMEOUT_SECONDS')
+    },
+    'MAX_DOCS_TOKENS': {
+        'value': os.environ.get('MAX_DOCS_TOKENS')
+    },
+    'MAX_DOCS_USED': {
+        'value': os.environ.get('MAX_DOCS_USED')
+    },
+    'MAX_RESPONSE_TOKENS': {
+        'value': os.environ.get('MAX_RESPONSE_TOKENS')
+    },
+    'SELECT_OPERATIONID_LLM_MODEL': {
+        'value': os.environ.get('SELECT_OPERATIONID_LLM_MODEL')
+    },
+    'CREATE_FUNCTION_LLM_MODEL': {
+        'value': os.environ.get('CREATE_FUNCTION_LLM_MODEL')
+    },
+    'POPULATE_FUNCTION_LLM_MODEL': {
+        'value': os.environ.get('POPULATE_FUNCTION_LLM_MODEL')
+    },
+    'TIKTOKEN_ENCODING_MODEL': {
+        'value': os.environ.get('TIKTOKEN_ENCODING_MODEL')
+    },
+    'PROMPT_TEMPLATE_PATH': {
+        'value': os.environ.get('PROMPT_TEMPLATE_PATH')
+    },
+    'API_SPEC_PATH': {
+        'value': os.environ.get('API_SPEC_PATH')
     }
 })
 

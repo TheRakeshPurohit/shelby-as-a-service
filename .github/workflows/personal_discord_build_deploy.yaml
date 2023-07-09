@@ -16,6 +16,7 @@ jobs:
             DISCORD_TOKEN: ${{ secrets.PERSONAL_SPRITE_DISCORD_TOKEN }}
             DISCORD_CHANNEL_ID: ${{ secrets.PERSONAL_SPRITE_DISCORD_CHANNEL_ID }}
 
+            # Public configs
             DOCKER_USERNAME: shelbyjenkins
             DOCKER_REGISTRY: docker.io
             DOCKER_SERVER: docker.io/shelbyjenkins/shelby-as-a-service
@@ -23,12 +24,14 @@ jobs:
 
             STACKPATH_STACK_ID: shelby-stack-327b67
 
+            # Configs that may change based on deployment type
             TYPE: discord
             WORKLOAD_NAME: shelby-as-a-service-personal-discord-sprite
             WORKLOAD_SLUG: personal-discord-sprite
-            VECTORSTORE_INDEX: shelby-as-a-service
-            VECTORSTORE_NAMESPACES: '{"tatum": "blockchain and web3", "deepgram": "ai speech to text services"}'
 
+            # Configs to be loaded into container env to overide config_agent
+            VECTORSTORE_INDEX: shelby-as-a-service
+            VECTORSTORE_NAMESPACES: '{"tatum": "blockchain and web3", "deepgram": "ai speech to text services"}'               
             ACTION_LLM_MODEL: gpt-4
             QUERY_LLM_MODEL: gpt-4
             VECTORSTORE_TOP_K: 3
