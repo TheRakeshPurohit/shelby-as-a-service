@@ -12,6 +12,13 @@ from configuration.shelby_agent_config import AppConfig
 def generate_workflow():
     agent_config = AppConfig()
     
+    if agent_config.TYPE == 'discord':
+        kvp_1 = f'DISCORD_TOKEN: ${{{{ secrets.{agent_config.NAME.upper()}_SPRITE_DISCORD_TOKEN }}}}'
+        kvp_2 = f'DISCORD_CHANNEL_ID: ${{{{ secrets.{agent_config.NAME.upper()}_SPRITE_DISCORD_CHANNEL_ID }}}}'
+    elif agent_config.TYPE == 'slack':
+        kvp_1 = f'SLACK_BOT_TOKEN: ${{{{ secrets.{agent_config.NAME.upper()}_SPRITE_SLACK_BOT_TOKEN }}}}'
+        kvp_2 = f'SLACK_APP_TOKEN: ${{{{ secrets.{agent_config.NAME.upper()}_SPRITE_SLACK_APP_TOKEN }}}}'
+        
     # Creates Github action workflow
     github_actions_script = textwrap.dedent(f"""\
     name: {agent_config.GITHUB_ACTION_WORKFLOW_NAME}
@@ -28,8 +35,9 @@ def generate_workflow():
                 OPENAI_API_KEY: ${{{{ secrets.OPENAI_API_KEY }}}}
                 PINECONE_API_KEY: ${{{{ secrets.PINECONE_API_KEY }}}}
                 DOCKER_TOKEN: ${{{{ secrets.DOCKER_TOKEN }}}}
-                DISCORD_TOKEN: ${{{{ secrets.{agent_config.NAME.upper()}_SPRITE_DISCORD_TOKEN }}}}
-                DISCORD_CHANNEL_ID: ${{{{ secrets.{agent_config.NAME.upper()}_SPRITE_DISCORD_CHANNEL_ID }}}}
+                
+                {kvp_1}
+                {kvp_2}
                 
                 DOCKER_USERNAME: {agent_config.DOCKER_USERNAME}
                 DOCKER_REGISTRY: {agent_config.DOCKER_REGISTRY}
@@ -57,7 +65,7 @@ def generate_workflow():
                 TIKTOKEN_ENCODING_MODEL: {agent_config.tiktoken_encoding_model}
                 PROMPT_TEMPLATE_PATH: {agent_config.prompt_template_path}
                 API_SPEC_PATH: {agent_config.API_spec_path}
-            
+    
             steps:
                 - name: Checkout code
                   uses: actions/checkout@v3

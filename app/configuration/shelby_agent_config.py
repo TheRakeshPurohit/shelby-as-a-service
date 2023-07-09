@@ -19,6 +19,7 @@ class AppConfig(BaseModel):
     NAME: str = 'personal' # lowercase
     # Set sprite type to deploy. "discord" or "slack"
     TYPE: str = 'discord' # lowercase
+    # TYPE: str = 'slack' # lowercase
     DOCKER_REGISTRY: str = 'docker.io'
     DOCKER_USERNAME: str = 'shelbyjenkins'
     DOCKER_REPO: str = 'shelby-as-a-service'
