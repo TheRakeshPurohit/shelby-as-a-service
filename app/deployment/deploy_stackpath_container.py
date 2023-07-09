@@ -103,7 +103,7 @@ config['payload']['workload']['spec']['containers']['webserver']['env'].update({
         'value': os.environ.get('VECTORSTORE_INDEX')
     },
     'VECTORSTORE_NAMESPACES': {
-        'value': json.dumps(os.environ.get('VECTORSTORE_NAMESPACES'))
+        'value': os.environ.get('VECTORSTORE_NAMESPACES')
     },
     'ACTION_LLM_MODEL': {
         'value': os.environ.get('ACTION_LLM_MODEL')
