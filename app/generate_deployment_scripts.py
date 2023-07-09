@@ -97,10 +97,10 @@ def generate_workflow():
                       tags: {agent_config.DOCKER_IMAGE_PATH}
 
                 - name: Add execute permissions to the script
-                  run: chmod +x deploy_stackpath_container.py
+                  run: chmod +x app/deployment/deploy_stackpath_container.py
 
                 - name: Run deployment script
-                  run: deploy_stackpath_container.py
+                  run: app/deployment/deploy_stackpath_container.py
     """)
     
     os.makedirs('.github/workflows', exist_ok=True)
