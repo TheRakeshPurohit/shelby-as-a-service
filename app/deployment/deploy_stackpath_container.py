@@ -4,7 +4,7 @@ import requests
 import os 
 import json
 from dotenv import load_dotenv
-from app.agents.logger_agent import LoggerAgent
+from agents.logger_agent import LoggerAgent
 
 load_dotenv() 
 
