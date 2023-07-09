@@ -17,7 +17,6 @@
                 ],
                 "containers": {
                     "webserver": {
-                        "image": "shelbyjenkins/shelby-as-a-service:discord-latest",
                         "command": [],
                         "ports": {},
                         "resources": {
@@ -31,8 +30,6 @@
                 "imagePullCredentials": [
                     {
                     "dockerRegistry": {
-                        "username": "shelbyjenkins",
-                        "server": "docker.io/shelbyjenkins/shelby-as-a-service"
                         }
                     }
                 ]
