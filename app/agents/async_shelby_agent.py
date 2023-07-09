@@ -130,8 +130,12 @@ class ShelbyAgent:
             with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_topic_prompt_template.yaml'), 'r') as stream:
                 prompt_template = yaml.safe_load(stream)
 
-            # Create a list of formatted strings, each with the format "index. key: value"
-            content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.agent_config.vectorstore_namespaces.items())]
+           # Create a list of formatted strings, each with the format "index. key: value"
+            if isinstance(self.agent_config.vectorstore_namespaces, dict):
+                content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.agent_config.vectorstore_namespaces.items())]
+            else:
+                self.log_agent.print_and_log(f"An error occured accessing vectorstore_namespaces {self.agent_config.vectorstore_namespaces}")
+
 
             # Join the strings together with spaces between them
             topics_str = " ".join(content_strs)
