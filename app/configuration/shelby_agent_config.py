@@ -57,7 +57,7 @@ class AppConfig(BaseModel):
     DOCKER_SERVER: str = f'docker.io/{DOCKER_USERNAME}/{DOCKER_REPO}'
     DOCKER_IMAGE_PATH: str = f'{DOCKER_USERNAME}/{DOCKER_REPO}:{NAME}-latest'
     GITHUB_ACTION_WORKFLOW_NAME: str = f'{NAME.lower()}_{TYPE.lower()}_build_deploy'
-    WORKLOAD_NAME: str = f'{NAME.lower()}-{TYPE.lower()}-sprite'
+    WORKLOAD_NAME: str = f'shelby-as-a-service-{NAME.lower()}-{TYPE.lower()}-sprite'
     WORKLOAD_SLUG: str = f'{NAME.lower()}-{TYPE.lower()}-sprite'
     
     # Don't touch these

@@ -23,7 +23,7 @@ jobs:
             STACKPATH_STACK_ID: shelby-stack-327b67
 
             TYPE: discord
-            WORKLOAD_NAME: personal-discord-sprite
+            WORKLOAD_NAME: shelby-as-a-service-personal-discord-sprite
             WORKLOAD_SLUG: personal-discord-sprite
             VECTORSTORE_INDEX: shelby-as-a-service
             VECTORSTORE_NAMESPACES: '{"tatum": "blockchain and web3", "deepgram": "ai speech to text services"}'
