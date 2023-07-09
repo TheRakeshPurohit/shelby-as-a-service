@@ -18,7 +18,7 @@ jobs:
             DOCKER_USERNAME: shelbyjenkins
             DOCKER_REGISTRY: docker.io
             DOCKER_SERVER: docker.io/shelbyjenkins/shelby-as-a-service
-            DOCKER_IMAGE_PATH: shelbyjenkins/shelby-as-a-service:personal-latest
+            DOCKER_IMAGE_PATH: shelbyjenkins/shelby-as-a-service:discord-latest
 
             STACKPATH_STACK_ID: shelby-stack-327b67
 
@@ -78,7 +78,7 @@ jobs:
                   context: .
                   file: app/deployment/discord/Dockerfile
                   push: true
-                  tags: shelbyjenkins/shelby-as-a-service:personal-latest
+                  tags: shelbyjenkins/shelby-as-a-service:discord-latest
 
             - name: Add execute permissions to the script
               run: chmod +x app/deployment/deploy_stackpath_container.py

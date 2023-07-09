@@ -24,8 +24,6 @@ class AppConfig(BaseModel):
     DOCKER_REPO: str = 'shelby-as-a-service'
     STACKPATH_STACK_ID: str = 'shelby-stack-327b67'
     
-    
-    
     # Docs config. Will generate with automation. For now enter manually.
     namespaces_manual_input: Dict[str, str] = {
         "tatum": "blockchain and web3", 
@@ -55,7 +53,7 @@ class AppConfig(BaseModel):
     
     # This is set with automation
     DOCKER_SERVER: str = f'docker.io/{DOCKER_USERNAME}/{DOCKER_REPO}'
-    DOCKER_IMAGE_PATH: str = f'{DOCKER_USERNAME}/{DOCKER_REPO}:{NAME}-latest'
+    DOCKER_IMAGE_PATH: str = f'{DOCKER_USERNAME}/{DOCKER_REPO}:{TYPE}-latest'
     GITHUB_ACTION_WORKFLOW_NAME: str = f'{NAME.lower()}_{TYPE.lower()}_build_deploy'
     WORKLOAD_NAME: str = f'shelby-as-a-service-{NAME.lower()}-{TYPE.lower()}-sprite'
     WORKLOAD_SLUG: str = f'{NAME.lower()}-{TYPE.lower()}-sprite'
