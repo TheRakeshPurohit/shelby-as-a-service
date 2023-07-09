@@ -3,8 +3,10 @@
 import requests
 import os 
 import json
+import sys
 from dotenv import load_dotenv
-from agents.logger_agent import LoggerAgent
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from app.agents.logger_agent import LoggerAgent
 
 load_dotenv() 
 
