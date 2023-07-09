@@ -72,14 +72,14 @@ def generate_workflow():
                   id: cache
                   with:
                       path: ~/.cache/pip
-                      key: ${{{{  runner.os }}}}-pip-${{{{  hashFiles('**/requirements.txt') }}}}
+                      key: ${{{{  runner.os }}}}-pip-${{{{  hashFiles('**/app/deployment/{agent_config.TYPE}/{agent_config.TYPE}_requirements.txt') }}}}
                       restore-keys: |
                           ${{{{  runner.os }}}}-pip-
 
                 - name: Install dependencies
                   run: |
                       python -m pip install --upgrade pip
-                      if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                      if [ -f app/deployment/{agent_config.TYPE}/{agent_config.TYPE}_requirements.txt ]; then pip install -r app/deployment/{agent_config.TYPE}/{agent_config.TYPE}_requirements.txt; fi
 
                 - name: Login to Docker registry
                   uses: docker/login-action@v2 
@@ -119,7 +119,7 @@ def generate_workflow():
         COPY ./ ./ 
 
         # Install python packages
-        RUN pip install --no-cache-dir -r requirements.txt
+        RUN pip install --no-cache-dir -r app/deployment/{agent_config.TYPE}/{agent_config.TYPE}_requirements.txt
 
         CMD ["python", "app/{agent_config.TYPE}_sprite.py"]
     """)

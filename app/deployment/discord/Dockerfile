@@ -8,6 +8,6 @@ WORKDIR /shelby-as-a-service
 COPY ./ ./ 
 
 # Install python packages
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r app/deployment/discord/discord_requirements.txt
 
 CMD ["python", "app/discord_sprite.py"]
