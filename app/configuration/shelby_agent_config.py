@@ -105,16 +105,17 @@ class AppConfig():
 
         match deployment_target:
             case 'discord':
-                self.discord_token: str = os.getenv(f'{self.service_name.upper()}_SPRITE_DISCORD_TOKEN') 
-                self.discord_channel_id: str = os.getenv(f'{self.service_name.upper()}_SPRITE_DISCORD_CHANNEL_ID')
+                self.discord_token: str = os.getenv('DISCORD_TOKEN') 
+                self.discord_channel_id: str = os.getenv('DISCORD_CHANNEL_ID')
+                # "" are required for formating in github actions workflow, but they need to be removed for use by discord sprite
                 self.discord_welcome_message: str = os.getenv('DISCORD_WELCOME_MESSAGE', self.deployment_config.discord_welcome_message).strip('"')
                 self.discord_short_message: str = os.getenv('DISCORD_SHORT_MESSAGE', self.deployment_config.discord_short_message).strip('"')
                 self.discord_message_start: str = os.getenv('DISCORD_MESSAGE_START', self.deployment_config.discord_message_start).strip('"')
                 self.discord_message_end: str = os.getenv('DISCORD_MESSAGE_END', self.deployment_config.discord_message_end).strip('"')
             
             case 'slack':
-                self.SLACK_BOT_TOKEN: str = os.getenv(f'{self.service_name.upper()}_SPRITE_SLACK_BOT_TOKEN') 
-                self.SLACK_APP_TOKEN: str = os.getenv(f'{self.service_name.upper()}_SPRITE_SLACK_APP_TOKEN') 
+                self.slack_bot_token: str = os.getenv('SLACK_BOT_TOKEN') 
+                self.slack_app_token: str = os.getenv('SLACK_APP_TOKEN') 
 
         # ActionAgent
         self.action_llm_model: str = os.getenv('ACTION_LLM_MODEL', self.deployment_config.action_llm_model)
