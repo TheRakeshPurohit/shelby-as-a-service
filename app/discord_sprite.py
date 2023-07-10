@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 log_agent = LoggerAgent('discord_sprite', 'discord_sprite.log', level='INFO')
-agent_config = AppConfig() 
+agent_config = AppConfig('discord') 
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -24,23 +24,23 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), intents=inten
 # This prevents the bot from being added to servers that aren't approved
 @bot.event
 async def on_guild_join(guild):
-    if not any(channel.id == int(os.getenv('DISCORD_CHANNEL_ID')) for channel in guild.channels):
+    if not any(channel.id == int(agent_config.discord_channel_id) for channel in guild.channels):
             log_agent.print_and_log(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
             await guild.leave()
-    channel = bot.get_channel(int(os.getenv('DISCORD_CHANNEL_ID')))
+    channel = bot.get_channel(int(agent_config.discord_channel_id))
     await channel.send(format_message(agent_config.discord_welcome_message, get_random_animal()))
             
 # App start up actions
 @bot.event
 async def on_ready():
     for guild in bot.guilds:
-        if not any(channel.id == int(os.getenv('DISCORD_CHANNEL_ID')) for channel in guild.channels):
+        if not any(channel.id == int(agent_config.discord_channel_id) for channel in guild.channels):
             log_agent.print_and_log(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
             await guild.leave()
         
     log_agent.print_and_log(f'Bot has logged in as {bot.user.name} (ID: {bot.user.id})')
     log_agent.print_and_log('------')
-    channel = bot.get_channel(int(os.getenv('DISCORD_CHANNEL_ID')))
+    channel = bot.get_channel(int(agent_config.discord_channel_id))
 
     await channel.send(format_message(agent_config.discord_welcome_message, get_random_animal()))
 
@@ -57,7 +57,7 @@ async def on_message(message):
             await message.channel.send(f'No, I will not tell you about the rabbits, <@{message.author.id}>,.')
             return
         # Must be in the approved channel
-        if message.channel.id != int(os.getenv('DISCORD_CHANNEL_ID')):
+        if message.channel.id != int(agent_config.discord_channel_id):
             return
         
         request = message.content.replace(f'<@{bot.user.id}>', '').strip()
@@ -85,7 +85,7 @@ async def on_message(message):
         if isinstance(request_response, dict) and 'answer_text' in request_response:
             parsed_reponse = parse_discord_markdown(request_response)
             await thread.send(parsed_reponse)
-            await thread.send(format_message(agent_config.discord_message_end, request_response['llm']))
+            await thread.send(agent_config.discord_message_end)
             log_agent.print_and_log(f'Parsed output: {parsed_reponse})')
         else:
             await thread.send(request_response)
@@ -122,8 +122,8 @@ def format_message(template, var=None):
 
 
 if __name__ == "__main__":
-    agent = ShelbyAgent()
+    agent = ShelbyAgent('discord')
     # Runs the bot through the asyncio.run() function built into the library
-    bot.run(os.getenv('DISCORD_TOKEN'))
+    bot.run(agent_config.discord_token)
 
 

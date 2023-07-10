@@ -186,6 +186,6 @@ async def main():
     await handler.start_async()
 
 if __name__ == "__main__":
-    agent = ShelbyAgent()
+    agent = ShelbyAgent('slack')
     asyncio.run(main())
     

@@ -17,11 +17,11 @@ from configuration.shelby_agent_config import AppConfig
 #endregion
 
 class ShelbyAgent:
-    def __init__(self):
+    def __init__(self, deployment_target):
         load_dotenv()
         openai.api_key = os.getenv("OPENAI_API_KEY")
         self.log_agent = LoggerAgent('ShelbyAgent', 'ShelbyAgent.log', level='INFO')
-        self.agent_config = AppConfig() 
+        self.agent_config = AppConfig(deployment_target) 
         self.action_agent = self.ActionAgent(self.log_agent, self.agent_config)
         self.query_agent = self.QueryAgent(self.log_agent, self.agent_config)
         self.API_agent = self.APIAgent(self.log_agent, self.agent_config)

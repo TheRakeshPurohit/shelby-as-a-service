@@ -6,29 +6,33 @@ jobs:
     docker:
         runs-on: ubuntu-latest
         env:
-            # Required github secrets
+            ### Services ###
+            DOCKER_USERNAME: shelbyjenkins
+            DOCKER_REGISTRY: docker.io
+            DOCKER_SERVER: docker.io/shelbyjenkins/shelby-as-a-service
+            DOCKER_IMAGE_PATH: shelbyjenkins/shelby-as-a-service:slack-latest
+            STACKPATH_STACK_ID: shelby-stack-327b67
+
+            ### Services Secrets to be added to github secrets ###
             STACKPATH_CLIENT_ID: ${{ secrets.STACKPATH_CLIENT_ID }}
             STACKPATH_API_CLIENT_SECRET: ${{ secrets.STACKPATH_API_CLIENT_SECRET }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
             PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
             DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
+
             SLACK_BOT_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_BOT_TOKEN }}
             SLACK_APP_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_APP_TOKEN }}
 
-            DOCKER_USERNAME: shelbyjenkins
-            DOCKER_REGISTRY: docker.io
-            DOCKER_SERVER: docker.io/shelbyjenkins/shelby-as-a-service
-            DOCKER_IMAGE_PATH: shelbyjenkins/shelby-as-a-service:slack-latest
 
-            STACKPATH_STACK_ID: shelby-stack-327b67
-
-            TYPE: slack
+            # Configs that may change based on deployment_target
+            DEPLOYMENT_TARGET: slack
             WORKLOAD_NAME: shelby-as-a-service-personal-slack-sprite
             WORKLOAD_SLUG: personal-slack-sprite
-            VECTORSTORE_INDEX: shelby-as-a-service
-            VECTORSTORE_NAMESPACES: '{"tatum": "blockchain and web3", "deepgram": "ai speech to text services"}'
 
+            # Configs to be loaded into container env to overide config_agent
+            VECTORSTORE_INDEX: shelby-as-a-service
+            VECTORSTORE_NAMESPACES: '{"tatum": "blockchain and web3", "deepgram": "ai speech to text services"}'               
             ACTION_LLM_MODEL: gpt-4
             QUERY_LLM_MODEL: gpt-4
             VECTORSTORE_TOP_K: 3
@@ -39,9 +43,6 @@ jobs:
             SELECT_OPERATIONID_LLM_MODEL: gpt-4
             CREATE_FUNCTION_LLM_MODEL: gpt-4
             POPULATE_FUNCTION_LLM_MODEL: gpt-4
-            TIKTOKEN_ENCODING_MODEL: text-embedding-ada-002
-            PROMPT_TEMPLATE_PATH: app/prompt_templates/
-            API_SPEC_PATH: data/minified_openAPI_specs/
 
         steps:
             - name: Checkout code

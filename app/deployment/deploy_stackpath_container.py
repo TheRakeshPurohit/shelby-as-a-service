@@ -12,7 +12,7 @@ load_dotenv()
 
 log_agent = LoggerAgent('deploy_agent', 'deploy_agent.log', level='INFO')
 
-TYPE = os.environ.get('TYPE')
+DEPLOYMENT_TARGET = os.environ.get('DEPLOYMENT_TARGET')
 
 url = "https://gateway.stackpath.com/identity/v1/oauth2/token"
 
@@ -70,7 +70,7 @@ config['payload']['workload']['spec']['imagePullCredentials'][0]['dockerRegistry
 config['payload']['workload']['name'] = os.environ.get('WORKLOAD_NAME').lower()
 config['payload']['workload']['slug'] = os.environ.get('WORKLOAD_SLUG').lower()
 
-match TYPE:
+match DEPLOYMENT_TARGET:
             case 'discord':
                 config['payload']['workload']['spec']['containers']['webserver']['env'] = {
                     'DISCORD_TOKEN': {
@@ -78,6 +78,18 @@ match TYPE:
                     },
                     'DISCORD_CHANNEL_ID': {
                         'value': os.environ.get('DISCORD_CHANNEL_ID')
+                    },
+                    'DISCORD_WELCOME_MESSAGE': {
+                        'value': os.environ.get('DISCORD_WELCOME_MESSAGE')
+                    },
+                    'DISCORD_SHORT_MESSAGE': {
+                        'value': os.environ.get('DISCORD_SHORT_MESSAGE')
+                    },
+                    'DISCORD_MESSAGE_START': {
+                        'value': os.environ.get('DISCORD_MESSAGE_START')
+                    },
+                    'DISCORD_MESSAGE_END': {
+                        'value': os.environ.get('DISCORD_MESSAGE_END')
                     }
                 }
             case 'slack':
