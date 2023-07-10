@@ -19,11 +19,11 @@ class AppConfig(BaseModel):
     NAME: str = 'personal' # lowercase
     # Set sprite type to deploy. "discord" or "slack"
     TYPE: str = 'discord' # lowercase
-    # TYPE: str = 'slack' # lowercase
     DOCKER_REGISTRY: str = 'docker.io'
     DOCKER_USERNAME: str = 'shelbyjenkins'
     DOCKER_REPO: str = 'shelby-as-a-service'
     STACKPATH_STACK_ID: str = 'shelby-stack-327b67'
+    vectorstore_index: str = 'shelby-as-a-service'
     
     # Docs config. Will generate with automation. For now enter manually.
     namespaces_manual_input: Dict[str, str] = {
@@ -39,6 +39,7 @@ class AppConfig(BaseModel):
 
     
     # These will be pushed into the container env from the github actions workflow overriding the agent_config in the repo
+    
     # ActionAgent
     action_llm_model: str = os.getenv('ACTION_LLM_MODEL', 'gpt-4')
     
@@ -50,26 +51,43 @@ class AppConfig(BaseModel):
         
     query_llm_model: str = os.getenv('QUERY_LLM_MODEL', 'gpt-4')
     vectorstore_top_k: int = int(os.getenv('VECTORSTORE_TOP_K', 3))
-    vectorstore_index: str = os.getenv('VECTORSTORE_INDEX', 'shelby-as-a-service')
     vectorstore_environment: str = os.getenv('VECTORSTORE_ENVIRONMENT', 'us-central1-gcp')
     max_docs_tokens: int = int(os.getenv('MAX_DOCS_TOKENS', 5000))
     max_docs_used: int = int(os.getenv('MAX_DOCS_USED', 3))
     max_response_tokens: int = int(os.getenv('MAX_RESPONSE_TOKENS', 300))
     openai_timeout_seconds: float = float(os.getenv('OPENAI_TIMEOUT_SECONDS', 180.0))
+    
     # APIAgent
     select_operationID_llm_model: str = os.getenv('SELECT_OPERATIONID_LLM_MODEL', 'gpt-4')
     create_function_llm_model: str = os.getenv('CREATE_FUNCTION_LLM_MODEL', 'gpt-4')
     populate_function_llm_model: str = os.getenv('POPULATE_FUNCTION_LLM_MODEL', 'gpt-4')
     
-    # This is set with automation
+    # IndexAgent
+    preprocessor_separators: Optional[str] = None
+    embedding_model: Optional[str] = "text-embedding-ada-002"
+    embedding_max_chunk_size: int = 8191
+    embedding_batch_size: int = 8
+    vectorstore_dimension: int = 1536
+    vectorstore_upsert_batch_size: int = 10
+    vectorstore_metric: str = "dotproduct"
+    vectorstore_pod_type: str = "p1"
+    preprocessor_min_length: int = 300
+    text_splitter_goal_length: int = 1500
+    text_splitter_max_length: int = 2500
+    text_splitter_chunk_overlap: int = 100
+    indexed_metadata: list[str] = ["data_source", "doc_type", "target_type"]
+    
+    # Don't touch these
+    tiktoken_encoding_model: Optional[str] = 'text-embedding-ada-002'
+    prompt_template_path: Optional[str] = os.getenv('PROMPT_TEMPLATE_PATH', 'app/prompt_templates/')
+    API_spec_path: str = os.getenv('API_SPEC_PATH', 'data/minified_openAPI_specs/')
+    
+    # For deployment
     DOCKER_SERVER: str = f'docker.io/{DOCKER_USERNAME}/{DOCKER_REPO}'
     DOCKER_IMAGE_PATH: str = f'{DOCKER_USERNAME}/{DOCKER_REPO}:{TYPE}-latest'
     GITHUB_ACTION_WORKFLOW_NAME: str = f'{NAME.lower()}_{TYPE.lower()}_build_deploy'
     WORKLOAD_NAME: str = f'shelby-as-a-service-{NAME.lower()}-{TYPE.lower()}-sprite'
     WORKLOAD_SLUG: str = f'{NAME.lower()}-{TYPE.lower()}-sprite'
     
-    # Don't touch these
-    tiktoken_encoding_model: Optional[str] = os.getenv('TIKTOKEN_ENCODING_MODEL', 'text-embedding-ada-002')
-    prompt_template_path: Optional[str] = os.getenv('PROMPT_TEMPLATE_PATH', 'app/prompt_templates/')
-    API_spec_path: str = os.getenv('API_SPEC_PATH', 'data/minified_openAPI_specs/')
+    
     

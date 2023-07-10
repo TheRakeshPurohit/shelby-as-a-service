@@ -2,19 +2,18 @@
 import os
 import json
 import openai
-import logging
 import traceback
 import asyncio
+import yaml
 from concurrent.futures import ThreadPoolExecutor
-from agents.logger_agent import LoggerAgent
-import pinecone
+import re
 from dotenv import load_dotenv
 import tiktoken
-import re
-from configuration.shelby_agent_config import AppConfig
 from langchain.embeddings import OpenAIEmbeddings
-import yaml
+import pinecone
 from pinecone_text.sparse import BM25Encoder
+from agents.logger_agent import LoggerAgent
+from configuration.shelby_agent_config import AppConfig
 #endregion
 
 class ShelbyAgent:

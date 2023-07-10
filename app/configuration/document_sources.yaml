@@ -1,0 +1,48 @@
+deepgram:
+  resources:
+    "developers.deepgram.com/reference":
+      enabled: True
+      load_all_paths: True
+      target_url: "https://developers.deepgram.com/sitemap.xml"
+      filter_url: "https://developers.deepgram.com/reference/"
+      target_type: "sitemap"
+      doc_type: "hard"
+    "developers.deepgram.com/docs":
+      enabled: True
+      load_all_paths: True
+      target_url: "https://developers.deepgram.com/sitemap.xml"
+      filter_url: "https://developers.deepgram.com/docs/"
+      target_type: "sitemap"
+      doc_type: "soft"
+tatum:
+  resources:
+    "docs.tatum.com":
+      enabled: True
+      load_all_paths: True
+      target_url: "https://docs.tatum.com"
+      target_type: "gitbook"
+      doc_type: "soft"
+    "docs.tatum.io":
+      enabled: False
+      load_all_paths: True
+      target_url: "https://docs.tatum.io"
+      target_type: "gitbook"
+      doc_type: "soft"
+    "tatum.com/blog":
+      enabled: False
+      load_all_paths: True
+      target_url: "https://tatum.com/blog"
+      target_type: ""
+      doc_type: "soft"
+    "api.tatum.io":
+      enabled: True
+      load_all_paths: True
+      target_url: "https://apidoc.tatum.io"
+      target_type: "local"
+      doc_type: "hard"
+    "github.com/tatumio/tatum-js":
+      enabled: False
+      load_all_paths: True
+      target_url: "https://github.com/tatumio/tatum-js"
+      target_type: ""
+      doc_type: "hard"
