@@ -460,12 +460,11 @@ class ShelbyAgent:
             parsed_documents = self.parse_documents(returned_documents)
             
             prompt = self.docs_prompt_template(query, parsed_documents)
-
+            self.log_agent.print_and_log(f'Sending prompt: {prompt}')
             llm_response = self.docs_prompt_llm(prompt)
+            self.log_agent.print_and_log(f'LLM response: {llm_response}')
             
             response = self.append_meta(llm_response, parsed_documents)
-            
-            
             
             return response
     

@@ -45,9 +45,9 @@ class DeploymentConfig(BaseModel):
     
     # QueryAgent
     query_llm_model: str = 'gpt-4'
-    vectorstore_top_k: int = 3
-    max_docs_tokens: int = 5000
-    max_docs_used: int = 3
+    vectorstore_top_k: int = 6
+    max_docs_tokens: int = 4000
+    max_docs_used: int = 6
     max_response_tokens: int = 300
     openai_timeout_seconds: float = 180.0
     

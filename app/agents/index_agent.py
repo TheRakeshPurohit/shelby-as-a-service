@@ -408,6 +408,8 @@ class OpenAPIPreProcessor:
         text_as_chunks = []
     
         for document in documents:
+            if self._tiktoken_len(document.get('content')) > 3000:
+                continue
             document_chunk, text_chunk = self.append_metadata(document)
             documents_as_chunks.append(document_chunk)
             text_as_chunks.append(text_chunk.lower())
@@ -430,7 +432,7 @@ class OpenAPIPreProcessor:
 
         # Document chunks are the metadata uploaded to vectorstore
         document_chunk = {
-                    "content": yaml.dump(document), 
+                    "content": document.get('content'), 
                     "url": document.get('metadata').get('doc_url'),
                     "title": document.get('metadata').get('operation_id'),
                     "resource_name": self.data_source_config.resource_name,
@@ -438,7 +440,7 @@ class OpenAPIPreProcessor:
                     "doc_type": self.data_source_config.doc_type
                     }
 
-        return document_chunk, yaml.dump(document)
+        return document_chunk, document.get('content')
     
     def _tiktoken_len(self, text):
         tokens = self.tokenizer.encode(

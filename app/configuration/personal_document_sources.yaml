@@ -23,7 +23,7 @@ tatum:
       target_type: "gitbook"
       doc_type: "soft"
     "docs.tatum.io":
-      enabled: True
+      enabled: False
       load_all_paths: True
       target_url: "https://docs.tatum.io"
       target_type: "gitbook"
@@ -37,7 +37,7 @@ stackpath:
   description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
   resources:
     "stackpath.dev/docs":
-      enabled: True
+      enabled: False
       target_url: "https://stackpath.dev/docs"
       target_type: "generic"
       doc_type: "soft"
