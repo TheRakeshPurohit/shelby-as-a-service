@@ -3,8 +3,7 @@ import logging
 
 class LoggerAgent:
     def __init__(self, logger_name, log_file, level='INFO'):
-        log_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(os.path.dirname(log_dir), 'logs')
+        log_dir = 'outputs/logs'
         os.makedirs(log_dir, exist_ok=True)
 
         self.logger = logging.getLogger(logger_name)

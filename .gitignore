@@ -5,3 +5,4 @@ logs/
 .devcontainer/
 .vscode/
 **/__pycache__/
+outputs/

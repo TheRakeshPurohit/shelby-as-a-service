@@ -1,23 +1,25 @@
 deepgram:
+  description: "ai speech to text services"
   resources:
     "developers.deepgram.com/reference":
-      enabled: True
+      enabled: False
       load_all_paths: True
       target_url: "https://developers.deepgram.com/sitemap.xml"
       filter_url: "https://developers.deepgram.com/reference/"
       target_type: "sitemap"
       doc_type: "hard"
     "developers.deepgram.com/docs":
-      enabled: True
+      enabled: False
       load_all_paths: True
       target_url: "https://developers.deepgram.com/sitemap.xml"
       filter_url: "https://developers.deepgram.com/docs/"
       target_type: "sitemap"
       doc_type: "soft"
 tatum:
+  description: "blockchain and web3"
   resources:
     "docs.tatum.com":
-      enabled: True
+      enabled: False
       load_all_paths: True
       target_url: "https://docs.tatum.com"
       target_type: "gitbook"
@@ -35,7 +37,7 @@ tatum:
       target_type: ""
       doc_type: "soft"
     "api.tatum.io":
-      enabled: True
+      enabled: False
       load_all_paths: True
       target_url: "https://apidoc.tatum.io"
       target_type: "local"
@@ -46,3 +48,27 @@ tatum:
       target_url: "https://github.com/tatumio/tatum-js"
       target_type: ""
       doc_type: "hard"
+stackpath:
+  description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
+  resources:
+    "stackpath.dev/docs":
+        enabled: True
+        load_all_paths: True
+        target_url: "https://stackpath.dev/docs"
+        filter_url: "None"
+        target_type: "generic"
+        doc_type: "soft"
+    "stackpath.dev/reference":
+        enabled: False
+        load_all_paths: True
+        target_url: "https://stackpath.dev/reference"
+        filter_url: "None"
+        target_type: "generic"
+        doc_type: "hard"
+    # "stackpath.dev/support":
+    #     enabled: True
+    #     load_all_paths: True
+    #     target_url: "https://stackpath.dev/reference"
+    #     filter_url: "https://stackpath.dev/docs/"
+    #     target_type: "generic"
+    #     doc_type: "hard"

@@ -59,10 +59,10 @@ def generate_workflow(deployment_target):
                 DEPLOYMENT_TARGET: {app_config.deployment_target}
                 WORKLOAD_NAME: {app_config.workload_name}
                 WORKLOAD_SLUG: {app_config.workload_slug}
+                VECTORSTORE_NAMESPACES: {repr(json.dumps(app_config.vectorstore_namespaces))}               
                 
                 # Configs to be loaded into container env to overide config_agent
                 VECTORSTORE_INDEX: {deployment_config.vectorstore_index}
-                VECTORSTORE_NAMESPACES: {repr(json.dumps(app_config.vectorstore_namespaces))}               
                 ACTION_LLM_MODEL: {deployment_config.action_llm_model}
                 QUERY_LLM_MODEL: {deployment_config.query_llm_model}
                 VECTORSTORE_TOP_K: {deployment_config.vectorstore_top_k}
