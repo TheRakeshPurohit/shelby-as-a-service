@@ -2,7 +2,8 @@
 shelby-as-a-service.code-workspace
 installed_packages.txt
 logs/
-.devcontainer/
 .vscode/
 **/__pycache__/
 outputs/
+LLM-OpenAPI-minifier/
+langchain/

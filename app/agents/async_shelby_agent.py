@@ -450,7 +450,6 @@ class ShelbyAgent:
         def run_context_enriched_query(self, query, topic):
             
             dense_embedding, sparse_embedding = self.get_query_embeddings(query)
-
             returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, topic)
 
             if not returned_documents:

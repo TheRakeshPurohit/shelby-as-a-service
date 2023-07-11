@@ -1,13 +1,11 @@
 # region Imports
 import os
 from typing import List, Union, Iterator
-import re
-import string
-import yaml
+import re, string
+import yaml, json
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-
 from langchain.schema import Document
 from langchain.document_loaders import GitbookLoader, SitemapLoader, RecursiveUrlLoader
 from langchain.text_splitter import BalancedRecursiveCharacterTextSplitter
@@ -18,7 +16,6 @@ import pinecone
 
 from agents.logger_agent import LoggerAgent
 from configuration.shelby_agent_config import AppConfig
-
 # endregion
 
 class IndexAgent:
@@ -27,7 +24,7 @@ class IndexAgent:
         self.log_agent = LoggerAgent('IndexAgent', 'IndexAgent.log', level='INFO')
         self.agent_config = AppConfig() 
         # Loads data sources from file
-        with open('app/configuration/document_sources.yaml', 'r') as stream:
+        with open(self.agent_config.document_sources_filepath, 'r') as stream:
             try:
                 self.data_source_config = yaml.safe_load(stream)
             except yaml.YAMLError as e:
@@ -37,31 +34,39 @@ class IndexAgent:
             environment=self.agent_config.vectorstore_environment,
             api_key=self.agent_config.pinecone_api_key, 
         )
+        indexes = pinecone.list_indexes()
+        if self.agent_config.vectorstore_index not in indexes:
+            # create new index
+            response = self.create_index()
+            self.log_agent.print_and_log(f"Created index: {response}")
+            
         self.vectorstore = pinecone.Index(self.agent_config.vectorstore_index)
         stats = self.vectorstore.describe_index_stats()
         self.log_agent.print_and_log(stats)
         
         self.document_sources_resources = []
-        # Iterate over each "name"
+        # Iterate over each source aka namespace
         for namespace, resources_dict in self.data_source_config.items():
-            # Then iterate over each resource for that "name"
+            # Then iterate over each resource within a source
             for resource_name, resource_content in resources_dict['resources'].items():
                 try:
                     data_source = DataSourceConfig(self, namespace, resource_name, resource_content)
                     if data_source.enabled == False:
                         continue
                     self.document_sources_resources.append(data_source)
-                    self.log_agent.print_and_log(f'Ingjesting docs from: {resource_name}')
+                    self.log_agent.print_and_log(f'Will index: {resource_name}')
                 except ValueError as e:
                     self.log_agent.print_and_log(f"Error processing source {resource_name}: {e}")
                     continue
-            
-        
-
+             
     def ingest_docs(self):
         for data_resource in self.document_sources_resources:
+            self.log_agent.print_and_log(f'\nNow indexing: {data_resource.resource_name}\n')
             # Load documents
             documents = data_resource.scraper.load()
+            
+            self.log_agent.print_and_log(f'Docs loaded for indexing: {data_resource.resource_name}')
+            
             if not documents:
                 raise ValueError("No documents loaded.")
             text_chunks, document_chunks = data_resource.preprocessor.run(documents)
@@ -81,16 +86,17 @@ class IndexAgent:
             # Pretrain "corpus"
             data_resource.bm25_encoder.fit(text_chunks)
             sparse_embeddings = data_resource.bm25_encoder.encode_documents(text_chunks)
+            self.log_agent.print_and_log(f'Embedding complete for: {data_resource.resource_name}')
             
             # Get count of vectors in index matching the "resource" metadata field
-            index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource': data_resource.resource_name})
-            self.log_agent.print_and_log(f'stats matching "resouce" metadata field: {index_resource_stats}')
+            index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
+            self.log_agent.print_and_log(f"stats matching 'resource_name' metadata field: {index_resource_stats}")
             resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
 
             # If the "resource" already has vectors delete the existing vectors before upserting new vectors
             if resource_vector_count != 0:
-                data_resource.vectorstore.delete(filter={'resource': data_resource.resource_name})
-            
+                self.clear_resource_name(data_resource)
+                
             # Get total count of vectors in index namespace and create new vectors with an id of index_vector_count + 1
             index_stats = data_resource.vectorstore.describe_index_stats()
             index_vector_count = index_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
@@ -115,17 +121,18 @@ class IndexAgent:
                 batch_size=self.agent_config.vectorstore_upsert_batch_size,
                 show_progress=True                 
             )
+            self.log_agent.print_and_log(f'Indexing complete for: {data_resource.resource_name}')
         index_stats = data_resource.vectorstore.describe_index_stats()
         self.log_agent.print_and_log(index_stats)
     
     def delete_index(self):
         res = self.document_sources_resources[0].vectorstore.describe_index_stats()
         self.log_agent.print_and_log(res)
-        # res = pinecone.delete_index(data_source_config.index_name)
-        #  self.log_agent.print_and_log(res)
+        res = pinecone.delete_index(self.agent_config.vectorstore_index)
+        self.log_agent.print_and_log(res)
         res = self.document_sources_resources[0].vectorstore.describe_index_stats()
         self.log_agent.print_and_log(res)
-    
+
     def clear_index(self):
         for data_source in self.document_sources_resources:
             stats = data_source.vectorstore.describe_index_stats()
@@ -143,8 +150,17 @@ class IndexAgent:
         stats =  self.document_sources_resources[0].vectorstore.describe_index_stats()
         self.log_agent.print_and_log(stats)
     
+    def clear_resource_name(self, data_resource):
+        data_resource.vectorstore.delete(
+        namespace=data_resource.namespace,
+        delete_all=False, 
+        filter={'resource_name': data_resource.resource_name}
+        )
+        self.log_agent.print_and_log(f"Removed pre-existing vectors in index with metadata fields 'resource_name': {data_resource.resource_name}")
+        index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
+        self.log_agent.print_and_log(f"New stats matching 'resource_name' metadata field: {index_resource_stats}")
+        
     def create_index(self):
-
         metadata_config = {
             "indexed": self.agent_config.indexed_metadata
         }
@@ -160,13 +176,15 @@ class IndexAgent:
         # Log the message
         self.log_agent.print_and_log(log_message)
         
-        return pinecone.create_index(
+        response = pinecone.create_index(
             name=self.agent_config.vectorstore_index, 
             dimension=self.agent_config.vectorstore_dimension, 
             metric=self.agent_config.vectorstore_metric,
             pod_type=self.agent_config.vectorstore_pod_type,
             metadata_config=metadata_config
             )
+        
+        return response
         
 class DataSourceConfig:
     def __init__(self, index_agent: IndexAgent, namespace, resource_name, resource_content):
@@ -191,7 +209,6 @@ class DataSourceConfig:
             self.resource_name, 
             self.index_name, 
             self.enabled,
-            self.load_all_paths, 
             self.target_url, 
             self.target_type, 
             self.doc_type
@@ -204,12 +221,6 @@ class DataSourceConfig:
             environment=index_agent.agent_config.vectorstore_environment
         )
         
-        indexes = pinecone.list_indexes()
-        if self.index_name not in indexes:
-            # create new index
-            response = index_agent.create_index(self)
-            index_agent.log_agent.print_and_log(f"Created index: {response}")
-
         # Initialize vectorstore index
         self.vectorstore = pinecone.Index(self.index_name)
         
@@ -229,24 +240,17 @@ class DataSourceConfig:
             case 'generic':
                 self.scraper = CustomScraper(self)
                 self.content_type = "text"
-            # case 'local':
-            #     self.scraper = YamlLoader('endpoint_folder/just_right')
-            #     self.content_type = "yaml"
-            # case 'code':
-            #     self.preprocessor = CodePreProcessor(agent_config)
-            #     self.content_type = "text"
+            case 'openapi':
+                self.scraper = OpenAPILoader(self)
+                self.content_type = "openapi"
             case _:
                 raise ValueError(f"Invalid target type: {self.target_type}")
             
         match self.content_type:
             case 'text':
                 self.preprocessor = CustomPreProcessor(self)
-            # case 'yaml':
-            #     self.preprocessor = YamlPreProcessor(self)
-            # case 'html':
-            #     self.preprocessor = HtmlPreProcessor(agent_config)
-            # case 'code':
-            #     self.preprocessor = CodePreProcessor(agent_config)
+            case 'openapi':
+                self.preprocessor = OpenAPIPreProcessor(self)
             case _:
                 raise ValueError("Invalid target type: should be text, html, or code.")
             
@@ -266,6 +270,8 @@ class CustomPreProcessor:
 
         self.tiktoken_encoding_model=data_source_config.index_agent.agent_config.tiktoken_encoding_model
         self.tokenizer = tiktoken.encoding_for_model(data_source_config.index_agent.agent_config.tiktoken_encoding_model)
+        
+        # Defines which chars can be kept; Alpha-numeric chars, punctionation, and whitespaces.
         self.printable = string.printable
 
         self.text_splitter = BalancedRecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -291,8 +297,22 @@ class CustomPreProcessor:
             self.data_source_config.index_agent.log_agent.print_and_log(page.metadata['title'])
             # Remove bad chars
             page.page_content = re.sub(f'[^{re.escape(self.printable)}]', '', page.page_content)
-            # Removes instances of more than two newlines
-            page.page_content = re.sub('\n{3,}', '\n\n', page.page_content)
+            # Reduces any sequential occurences of a specific whitespace (' \t\n\r\v\f') to just two of those specific whitespaces
+            # Create a dictionary to map each whitespace character to its escape sequence (if needed)
+            whitespace_characters = {
+                ' ': r' ',
+                '\t': r'\t',
+                '\n': r'\n',
+                '\r': r'\r',
+                '\v': r'\v',
+                '\f': r'\f',
+            }
+            # Replace any sequential occurrences of each whitespace character with just two
+            for char, escape_sequence in whitespace_characters.items():
+                pattern = escape_sequence + "{3,}"
+                replacement = char * 2
+                page.page_content = re.sub(pattern, replacement, page.page_content)
+            # page.page_content = re.sub('\n{3,}', '\n\n', page.page_content)
             # Skip if too small
             if self._tiktoken_len(page.page_content) < self.data_source_config.index_agent.agent_config.preprocessor_min_length:
                 self.data_source_config.index_agent.log_agent.print_and_log(f'page too small: {self._tiktoken_len(page.page_content)}')
@@ -345,78 +365,85 @@ class CustomScraper:
         self.data_source_config = data_source_config
         self.load_urls = RecursiveUrlLoader(url=self.data_source_config.target_url)
     def load(self) -> Iterator[Document]:
-        documents = self.load_urls.load()
-        return [Document(page_content=doc.metadata.get('description'), metadata=doc.metadata) for doc in documents]
+        documents =  self.load_urls.load()
+        return [Document(page_content=doc.page_content, metadata=doc.metadata) for doc in documents]
 
+class OpenAPILoader:
+    def __init__(self, data_source_config: DataSourceConfig):
+        self.data_source_config = data_source_config
+        self.target_url = data_source_config.target_url
+    def load(self) -> List[Document]:
+        """Load YAML or JSON files."""
+        documents = []
+        file_extension = None
+        for filename in os.listdir(self.target_url):
+            if file_extension is None:
+                if filename.endswith('.yaml'):
+                    file_extension = '.yaml'
+                elif filename.endswith('.json'):
+                    file_extension = '.json'
+                else:
+                    self.data_source_config.index_agent.log_agent.print_and_log(f"Unsupported file format: {filename}")
+                    continue
+            elif not filename.endswith(file_extension):
+                self.data_source_config.index_agent.log_agent.print_and_log(f"Inconsistent file formats in directory: {filename}")
+                continue
+            file_path = os.path.join(self.target_url, filename)
+            with open(file_path, 'r') as file:
+                if file_extension == '.yaml':
+                    documents.append(yaml.safe_load(file))
+                elif file_extension == '.json':
+                    documents.append(json.load(file))
+        return documents
 
+# Temporary implementation 
+class OpenAPIPreProcessor:
+    def __init__(self, data_source_config: DataSourceConfig):
+        self.data_source_config = data_source_config
+        self.tiktoken_encoding_model = data_source_config.index_agent.agent_config.tiktoken_encoding_model
+        self.tokenizer = tiktoken.encoding_for_model(self.tiktoken_encoding_model)
+
+    def run(self, documents):
+        documents_as_chunks = []
+        text_as_chunks = []
+    
+        for document in documents:
+            document_chunk, text_chunk = self.append_metadata(document)
+            documents_as_chunks.append(document_chunk)
+            text_as_chunks.append(text_chunk.lower())
         
-# class YamlLoader:
-#     def __init__(self, directory_path: str):
-#         self.directory_path = directory_path
-#     def load(self) -> List[Document]:
-#         """Load YAML files."""
-#         documents = []
-#         for filename in os.listdir(self.directory_path):
-#             if not filename.endswith('.yaml'):  # Skip non-YAML files
-#                 continue
-#             file_path = os.path.join(self.directory_path, filename)
-#             with open(file_path, 'r') as file:
-#                 yaml_content = yaml.safe_load(file)
-#                 documents.append(yaml_content)
-#         return documents
+        print("Total pages:", len(documents))
+        print("Total chunks:", len(documents_as_chunks))
+        if not documents_as_chunks:
+            return
+        token_counts = [
+            self._tiktoken_len(chunk) for chunk in text_as_chunks
+        ]
+        print("Min:", min(token_counts))
+        print("Avg:", int(sum(token_counts) / len(token_counts)))
+        print("Max:", max(token_counts))
+        print("Total tokens:", int(sum(token_counts)))
 
-# class YamlPreProcessor:
-#     def __init__(self, data_source_config: DataSourceConfig, agent_config: AppConfig):
-#         self.data_source_config = data_source_config
-#         self.agent_config = agent_config
-#         self.tiktoken_encoding_model=agent_config.tiktoken_encoding_model
-#         self.tokenizer = tiktoken.encoding_for_model(agent_config.tiktoken_encoding_model)
-
-#     def run(self, documents):
-#         documents_as_chunks = []
-#         text_as_chunks = []
+        return text_as_chunks, documents_as_chunks
     
-#         for document in documents:
-#             document_chunk, text_chunk = self.append_metadata(document)
-#             documents_as_chunks.append(document_chunk)
-#             text_as_chunks.append(text_chunk.lower())
+    def append_metadata(self, document):
+
+        # Document chunks are the metadata uploaded to vectorstore
+        document_chunk = {
+                    "content": yaml.dump(document), 
+                    "url": document.get('metadata').get('doc_url'),
+                    "title": document.get('metadata').get('operation_id'),
+                    "resource_name": self.data_source_config.resource_name,
+                    "target_type": self.data_source_config.target_type,
+                    "doc_type": self.data_source_config.doc_type
+                    }
+
+        return document_chunk, yaml.dump(document)
+    
+    def _tiktoken_len(self, text):
+        tokens = self.tokenizer.encode(
+            text,
+            disallowed_special=()
+        )
+        return len(tokens)
         
-#         log_agent.print_and_log("Total pages:", len(documents))
-#         log_agent.print_and_log("Total chunks:", len(documents_as_chunks))
-#         if not documents_as_chunks:
-#             return
-#         token_counts = [
-#             self._tiktoken_len(chunk) for chunk in text_as_chunks
-#         ]
-#         log_agent.print_and_log("Min:", min(token_counts))
-#         log_agent.print_and_log("Avg:", int(sum(token_counts) / len(token_counts)))
-#         log_agent.print_and_log("Max:", max(token_counts))
-#         log_agent.print_and_log("Total tokens:", int(sum(token_counts)))
-
-#         return text_as_chunks, documents_as_chunks
-    
-#     def append_metadata(self, yaml_content):
-#         # Use yaml.dump to convert the dictionary back to a YAML-formatted string
-#         yaml_string = yaml.dump(yaml_content)
-#         # Document chunks are the metadata uploaded to vectorstore
-#         document_chunk = {
-#                     "content": yaml_string, 
-#                     "url": yaml_content.get('apiDocUrl'),
-#                     "title": yaml_content.get('operationId'),
-#                     "data_source": self.data_source_config.source,
-#                     "target_type": self.data_source_config.target_type,
-#                     "doc_type": self.data_source_config.doc_type
-#                     }
-#         # Text chunks here are used to create embeddings
-#         text_chunk = yaml_string
-
-#         return document_chunk, text_chunk
-
-    
-#     def _tiktoken_len(self, text):
-#         tokens = self.tokenizer.encode(
-#             text,
-#             disallowed_special=()
-#         )
-#         return len(tokens)
-

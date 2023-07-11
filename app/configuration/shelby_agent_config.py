@@ -19,6 +19,8 @@ class DeploymentConfig(BaseModel):
     ### Name your bot/sprite/service ###
     service_name: str = 'personal'
 
+    document_sources_filename: str = 'personal_document_sources.yaml'
+    
     ### Services ###
     docker_registry: str = 'docker.io'
     docker_username: str = 'shelbyjenkins'
@@ -58,9 +60,9 @@ class DeploymentConfig(BaseModel):
     preprocessor_separators: Optional[str] = None
     embedding_model: Optional[str] = "text-embedding-ada-002"
     embedding_max_chunk_size: int = 8191
-    embedding_batch_size: int = 8
+    embedding_batch_size: int = 100
     vectorstore_dimension: int = 1536
-    vectorstore_upsert_batch_size: int = 10
+    vectorstore_upsert_batch_size: int = 20
     vectorstore_metric: str = "dotproduct"
     vectorstore_pod_type: str = "p1"
     preprocessor_min_length: int = 300
@@ -155,10 +157,11 @@ class AppConfig():
             self. workload_slug: str = f'{self.service_name.lower()}-{self.deployment_target.lower()}-sprite'
 
         # Loads from document sources config file or env
-        with open('app/configuration/document_sources.yaml', 'r') as stream:
-            data_source_config = yaml.safe_load(stream)
+        self.document_sources_filepath = os.path.join('app/configuration', self.deployment_config.document_sources_filename)
+        with open(self.document_sources_filepath, 'r') as stream:
+            data_sources = yaml.safe_load(stream)
         
-        self.namespaces_from_file = {key: value['description'] for key, value in data_source_config.items()}
+        self.namespaces_from_file = {key: value['description'] for key, value in data_sources.items()}
         
         if os.getenv('VECTORSTORE_NAMESPACES') is not None:
             self.vectorstore_namespaces = json.loads(os.getenv('VECTORSTORE_NAMESPACES'))

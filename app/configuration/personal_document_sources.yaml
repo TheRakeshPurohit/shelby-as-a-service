@@ -1,0 +1,48 @@
+deepgram:
+  description: "Advanced AI services including, speech-to-text, translation, and sentiment analysis."
+  resources:
+    "developers.deepgram.com/reference":
+      enabled: False
+      target_url: "https://developers.deepgram.com/sitemap.xml"
+      filter_url: "https://developers.deepgram.com/reference/"
+      target_type: "sitemap"
+      doc_type: "hard"
+    "developers.deepgram.com/docs":
+      enabled: False
+      target_url: "https://developers.deepgram.com/sitemap.xml"
+      filter_url: "https://developers.deepgram.com/docs/"
+      target_type: "sitemap"
+      doc_type: "soft"
+tatum:
+  description: "blockchain and web3 infrastructure and services including JS and C# SDKs with support for 70 networks."
+  resources:
+    "docs.tatum.com":
+      enabled: False
+      load_all_paths: True
+      target_url: "https://docs.tatum.com"
+      target_type: "gitbook"
+      doc_type: "soft"
+    "docs.tatum.io":
+      enabled: True
+      load_all_paths: True
+      target_url: "https://docs.tatum.io"
+      target_type: "gitbook"
+      doc_type: "soft"
+    "api.tatum.io":
+      enabled: True
+      target_url: "data/minified_openAPI_specs/api.tatum.io/operationIDs"
+      target_type: "openapi"
+      doc_type: "hard"
+stackpath:
+  description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
+  resources:
+    "stackpath.dev/docs":
+      enabled: True
+      target_url: "https://stackpath.dev/docs"
+      target_type: "generic"
+      doc_type: "soft"
+    "stackpath.dev/reference":
+      enabled: True
+      target_url: "data/minified_openAPI_specs/gateway.stackpath.com/operationIDs"
+      target_type: "openapi"
+      doc_type: "hard"

@@ -29,10 +29,10 @@ jobs:
             DEPLOYMENT_TARGET: slack
             WORKLOAD_NAME: shelby-as-a-service-personal-slack-sprite
             WORKLOAD_SLUG: personal-slack-sprite
+            VECTORSTORE_NAMESPACES: '{"deepgram": "ai speech to text services", "tatum": "blockchain and web3", "stackpath": "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"}'               
 
             # Configs to be loaded into container env to overide config_agent
             VECTORSTORE_INDEX: shelby-as-a-service
-            VECTORSTORE_NAMESPACES: '{"tatum": "blockchain and web3", "deepgram": "ai speech to text services"}'               
             ACTION_LLM_MODEL: gpt-4
             QUERY_LLM_MODEL: gpt-4
             VECTORSTORE_TOP_K: 3

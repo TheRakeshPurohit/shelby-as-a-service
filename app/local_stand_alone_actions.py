@@ -15,6 +15,7 @@ def manage_index():
     # agent.clear_index()
     # agent.clear_namespace('stackpath')
 
+# Remove comment to run index_agent
 manage_index()
 
 ### Locally test shelby_agent ###
@@ -31,4 +32,5 @@ request = "Can you tell me how deploy a container with stackpath?"
 # request = "Can you tell me about what elephants?"
 # request = "can you tell me how to create a curl and javascript fetch request using the tatum api to fetch the latest block on solana using native rpc client on an rpc node?"
 
+# Remove comment to run shelby_agent
 # asyncio.run(run_shelby_agent(request))
