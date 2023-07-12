@@ -128,11 +128,11 @@ See the [open issues](https://github.com/othneildrew/Best-README-Template/issues
 
 This will be covered in three steps:
 
-1. Installation -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/INSTALLATION.md
-2. Configuration -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/CONFIGURATION.md
+1. Installation -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/INSTALLATION.md
+2. Configuration -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/CONFIGURATION.md
 3. Deploying for
-   1. Discord -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/DEPLOYING_FOR_DISCORD.md
-   2. Slack -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/DEPLOYING_FOR_SLACK.md
+   1. Discord -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/DEPLOYING_FOR_DISCORD.md
+   2. Slack -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/DEPLOYING_FOR_SLACK.md
 
 ### Prerequisites
 
