@@ -83,22 +83,71 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
+An easy bot that uses GPT and documents to answer questions. Supports Discord and Slack bots.
 
+[![Discord Screen Shot][discord-screenshot]](documentation/discord-example.png)
+[![Slack Screen Shot][slack-screenshot]](documentation/slack-example.png)
 
-Simple discord and slack bots using pinecone and GPT
+I've made myself redundant. Good. 
 
-Main logic is ran through the async_shelby_agent 
+### Features
 
-Has a portion of the haystack package for sparse-dense functionality
+Shelby-as-a-service (SAAS) lets anyone say 'hello world' with their own GPT bots. When a user makes a request the app, it it stuffs related documents and the request into a prompt, and sends it to GPT. The response and documents are then returned to the user.
 
-Sharing this as a PoC with itent of merging functionality from the LLM-minifier tool for function calling
+Context enriched querying is an easy app. Sharing it with your friends and co-workers is the hard part. This app takes care of the boring stuff, and lets you have fun. 
 
-1. Set config with shelby_agent_configure.py
-2. run generate_github_action.py
-3. Commit, push, and run action
+* Requires only API keys and a list of document source URLs to run.
+* Automatically scrapes, processes, and uploads data from websites, gitbooks, sitemaps, and OpenAPI specs.
+* Superior Document retrieval.
+  * Performs semantic search with sparse/dense embeddings by default.
+  * Generates additional search keywords for better semantic search results.
+  * Checks if documents are relevant by asking GPT, "Which of these documents are relevant?"
+  * Superior document pre-processing with BalancedRecursiveCharacterTextSplitter and thoughtful parsing.
+* Tweaking not required, but all the knobs are at your disposal in the configuration folder.
+  * All configuration variables are stored and loaded through  shelby_agent_config.py
+  * All data sources are added through template_document_sources.yaml
+  * All prompts are easily accessbile through prompt_template folder
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- ROADMAP -->
+## Roadmap
+
+* Enable memory for conversational queries
+* Enable the bot to make request to *any* API with an OpenAPI spec
+* Improve and add additional document sources
+* Add service providers
+* Installable via PIP
+
+See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- GETTING STARTED -->
+## Getting Started
+
+This will be covered in three steps:
+
+1. Installation -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/INSTALLATION.md
+2. Configuration -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/CONFIGURATION.md
+3. Deploying for
+   1. Discord -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/DEPLOYING_FOR_DISCORD.md
+   2. Slack -> https://github.com/ShelbyJenkins/shelby-as-a-service/documentation/DEPLOYING_FOR_SLACK.md
+
+### Prerequisites
+
+You will need and API key for the following services:
+
+Free:
+* Discord -> https://discord.com/developers/docs/intro
+* or Slack -> https://api.slack.com/apps
+* Pinecone -> https://www.pinecone.io/
+* Github -> https://github.com/
+* Docker -> https://www.docker.com/
+
+Paid:
+* OpenAI API (GPT-3.5 is tenable) -> https://platform.openai.com/overview
+* Stackpath -> https://www.stackpath.com/
 
 
 ### Built With
@@ -110,44 +159,6 @@ Sharing this as a PoC with itent of merging functionality from the LLM-minifier 
 * [![slack-bolt][slack-bolt]][slack-bolt-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-Nomenclature 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
-
-### Installation
-
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/ShelbyJenkins/shelby-as-a-service.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -201,7 +212,8 @@ Project Link: [https://github.com/ShelbyJenkins/shelby-as-a-service](https://git
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/jshelbyj/
 
-[product-screenshot]: images/screenshot.png
+[discord-screenshot]: documentation/discord-example.png
+[slack-screenshot]: documentation/slack-example.png
 
 [python]: https://img.shields.io/badge/python-000000?style=for-the-badge&logo=python&logoColor=white
 [python-url]: https://www.python.org/
