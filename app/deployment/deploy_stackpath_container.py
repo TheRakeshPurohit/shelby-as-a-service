@@ -76,8 +76,8 @@ match DEPLOYMENT_TARGET:
                     'DISCORD_TOKEN': {
                         'value': os.environ.get('DISCORD_TOKEN')
                     },
-                    'DISCORD_CHANNEL_ID': {
-                        'value': os.environ.get('DISCORD_CHANNEL_ID')
+                    'DISCORD_CHANNEL_IDS': {
+                        'value': os.environ.get('DISCORD_CHANNEL_IDS')
                     },
                     'DISCORD_WELCOME_MESSAGE': {
                         'value': os.environ.get('DISCORD_WELCOME_MESSAGE')
