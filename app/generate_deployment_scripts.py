@@ -78,7 +78,7 @@ def generate_workflow(deployment_target):
             steps:
                 - name: Checkout code
                   uses: actions/checkout@v3
-
+                                    
                 - name: Set up Python
                   uses: actions/setup-python@v2
                   with:
@@ -128,7 +128,10 @@ def generate_workflow(deployment_target):
     dockerfile = textwrap.dedent(f"""\
         # Use an official Python runtime as a parent image
         FROM python:3-slim-buster
-
+        
+        # Install Git
+        RUN apt-get update && apt-get install -y git
+        
         # Set the working directory in the container to /shelby-as-a-service
         WORKDIR /shelby-as-a-service
 

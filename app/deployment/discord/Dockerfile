@@ -1,6 +1,9 @@
 # Use an official Python runtime as a parent image
 FROM python:3-slim-buster
 
+# Install Git
+RUN apt-get update && apt-get install -y git
+
 # Set the working directory in the container to /shelby-as-a-service
 WORKDIR /shelby-as-a-service
 
