@@ -20,6 +20,6 @@
       {{doc_number_digit}}\n{{doc_number_digit}}\n{{doc_number_digit}}
   -   
     role: user
-    content: query
+    content: 
 
 

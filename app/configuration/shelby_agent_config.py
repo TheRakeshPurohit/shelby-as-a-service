@@ -44,11 +44,13 @@ class DeploymentConfig(BaseModel):
     action_llm_model: str = 'gpt-4'
     
     # QueryAgent
+    # pre_query_llm_model: str = 'gpt-4'
+    pre_query_llm_model: str = 'gpt-3.5-turbo'
     query_llm_model: str = 'gpt-4'
-    vectorstore_top_k: int = 6
-    max_docs_tokens: int = 4000
-    max_docs_used: int = 6
-    max_response_tokens: int = 300
+    vectorstore_top_k: int = 5
+    max_docs_tokens: int = 3500
+    max_docs_used: int = 5
+    max_response_tokens: int = 400
     openai_timeout_seconds: float = 180.0
     
     # APIAgent
@@ -67,7 +69,7 @@ class DeploymentConfig(BaseModel):
     vectorstore_pod_type: str = "p1"
     preprocessor_min_length: int = 300
     text_splitter_goal_length: int = 1500
-    text_splitter_max_length: int = 2500
+    text_splitter_max_length: int = 2000
     text_splitter_chunk_overlap: int = 100
     indexed_metadata: list[str] = ["data_source", "doc_type", "target_type", "resource_name"]
         
@@ -116,6 +118,7 @@ class AppConfig():
         self.action_llm_model: str = os.getenv('ACTION_LLM_MODEL', self.deployment_config.action_llm_model)
         
         # QueryAgent
+        self.pre_query_llm_model: str = os.getenv('PRE_QUERY_LLM_MODEL', self.deployment_config.pre_query_llm_model)
         self.query_llm_model: str = os.getenv('QUERY_LLM_MODEL', self.deployment_config.query_llm_model)
         self.vectorstore_top_k: int = int(os.getenv('VECTORSTORE_TOP_K', self.deployment_config.vectorstore_top_k))
         self.max_docs_tokens: int = int(os.getenv('MAX_DOCS_TOKENS', self.deployment_config.max_docs_tokens))

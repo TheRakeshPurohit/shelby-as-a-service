@@ -36,14 +36,14 @@ class ShelbyAgent:
         match workflow:
             case 1:
                 # Run QueryAgent
+                
                 # If only one topic, then we skip the ActionAgent topic decision.
                 if len(self.agent_config.vectorstore_namespaces) == 1:
                     topic = next(iter(self.agent_config.vectorstore_namespaces))
                 else: 
                     topic = self.action_agent.topic_decision(request)
+                    
                 if topic == 0:
-                    # If no topic run basic query
-                    # response = self.query_agent.run_basic_query(request)
                     no_topics = "Query not related to any supported topics. Supported topics are:\n"
                     for key, value in self.agent_config.vectorstore_namespaces.items():
                         no_topics += f"{key}: {value}\n"
@@ -60,6 +60,7 @@ class ShelbyAgent:
                 no_workflow = 'No workflow found for request.'
                 self.log_agent.print_and_log(no_workflow)
                 return no_workflow
+            
 
         return response
 
@@ -188,12 +189,32 @@ class ShelbyAgent:
             self.log_agent = log_agent
             self.agent_config = agent_config
 
-        # Gets embeddings from query string
-        def get_query_embeddings(self, query):
+        def pre_query(self, query):
             try:
-                
-                self.log_agent.print_and_log(f"embedding query: {query}")
-                
+                with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_pre_query_template.yaml'), 'r') as stream:
+                    # Load the YAML data and print the result
+                    prompt_template = yaml.safe_load(stream)
+                    
+                # Loop over the list of dictionaries in data['prompt_template']
+                for role in prompt_template:
+                    if role['role'] == 'user':  # If the 'role' is 'user'
+                        role['content'] = query  # Replace the 'content' with 'prompt_message'
+                        
+                response = openai.ChatCompletion.create(
+                    model=self.agent_config.pre_query_llm_model,
+                    messages=prompt_template,
+                    max_tokens=25
+                )
+                response = response['choices'][0]['message']['content']
+                pre_query = f'query: {query}, keywords: {response}'
+                return pre_query
+
+            except Exception as e:
+                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
+                raise e
+            
+        def get_query_embeddings(self, query):
+            try:                    
                 embedding_retriever = OpenAIEmbeddings(
                     model=self.agent_config.query_llm_model,
                     openai_api_key=os.getenv("OPENAI_API_KEY"),
@@ -236,7 +257,7 @@ class ShelbyAgent:
                 )
 
                 # Destructures the QueryResponse object the pinecone library generates.
-                documents_list = []
+                returned_documents = []
                 for m in soft_query_response.matches:
                     response = {
                         'content': m.metadata['content'],
@@ -246,7 +267,7 @@ class ShelbyAgent:
                         'score': m.score,
                         'id': m.id
                     }
-                    documents_list.append(response)
+                    returned_documents.append(response)
                 for m in hard_query_response.matches:
                     response = {
                         'content': m.metadata['content'],
@@ -256,23 +277,90 @@ class ShelbyAgent:
                         'score': m.score,
                         'id': m.id
                     }
-                    documents_list.append(response)
-
-                return documents_list
+                    returned_documents.append(response)
+                                   
+                return returned_documents
             except Exception as e:
                 self.log_agent.print_and_log(f"An error occurred in query_vectorstore: {str(e)}")
                 raise e
         
-        # Parses documents into x and prunes the count to meet token threshold
+        def doc_check(self, query, documents):
+            try:
+                with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_doc_check_template.yaml'), 'r') as stream:
+                    # Load the YAML data and print the result
+                    prompt_template = yaml.safe_load(stream)
+                
+                doc_counter = 1
+                content_strs = []
+                for doc in documents:
+                    content_strs.append(f"{doc['title']} doc_number: [{doc_counter}]")
+                    documents_str = " ".join(content_strs)
+                    doc_counter += 1
+                prompt_message  = "Query: " + query + " Documents: " + documents_str
+                          
+                logit_bias = {
+                            # 1-9
+                            "16": 100,
+                            "17": 100,
+                            "18": 100,
+                            "19": 100,
+                            "20": 100,
+                            "21": 100,
+                            "22": 100,
+                            "23": 100,
+                            "24": 100,
+                            # \n
+                            "198": 100
+                        }
+                
+                # Loop over the list of dictionaries in data['prompt_template']
+                for role in prompt_template:
+                    if role['role'] == 'user':  # If the 'role' is 'user'
+                        role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
+                        
+                response = openai.ChatCompletion.create(
+                    model=self.agent_config.pre_query_llm_model,
+                    messages=prompt_template,
+                    max_tokens=10,
+                    logit_bias=logit_bias
+                )
+                doc_check = response['choices'][0]['message']['content']
+                 # This finds all instances of [n] in the LLM response
+                pattern_num = r"\d"
+                matches = re.findall(pattern_num, doc_check)
+                
+                relevant_documents = []
+                # Creates a lit of each unique mention of n in LLM response
+                unique_doc_nums = set([int(match) for match in matches])
+                for doc_num in unique_doc_nums:
+                    # doc_num given to llm has an index starting a 1
+                    # Subtract 1 to get the correct index in the list
+                    # Access the document from the list using the index
+                    relevant_documents.append(documents[doc_num - 1])
+
+                return relevant_documents
+
+            except Exception as e:
+                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
+                raise e
+            
         def parse_documents(self, returned_documents):
             try:
-                def docs_tiktoken_len(documents):
+                def _tiktoken_len(document):
+                    tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
+                    tokens = tokenizer.encode(
+                        document,
+                        disallowed_special=()
+                    )
+                    return len(tokens)
+                
+                def _docs_tiktoken_len(documents):
                     tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
                     token_count = 0
-                    for doc in documents:
+                    for document in documents:
                         tokens = 0
                         tokens += len(tokenizer.encode(
-                            doc['content'],
+                            document['content'],
                             disallowed_special=()
                         ))
                         token_count += tokens
@@ -285,34 +373,55 @@ class ShelbyAgent:
                 # Sort the list by score
                 sorted_documents = sorted(returned_documents, key=lambda x: x['score'], reverse=True)
 
-                # Add doc_num field
-                embeddings_tokens = 0
                 for i, document in enumerate(sorted_documents, start=1):
+                    token_count = _tiktoken_len(document['content'])
+                    if token_count > self.agent_config.max_docs_tokens:
+                        sorted_documents.pop(idx)
+                        continue
+                    document['token_count'] = token_count
                     document['doc_num'] = i
-
-                embeddings_tokens = docs_tiktoken_len(sorted_documents)
+                
+                embeddings_tokens = _docs_tiktoken_len(sorted_documents)
                 
                 # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
                 iterations = 0
+                original_documents_count = len(sorted_documents)
                 while embeddings_tokens > self.agent_config.max_docs_tokens:
-                    if iterations > len(sorted_documents):
-                        self.log_agent.print_and_log(f"Could not reduce tokens under {self.agent_config.max_docs_tokens}.")
+                    if iterations >= original_documents_count:
+                        break
+                    # Find the index of the document with the highest token_count that exceeds text_splitter_goal_length
+                    max_token_count_idx = max((idx for idx, document in enumerate(sorted_documents) if document['token_count'] > self.agent_config.text_splitter_goal_length), 
+                          key=lambda idx: sorted_documents[idx]['token_count'], default=None)
+                    # If a document was found that meets the conditions, remove it from the list
+                    if max_token_count_idx is not None:
+                        doc_type = sorted_documents[max_token_count_idx]['doc_type']
+                        if doc_type == 'soft':
+                            soft_count -= 1
+                        else:
+                            hard_count -= 1
+                        sorted_documents.pop(max_token_count_idx)
                         break
                     # Remove the lowest scoring 'soft' document if there is more than one,
-                    # otherwise remove the lowest scoring 'hard' document
-                    if soft_count > 1:
+                    elif soft_count > 1:
                         for idx, document in reversed(list(enumerate(sorted_documents))):
                             if document['doc_type'] == 'soft':
                                 sorted_documents.pop(idx)
                                 soft_count -= 1
                                 break
+                    # otherwise remove the lowest scoring 'hard' document
                     elif hard_count > 1:
                         for idx, document in reversed(list(enumerate(sorted_documents))):
                             if document['doc_type'] == 'hard':
                                 sorted_documents.pop(idx)
                                 hard_count -= 1
                                 break
-                    embeddings_tokens = docs_tiktoken_len(sorted_documents)
+                    else:
+                        # Find the index of the document with the highest token_count
+                        max_token_count_idx = max(range(len(sorted_documents)), key=lambda idx: sorted_documents[idx]['token_count'])
+                        # Remove the document with the highest token_count from the list
+                        sorted_documents.pop(max_token_count_idx)
+ 
+                    embeddings_tokens = _docs_tiktoken_len(sorted_documents)
                     # self.log_agent.print_and_log("removed lowest scoring embedding doc .")
                     # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
                     iterations += 1
@@ -332,9 +441,7 @@ class ShelbyAgent:
                                 hard_count -= 1
                                 break
                     # self.log_agent.print_and_log("removed lowest scoring embedding doc.")
-
-                self.log_agent.print_and_log(f"final number of context docs now: {len(sorted_documents)}")
-                
+                                  
                 for i, document in enumerate(sorted_documents, start=1):
                     document['doc_num'] = i
                 return sorted_documents
@@ -342,7 +449,6 @@ class ShelbyAgent:
                 self.log_agent.print_and_log(f"An error occurred in parse_documents: {str(e)}")
                 raise e
     
-        # Generates multi-line text string with complete prompt
         def docs_prompt_template(self, query, documents):
             try:
                 with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_prompt_template.yaml'), 'r') as stream:
@@ -375,8 +481,7 @@ class ShelbyAgent:
         
         def docs_prompt_llm(self, prompt):
             try:
-                self.log_agent.print_and_log(f"sending prompt to llm")
-                
+
                 response = openai.ChatCompletion.create(
                     model=self.agent_config.query_llm_model,
                     messages=prompt,
@@ -449,24 +554,46 @@ class ShelbyAgent:
     
         def run_context_enriched_query(self, query, topic):
             
-            dense_embedding, sparse_embedding = self.get_query_embeddings(query)
+            self.log_agent.print_and_log(f'Query: {query}')
+            
+            pre_query = self.pre_query(query)
+            self.log_agent.print_and_log(f"Pre-query response: {pre_query}")
+            
+            dense_embedding, sparse_embedding = self.get_query_embeddings(pre_query)
+            self.log_agent.print_and_log("Sparse and dense embeddings retrieved")
+            
             returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, topic)
-
             if not returned_documents:
                 self.log_agent.print_and_log("No supporting documents found!")
-            else:
-                self.log_agent.print_and_log(f"{len(returned_documents)} context docs retrieved")
-                
-            parsed_documents = self.parse_documents(returned_documents)
+            returned_documents_list = []
+            for returned_doc in returned_documents:
+                returned_documents_list.append(returned_doc['url'])
+            self.log_agent.print_and_log(f"{len(returned_documents)} documents returned from vectorstore: {returned_documents_list}")
             
+            returned_documents = self.doc_check(query, returned_documents)
+            if not returned_documents:
+                self.log_agent.print_and_log("No supporting documents after doc_check!")
+            returned_documents_list = []
+            for returned_doc in returned_documents:
+                returned_documents_list.append(returned_doc['url'])
+            self.log_agent.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
+            
+            parsed_documents = self.parse_documents(returned_documents)
+            final_documents_list = []
+            for parsed_document in parsed_documents:
+                final_documents_list.append(parsed_document['url'])
+            self.log_agent.print_and_log(f"{len(parsed_documents)} documents returned after parsing: {final_documents_list}")
+                
             prompt = self.docs_prompt_template(query, parsed_documents)
-            self.log_agent.print_and_log(f'Sending prompt: {prompt}')
+            
+            self.log_agent.print_and_log(f'Sending prompt to LLM')
             llm_response = self.docs_prompt_llm(prompt)
             self.log_agent.print_and_log(f'LLM response: {llm_response}')
+                 
+            parsed_response = self.append_meta(llm_response, parsed_documents)
+            self.log_agent.print_and_log(f'LLM response with appended metadata: {parsed_response}')
             
-            response = self.append_meta(llm_response, parsed_documents)
-            
-            return response
+            return parsed_response
     
     # Currently under development
     class APIAgent:

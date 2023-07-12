@@ -34,12 +34,13 @@ jobs:
             # Configs to be loaded into container env to overide config_agent
             VECTORSTORE_INDEX: shelby-as-a-service
             ACTION_LLM_MODEL: gpt-4
+            PRE_QUERY_LLM_MODEL: gpt-3.5-turbo
             QUERY_LLM_MODEL: gpt-4
-            VECTORSTORE_TOP_K: 3
+            VECTORSTORE_TOP_K: 5
             OPENAI_TIMEOUT_SECONDS: 180.0
-            MAX_DOCS_TOKENS: 5000
-            MAX_DOCS_USED: 3
-            MAX_RESPONSE_TOKENS: 300
+            MAX_DOCS_TOKENS: 3500
+            MAX_DOCS_USED: 5
+            MAX_RESPONSE_TOKENS: 400
             SELECT_OPERATIONID_LLM_MODEL: gpt-4
             CREATE_FUNCTION_LLM_MODEL: gpt-4
             POPULATE_FUNCTION_LLM_MODEL: gpt-4

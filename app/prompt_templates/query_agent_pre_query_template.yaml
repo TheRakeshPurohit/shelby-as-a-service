@@ -1,0 +1,13 @@
+  - 
+    role: system
+    content: | 
+      A software developer has asked a question.
+      Imagine your writing step-by-step technical documentation that would answer the question.
+      Generate six to twelve technological terms that would be used in answering the question.
+      Focus on tools and syntax that would be critical to the answer.
+      Seperate the terms by comma.
+  -  
+    role: user
+    content: 
+
+

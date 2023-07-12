@@ -64,6 +64,7 @@ def generate_workflow(deployment_target):
                 # Configs to be loaded into container env to overide config_agent
                 VECTORSTORE_INDEX: {deployment_config.vectorstore_index}
                 ACTION_LLM_MODEL: {deployment_config.action_llm_model}
+                PRE_QUERY_LLM_MODEL: {deployment_config.pre_query_llm_model}
                 QUERY_LLM_MODEL: {deployment_config.query_llm_model}
                 VECTORSTORE_TOP_K: {deployment_config.vectorstore_top_k}
                 OPENAI_TIMEOUT_SECONDS: {deployment_config.openai_timeout_seconds}

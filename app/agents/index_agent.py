@@ -408,7 +408,7 @@ class OpenAPIPreProcessor:
         text_as_chunks = []
     
         for document in documents:
-            if self._tiktoken_len(document.get('content')) > 3000:
+            if self._tiktoken_len(document.get('content')) > 2500:
                 continue
             document_chunk, text_chunk = self.append_metadata(document)
             documents_as_chunks.append(document_chunk)

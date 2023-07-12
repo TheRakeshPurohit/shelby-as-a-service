@@ -9,6 +9,6 @@
       2. The user is requesting some action to be performed on their behalf or their request can only be fulfilled by performing an API request to a relevant API. If action two is choosen, an API call to a relevant API will be performed on the users behalf. 
   -   
     role: user
-    content: query
+    content: 
 
 
