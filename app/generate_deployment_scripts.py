@@ -15,7 +15,7 @@ def generate_workflow(deployment_target):
     
     match app_config.deployment_target:
             case 'discord':
-                kvps = f""" 
+                kvps = f"""
                 DISCORD_TOKEN: ${{{{ secrets.{deployment_config.service_name.upper()}_SPRITE_DISCORD_TOKEN }}}}
                 DISCORD_CHANNEL_ID: ${{{{ secrets.{deployment_config.service_name.upper()}_SPRITE_DISCORD_CHANNEL_ID }}}}
                 DISCORD_WELCOME_MESSAGE: {deployment_config.discord_welcome_message}
@@ -51,10 +51,8 @@ def generate_workflow(deployment_target):
                 STACKPATH_API_CLIENT_SECRET: ${{{{ secrets.STACKPATH_API_CLIENT_SECRET }}}}
                 OPENAI_API_KEY: ${{{{ secrets.OPENAI_API_KEY }}}}
                 PINECONE_API_KEY: ${{{{ secrets.PINECONE_API_KEY }}}}
-                DOCKER_TOKEN: ${{{{ secrets.DOCKER_TOKEN }}}}
-                
+                DOCKER_TOKEN: ${{{{ secrets.DOCKER_TOKEN }}}}  
                 {kvps}
-                
                 # Configs that may change based on deployment_target
                 DEPLOYMENT_TARGET: {app_config.deployment_target}
                 WORKLOAD_NAME: {app_config.workload_name}

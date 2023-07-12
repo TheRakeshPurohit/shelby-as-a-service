@@ -1,609 +1,584 @@
 #region
-import os
-import json
-import openai
-import traceback
-import asyncio
-import yaml
+import os, asyncio
 from concurrent.futures import ThreadPoolExecutor
-import re
+import json, yaml, re
+import openai, pinecone, tiktoken
+
 from dotenv import load_dotenv
-import tiktoken
 from langchain.embeddings import OpenAIEmbeddings
-import pinecone
 from pinecone_text.sparse import BM25Encoder
+
 from agents.logger_agent import LoggerAgent
 from configuration.shelby_agent_config import AppConfig
 #endregion
 
 class ShelbyAgent:
+    
+    ### ShelbyAgent is the main class that organizes the actions of all other classes ###
+    
     def __init__(self, deployment_target):
+        
         load_dotenv()
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        self.log_agent = LoggerAgent('ShelbyAgent', 'ShelbyAgent.log', level='INFO')
         self.agent_config = AppConfig(deployment_target) 
-        self.action_agent = self.ActionAgent(self.log_agent, self.agent_config)
-        self.query_agent = self.QueryAgent(self.log_agent, self.agent_config)
-        self.API_agent = self.APIAgent(self.log_agent, self.agent_config)
+        self.log_agent = LoggerAgent('ShelbyAgent', 'ShelbyAgent.log', level='INFO')
+        self.action_agent = ActionAgent(self.log_agent, self.agent_config)
+        self.query_agent = QueryAgent(self.log_agent, self.agent_config)
+        self.API_agent = APIAgent(self.log_agent, self.agent_config)
+        openai.api_key = self.agent_config.openai_api_key
 
     def request_thread(self, request):
-        # ActionAgent determines the workflow
         
-        # workflow = self.action_agent.action_decision(request)
-        # Currently disabled and locked to QueryAgent
-        workflow = 1
+        try:
+            # ActionAgent determines the workflow
+            # workflow = self.action_agent.action_decision(request)
+            # Currently disabled and locked to QueryAgent
+            workflow = 1
+            match workflow:
+                case 1:
+                    # Run QueryAgent
+                    if len(self.agent_config.vectorstore_namespaces) == 1:
+                        # If only one topic, then we skip the ActionAgent topic decision.
+                        topic = next(iter(self.agent_config.vectorstore_namespaces))
+                    else: 
+                        topic = self.action_agent.topic_decision(request)
+                    if topic == 0:
+                        # If no topics found message is sent to sprite
+                        no_topics = "Query not related to any supported topics. Supported topics are:\n"
+                        for key, value in self.agent_config.vectorstore_namespaces.items():
+                            no_topics += f"{key}: {value}\n"
+                        self.log_agent.print_and_log(no_topics)
+                        response = no_topics
+                    else:
+                        response = self.query_agent.run_context_enriched_query(request, topic)
+                case 2:
+                    # Run APIAgent
+                    response= self.API_agent.run_API_agent(request)
+                case _:
+                    # Else just run the docs agent for now
+                    no_workflow = 'No workflow found for request.'
+                    self.log_agent.print_and_log(no_workflow)
+                    return no_workflow
+                
+            return response
         
-        match workflow:
-            case 1:
-                # Run QueryAgent
-                
-                # If only one topic, then we skip the ActionAgent topic decision.
-                if len(self.agent_config.vectorstore_namespaces) == 1:
-                    topic = next(iter(self.agent_config.vectorstore_namespaces))
-                else: 
-                    topic = self.action_agent.topic_decision(request)
-                    
-                if topic == 0:
-                    no_topics = "Query not related to any supported topics. Supported topics are:\n"
-                    for key, value in self.agent_config.vectorstore_namespaces.items():
-                        no_topics += f"{key}: {value}\n"
-                    self.log_agent.print_and_log(no_topics)
-                    response = no_topics
-                else:
-                    response = self.query_agent.run_context_enriched_query(request, topic)
-                
-            case 2:
-                # Run APIAgent
-                response= self.API_agent.run_API_agent(request)
-            # Else just run the docs agent for now
-            case _:
-                no_workflow = 'No workflow found for request.'
-                self.log_agent.print_and_log(no_workflow)
-                return no_workflow
-            
-
-        return response
+        except Exception as e:
+            # Logs error and sends error to sprite
+            self.log_agent.print_and_log(f"An error occurred while processing request: {e}")
+           
+            return f"Bot broke. Probably just an API issue. Feel free to try again. Otherwise contact support."
 
     async def run_request(self, request):
-        try:
-            with ThreadPoolExecutor() as executor:
-                loop = asyncio.get_event_loop()
-                response = await loop.run_in_executor(executor, self.request_thread, request)
-                return response
-        except Exception as e:
-            tb = traceback.format_exc()
-            self.log_agent.print_and_log(f"An error occurred: {str(e)}. Traceback: {tb}")
-            raise e
+        
+        # Required to run multiple requests at a time in async
+        with ThreadPoolExecutor() as executor:
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(executor, self.request_thread, request)
+            
+            return response
 
-    class ActionAgent:
-        def __init__(self, log_agent, agent_config):
-            self.log_agent = log_agent
-            self.agent_config = agent_config
+class ActionAgent:
     
+    ### ActionAgent orchestrates the path requests flow through workflows ###
+    
+    def __init__(self, log_agent, agent_config):
+        
+        self.log_agent = log_agent
+        self.agent_config = agent_config
+
+    def action_prompt_template(self, query):
+        
         # Chooses workflow
         # Currently disabled
-        def action_prompt_template(self, query):
-            try:
-                with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_action_prompt_template.yaml'), 'r') as stream:
-                    # Load the YAML data and print the result
-                    prompt_template = yaml.safe_load(stream)
+        with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_action_prompt_template.yaml'), 'r') as stream:
+            # Load the YAML data and print the result
+            prompt_template = yaml.safe_load(stream)
 
-                # Loop over the list of dictionaries in data['prompt_template']
-                for role in prompt_template:
-                    if role['role'] == 'user':  # If the 'role' is 'user'
-                        role['content'] = query  # Replace the 'content' with 'prompt_message'
-                
-                return prompt_template
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
-                raise e
-            
-        def action_prompt_llm(self, prompt, actions):
-            try:
-                # Shamelessly copied from https://github.com/minimaxir/simpleaichat/blob/main/PROMPTS.md#tools
-                # Creates a dic of tokens equivalent to 0-n where n is the number of action items with a logit bias of 100
-                # This forces GPT to choose one.
-                logit_bias_weight = 100
-                logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(actions) + 1)}
+        # Loop over the list of dictionaries in data['prompt_template']
+        for role in prompt_template:
+            if role['role'] == 'user':  # If the 'role' is 'user'
+                role['content'] = query  # Replace the 'content' with 'prompt_message'
+        
+        return prompt_template
+    
+    def action_prompt_llm(self, prompt, actions):
 
-                response = openai.ChatCompletion.create(
-                    model=self.agent_config.action_llm_model,
-                    messages=prompt,
-                    max_tokens=1,
-                    logit_bias=logit_bias
-                )
-                return response['choices'][0]['message']['content']
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in action_prompt_llm: {str(e)}")
-                raise e
-            
-        def action_decision(self, query):
-            prompt_template = self.action_prompt_template(query)
-            actions = ['questions_on_docs', 'function_calling']
-            workflow = self.action_prompt_llm(prompt_template, actions)
-            return workflow 
+        # Shamelessly copied from https://github.com/minimaxir/simpleaichat/blob/main/PROMPTS.md#tools
+        # Creates a dic of tokens equivalent to 0-n where n is the number of action items with a logit bias of 100
+        # This forces GPT to choose one.
+        logit_bias_weight = 100
+        logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(actions) + 1)}
+
+        response = openai.ChatCompletion.create(
+            model=self.agent_config.action_llm_model,
+            messages=prompt,
+            max_tokens=1,
+            logit_bias=logit_bias
+        )
+        
+        return response['choices'][0]['message']['content']
+        
+    def action_decision(self, query):
+        
+        prompt_template = self.action_prompt_template(query)
+        actions = ['questions_on_docs', 'function_calling']
+        workflow = self.action_prompt_llm(prompt_template, actions)
+        return workflow 
+    
+    def topic_prompt_template(self, query):
         
         # Chooses topic
         # If no matching topic found, returns 0.
-        def topic_prompt_template(self, query):
+        with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_topic_prompt_template.yaml'), 'r') as stream:
+            prompt_template = yaml.safe_load(stream)
 
-            with open(os.path.join(self.agent_config.prompt_template_path, 'action_agent_topic_prompt_template.yaml'), 'r') as stream:
-                prompt_template = yaml.safe_load(stream)
+        # Create a list of formatted strings, each with the format "index. key: value"
+        if isinstance(self.agent_config.vectorstore_namespaces, dict):
+            content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.agent_config.vectorstore_namespaces.items())]
 
-           # Create a list of formatted strings, each with the format "index. key: value"
-            if isinstance(self.agent_config.vectorstore_namespaces, dict):
-                content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.agent_config.vectorstore_namespaces.items())]
-            else:
-                self.log_agent.print_and_log(f"An error occured accessing vectorstore_namespaces {self.agent_config.vectorstore_namespaces}")
+        # Join the strings together with spaces between them
+        topics_str = " ".join(content_strs)
 
-
-            # Join the strings together with spaces between them
-            topics_str = " ".join(content_strs)
-
-            # Append the documents string to the query
-            prompt_message  = "user query: " + query + " topics: " + topics_str
-            
-            # Loop over the list of dictionaries in data['prompt_template']
-            for role in prompt_template:
-                if role['role'] == 'user':  
-                    role['content'] = prompt_message  
-            
-            return prompt_template
-    
-        def topic_prompt_llm(self, prompt):
-
-            # Shamelessly copied from https://github.com/minimaxir/simpleaichat/blob/main/PROMPTS.md#tools
-            # Creates a dic of tokens equivalent to 0-n where n is the number of topics with a logit bias of 100
-            # This forces GPT to choose one.
-            logit_bias_weight = 100
-            logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(self.agent_config.vectorstore_namespaces) + 1)}
-
-            response = openai.ChatCompletion.create(
-                model=self.agent_config.action_llm_model,
-                messages=prompt,
-                max_tokens=1,
-                logit_bias=logit_bias
-            )
-            try:
-                topic_key = int(response['choices'][0]['message']['content'])
-            except ValueError:
-                # This block will execute if the conversion to int fails.
-                self.log_agent.print_and_log(f"Failed to convert topic_key to int: {response['choices'][0]['message']['content']}")
-                return 0
-            if topic_key == 0:
-                return 0
-            # Otherwise return string with the namespace of the topic in the vectorstore
-            topic = list(self.agent_config.vectorstore_namespaces.keys())[topic_key - 1]  # We subtract 1 because list indices start at 0
-            return topic
-            
-        def topic_decision(self, query):
-            prompt_template = self.topic_prompt_template(query)
-            topic = self.topic_prompt_llm(prompt_template)
-            
-            self.log_agent.print_and_log(f"{self.agent_config.action_llm_model} chose to fetch context docs from {topic} namespace.")
-            
-            return topic 
-
-    class QueryAgent:
-        def __init__(self, log_agent, agent_config):
-            self.log_agent = log_agent
-            self.agent_config = agent_config
-
-        def pre_query(self, query):
-            try:
-                with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_pre_query_template.yaml'), 'r') as stream:
-                    # Load the YAML data and print the result
-                    prompt_template = yaml.safe_load(stream)
-                    
-                # Loop over the list of dictionaries in data['prompt_template']
-                for role in prompt_template:
-                    if role['role'] == 'user':  # If the 'role' is 'user'
-                        role['content'] = query  # Replace the 'content' with 'prompt_message'
-                        
-                response = openai.ChatCompletion.create(
-                    model=self.agent_config.pre_query_llm_model,
-                    messages=prompt_template,
-                    max_tokens=25
-                )
-                response = response['choices'][0]['message']['content']
-                pre_query = f'query: {query}, keywords: {response}'
-                return pre_query
-
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
-                raise e
-            
-        def get_query_embeddings(self, query):
-            try:                    
-                embedding_retriever = OpenAIEmbeddings(
-                    model=self.agent_config.query_llm_model,
-                    openai_api_key=os.getenv("OPENAI_API_KEY"),
-                    request_timeout=self.agent_config.openai_timeout_seconds
-                )
-                dense_embedding = embedding_retriever.embed_query(query)
-
-
-                bm25_encoder = BM25Encoder()
-                bm25_encoder.fit(query)
-                sparse_embedding = bm25_encoder.encode_documents(query)
-
-                return dense_embedding, sparse_embedding
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in get_query_embeddings: {str(e)}")
-                raise e
-
-        def query_vectorstore(self, dense_embedding, sparse_embedding, topic):
-            try:
-                pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment=self.agent_config.vectorstore_environment)
-                index = pinecone.Index(self.agent_config.vectorstore_index)
-                
-                soft_query_response = index.query(
-                    top_k=self.agent_config.vectorstore_top_k,
-                    include_values=False,
-                    namespace=topic,
-                    include_metadata=True,
-                    filter={"doc_type": {"$eq": "soft"}},
-                    vector=dense_embedding,
-                    sparse_vector=sparse_embedding
-                )
-                hard_query_response = index.query(
-                    top_k=self.agent_config.vectorstore_top_k,
-                    include_values=False,
-                    namespace=topic,
-                    include_metadata=True,
-                    filter={"doc_type": {"$eq": "hard"}},
-                    vector=dense_embedding,
-                    sparse_vector=sparse_embedding
-                )
-
-                # Destructures the QueryResponse object the pinecone library generates.
-                returned_documents = []
-                for m in soft_query_response.matches:
-                    response = {
-                        'content': m.metadata['content'],
-                        'title': m.metadata['title'],
-                        'url': m.metadata['url'],
-                        'doc_type': m.metadata['doc_type'],
-                        'score': m.score,
-                        'id': m.id
-                    }
-                    returned_documents.append(response)
-                for m in hard_query_response.matches:
-                    response = {
-                        'content': m.metadata['content'],
-                        'title': m.metadata['title'],
-                        'url': m.metadata['url'],
-                        'doc_type': m.metadata['doc_type'],
-                        'score': m.score,
-                        'id': m.id
-                    }
-                    returned_documents.append(response)
-                                   
-                return returned_documents
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in query_vectorstore: {str(e)}")
-                raise e
+        # Append the documents string to the query
+        prompt_message  = "user query: " + query + " topics: " + topics_str
         
-        def doc_check(self, query, documents):
-            try:
-                with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_doc_check_template.yaml'), 'r') as stream:
-                    # Load the YAML data and print the result
-                    prompt_template = yaml.safe_load(stream)
-                
-                doc_counter = 1
-                content_strs = []
-                for doc in documents:
-                    content_strs.append(f"{doc['title']} doc_number: [{doc_counter}]")
-                    documents_str = " ".join(content_strs)
-                    doc_counter += 1
-                prompt_message  = "Query: " + query + " Documents: " + documents_str
-                          
-                logit_bias = {
-                            # 1-9
-                            "16": 100,
-                            "17": 100,
-                            "18": 100,
-                            "19": 100,
-                            "20": 100,
-                            "21": 100,
-                            "22": 100,
-                            "23": 100,
-                            "24": 100,
-                            # \n
-                            "198": 100
-                        }
-                
-                # Loop over the list of dictionaries in data['prompt_template']
-                for role in prompt_template:
-                    if role['role'] == 'user':  # If the 'role' is 'user'
-                        role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
-                        
-                response = openai.ChatCompletion.create(
-                    model=self.agent_config.pre_query_llm_model,
-                    messages=prompt_template,
-                    max_tokens=10,
-                    logit_bias=logit_bias
-                )
-                doc_check = response['choices'][0]['message']['content']
-                 # This finds all instances of [n] in the LLM response
-                pattern_num = r"\d"
-                matches = re.findall(pattern_num, doc_check)
-                
-                relevant_documents = []
-                # Creates a lit of each unique mention of n in LLM response
-                unique_doc_nums = set([int(match) for match in matches])
-                for doc_num in unique_doc_nums:
-                    # doc_num given to llm has an index starting a 1
-                    # Subtract 1 to get the correct index in the list
-                    # Access the document from the list using the index
-                    relevant_documents.append(documents[doc_num - 1])
-
-                return relevant_documents
-
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
-                raise e
-            
-        def parse_documents(self, returned_documents):
-            try:
-                def _tiktoken_len(document):
-                    tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
-                    tokens = tokenizer.encode(
-                        document,
-                        disallowed_special=()
-                    )
-                    return len(tokens)
-                
-                def _docs_tiktoken_len(documents):
-                    tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
-                    token_count = 0
-                    for document in documents:
-                        tokens = 0
-                        tokens += len(tokenizer.encode(
-                            document['content'],
-                            disallowed_special=()
-                        ))
-                        token_count += tokens
-                    return token_count
-                
-                # Count the number of 'hard' and 'soft' documents
-                hard_count = sum(1 for doc in returned_documents if doc['doc_type'] == 'hard')
-                soft_count = sum(1 for doc in returned_documents if doc['doc_type'] == 'soft')
-
-                # Sort the list by score
-                sorted_documents = sorted(returned_documents, key=lambda x: x['score'], reverse=True)
-
-                for i, document in enumerate(sorted_documents, start=1):
-                    token_count = _tiktoken_len(document['content'])
-                    if token_count > self.agent_config.max_docs_tokens:
-                        sorted_documents.pop(idx)
-                        continue
-                    document['token_count'] = token_count
-                    document['doc_num'] = i
-                
-                embeddings_tokens = _docs_tiktoken_len(sorted_documents)
-                
-                # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
-                iterations = 0
-                original_documents_count = len(sorted_documents)
-                while embeddings_tokens > self.agent_config.max_docs_tokens:
-                    if iterations >= original_documents_count:
-                        break
-                    # Find the index of the document with the highest token_count that exceeds text_splitter_goal_length
-                    max_token_count_idx = max((idx for idx, document in enumerate(sorted_documents) if document['token_count'] > self.agent_config.text_splitter_goal_length), 
-                          key=lambda idx: sorted_documents[idx]['token_count'], default=None)
-                    # If a document was found that meets the conditions, remove it from the list
-                    if max_token_count_idx is not None:
-                        doc_type = sorted_documents[max_token_count_idx]['doc_type']
-                        if doc_type == 'soft':
-                            soft_count -= 1
-                        else:
-                            hard_count -= 1
-                        sorted_documents.pop(max_token_count_idx)
-                        break
-                    # Remove the lowest scoring 'soft' document if there is more than one,
-                    elif soft_count > 1:
-                        for idx, document in reversed(list(enumerate(sorted_documents))):
-                            if document['doc_type'] == 'soft':
-                                sorted_documents.pop(idx)
-                                soft_count -= 1
-                                break
-                    # otherwise remove the lowest scoring 'hard' document
-                    elif hard_count > 1:
-                        for idx, document in reversed(list(enumerate(sorted_documents))):
-                            if document['doc_type'] == 'hard':
-                                sorted_documents.pop(idx)
-                                hard_count -= 1
-                                break
-                    else:
-                        # Find the index of the document with the highest token_count
-                        max_token_count_idx = max(range(len(sorted_documents)), key=lambda idx: sorted_documents[idx]['token_count'])
-                        # Remove the document with the highest token_count from the list
-                        sorted_documents.pop(max_token_count_idx)
- 
-                    embeddings_tokens = _docs_tiktoken_len(sorted_documents)
-                    # self.log_agent.print_and_log("removed lowest scoring embedding doc .")
-                    # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
-                    iterations += 1
-                # self.log_agent.print_and_log(f"number of context docs now: {len(sorted_documents)}")
-                # Same as above but removes based on total count of docs instead of token count.
-                while len(sorted_documents) > self.agent_config.max_docs_used:
-                    if soft_count > 1:
-                        for idx, document in reversed(list(enumerate(sorted_documents))):
-                            if document['doc_type'] == 'soft':
-                                sorted_documents.pop(idx)
-                                soft_count -= 1
-                                break
-                    elif hard_count > 1:
-                        for idx, document in reversed(list(enumerate(sorted_documents))):
-                            if document['doc_type'] == 'hard':
-                                sorted_documents.pop(idx)
-                                hard_count -= 1
-                                break
-                    # self.log_agent.print_and_log("removed lowest scoring embedding doc.")
-                                  
-                for i, document in enumerate(sorted_documents, start=1):
-                    document['doc_num'] = i
-                return sorted_documents
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in parse_documents: {str(e)}")
-                raise e
-    
-        def docs_prompt_template(self, query, documents):
-            try:
-                with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_prompt_template.yaml'), 'r') as stream:
-                    # Load the YAML data and print the result
-                    prompt_template = yaml.safe_load(stream)
-
-                # Loop over documents and append them to each other and then adds the query
-                if documents:
-                    content_strs = []
-                    for doc in documents:
-                        doc_num = doc['doc_num']
-                        content_strs.append(f"{doc['content']} doc_num: [{doc_num}]")
-                        documents_str = " ".join(content_strs)
-                    prompt_message  = "Query: " + query + " Documents: " + documents_str
-                else:
-                    prompt_message  = "Query: " + query
-
-                # Loop over the list of dictionaries in data['prompt_template']
-                for role in prompt_template:
-                    if role['role'] == 'user':  # If the 'role' is 'user'
-                        role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
-                        
-                # self.log_agent.print_and_log(f"prepared prompt: {json.dumps(prompt_template, indent=4)}")
-                
-                return prompt_template
-            
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in docs_prompt_template: {str(e)}")
-                raise e
+        # Loop over the list of dictionaries in data['prompt_template']
+        for role in prompt_template:
+            if role['role'] == 'user':  
+                role['content'] = prompt_message  
         
-        def docs_prompt_llm(self, prompt):
-            try:
+        return prompt_template
 
-                response = openai.ChatCompletion.create(
-                    model=self.agent_config.query_llm_model,
-                    messages=prompt,
-                    max_tokens=self.agent_config.max_response_tokens
-                )
-                
-                # self.log_agent.print_and_log(response['choices'][0]['message']['content'])
-                
-                return response['choices'][0]['message']['content']
+    def topic_prompt_llm(self, prompt):
+
+        logit_bias_weight = 100
+        logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(self.agent_config.vectorstore_namespaces) + 1)}
+
+        response = openai.ChatCompletion.create(
+            model=self.agent_config.action_llm_model,
+            messages=prompt,
+            max_tokens=1,
+            logit_bias=logit_bias
+        )
+
+        topic_key = int(response['choices'][0]['message']['content'])
+
+        if topic_key == 0:
+            return 0
+        # Otherwise return string with the namespace of the topic in the vectorstore
+        topic = list(self.agent_config.vectorstore_namespaces.keys())[topic_key - 1]  # We subtract 1 because list indices start at 0
+        
+        return topic
+        
+    def topic_decision(self, query):
+        
+        prompt_template = self.topic_prompt_template(query)
+        topic = self.topic_prompt_llm(prompt_template)
+        
+        self.log_agent.print_and_log(f"{self.agent_config.action_llm_model} chose to fetch context docs from {topic} namespace.")
+        
+        return topic 
+
+class QueryAgent:
+    
+    ### QueryAgent answers questions ###
+    
+    def __init__(self, log_agent, agent_config):
+        
+        self.log_agent = log_agent
+        self.agent_config = agent_config
+
+    def pre_query(self, query):
+        
+        with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_pre_query_template.yaml'), 'r') as stream:
+            # Load the YAML data and print the result
+            prompt_template = yaml.safe_load(stream)
             
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in docs_prompt_llm: {str(e)}")
-                raise e
+        # Loop over the list of dictionaries in data['prompt_template']
+        for role in prompt_template:
+            if role['role'] == 'user':  # If the 'role' is 'user'
+                role['content'] = query  # Replace the 'content' with 'prompt_message'
+                
+        response = openai.ChatCompletion.create(
+            model=self.agent_config.pre_query_llm_model,
+            messages=prompt_template,
+            max_tokens=25
+        )
+        response = response['choices'][0]['message']['content']
+        pre_query = f'query: {query}, keywords: {response}'
+        
+        return pre_query
+    
+    def get_query_embeddings(self, query):
+            
+        embedding_retriever = OpenAIEmbeddings(
+            model=self.agent_config.query_llm_model,
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            request_timeout=self.agent_config.openai_timeout_seconds
+        )
+        dense_embedding = embedding_retriever.embed_query(query)
 
-        def append_meta(self, input_text, parsed_documents):
-            try:
-                # Covering LLM doc notations cases
-                # The modified pattern now includes optional opening parentheses or brackets before "Document"
-                # and optional closing parentheses or brackets after the number
-                pattern = r"[\[\(]?Document\s*\[?(\d+)\]?\)?[\]\)]?"
-                formatted_text = re.sub(pattern, r"[\1]", input_text, flags=re.IGNORECASE)
 
-                # This finds all instances of [n] in the LLM response
-                pattern_num = r"\[\d\]"
-                matches = re.findall(pattern_num, formatted_text)
-                print(matches)
+        bm25_encoder = BM25Encoder()
+        bm25_encoder.fit(query)
+        sparse_embedding = bm25_encoder.encode_documents(query)
 
-                if not matches:
-                    self.log_agent.print_and_log("No supporting docs.")
-                    answer_obj = {
-                        "answer_text": input_text,
-                        "llm": self.agent_config.query_llm_model,
-                        "documents": []
-                    }
-                    return answer_obj
-                print(matches)
+        return dense_embedding, sparse_embedding
 
-                # Formatted text has all mutations of documents n replaced with [n]
-                answer_obj = {
-                        "answer_text": formatted_text,
-                        "llm": self.agent_config.query_llm_model,
-                        "documents": []
-                }
+    def query_vectorstore(self, dense_embedding, sparse_embedding, topic):
+            
+        pinecone.init(api_key=self.agent_config.pinecone_api_key, environment=self.agent_config.vectorstore_environment)
+        index = pinecone.Index(self.agent_config.vectorstore_index)
+        
+        soft_query_response = index.query(
+            top_k=self.agent_config.vectorstore_top_k,
+            include_values=False,
+            namespace=topic,
+            include_metadata=True,
+            filter={"doc_type": {"$eq": "soft"}},
+            vector=dense_embedding,
+            sparse_vector=sparse_embedding
+        )
+        hard_query_response = index.query(
+            top_k=self.agent_config.vectorstore_top_k,
+            include_values=False,
+            namespace=topic,
+            include_metadata=True,
+            filter={"doc_type": {"$eq": "hard"}},
+            vector=dense_embedding,
+            sparse_vector=sparse_embedding
+        )
 
-                if matches:
-                    # Creates a lit of each unique mention of [n] in LLM response
-                    unique_doc_nums = set([int(match[1:-1]) for match in matches])
-                    for doc_num in unique_doc_nums:
-                        # doc_num given to llm has an index starting a 1
-                        # Subtract 1 to get the correct index in the list
-                        doc_index = doc_num - 1
-                        # Access the document from the list using the index
-                        if 0 <= doc_index < len(parsed_documents):
-                            document = {
-                                "doc_num": parsed_documents[doc_index]['doc_num'],
-                                "url": parsed_documents[doc_index]['url'],
-                                "title": parsed_documents[doc_index]['title']
-                            }
-                            answer_obj["documents"].append(document)
-                        else:
-                            self.log_agent.print_and_log(f"Document{doc_num} not found in the list.")
+        # Destructures the QueryResponse object the pinecone library generates.
+        returned_documents = []
+        for m in soft_query_response.matches:
+            response = {
+                'content': m.metadata['content'],
+                'title': m.metadata['title'],
+                'url': m.metadata['url'],
+                'doc_type': m.metadata['doc_type'],
+                'score': m.score,
+                'id': m.id
+            }
+            returned_documents.append(response)
+        for m in hard_query_response.matches:
+            response = {
+                'content': m.metadata['content'],
+                'title': m.metadata['title'],
+                'url': m.metadata['url'],
+                'doc_type': m.metadata['doc_type'],
+                'score': m.score,
+                'id': m.id
+            }
+            returned_documents.append(response)
                             
-                # self.log_agent.print_and_log(f"response with metadata: {answer_obj}")
+        return returned_documents
+
+    def doc_check(self, query, documents):
+        
+        with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_doc_check_template.yaml'), 'r') as stream:
+            # Load the YAML data and print the result
+            prompt_template = yaml.safe_load(stream)
+        
+        doc_counter = 1
+        content_strs = []
+        for doc in documents:
+            content_strs.append(f"{doc['title']} doc_number: [{doc_counter}]")
+            documents_str = " ".join(content_strs)
+            doc_counter += 1
+        prompt_message  = "Query: " + query + " Documents: " + documents_str
+                    
+        logit_bias = {
+                    # 1-9
+                    "16": 100,
+                    "17": 100,
+                    "18": 100,
+                    "19": 100,
+                    "20": 100,
+                    "21": 100,
+                    "22": 100,
+                    "23": 100,
+                    "24": 100,
+                    # \n
+                    "198": 100
+                }
+        
+        # Loop over the list of dictionaries in data['prompt_template']
+        for role in prompt_template:
+            if role['role'] == 'user':  # If the 'role' is 'user'
+                role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
                 
-                return answer_obj
-            
-            except Exception as e:
-                self.log_agent.print_and_log(f"An error occurred in append_meta: {str(e)}")
-                raise e
-    
-        def run_context_enriched_query(self, query, topic):
-            
-            self.log_agent.print_and_log(f'Query: {query}')
-            
-            pre_query = self.pre_query(query)
-            self.log_agent.print_and_log(f"Pre-query response: {pre_query}")
-            
-            dense_embedding, sparse_embedding = self.get_query_embeddings(pre_query)
-            self.log_agent.print_and_log("Sparse and dense embeddings retrieved")
-            
-            returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, topic)
-            if not returned_documents:
-                self.log_agent.print_and_log("No supporting documents found!")
-            returned_documents_list = []
-            for returned_doc in returned_documents:
-                returned_documents_list.append(returned_doc['url'])
-            self.log_agent.print_and_log(f"{len(returned_documents)} documents returned from vectorstore: {returned_documents_list}")
-            
-            returned_documents = self.doc_check(query, returned_documents)
-            if not returned_documents:
-                self.log_agent.print_and_log("No supporting documents after doc_check!")
-            returned_documents_list = []
-            for returned_doc in returned_documents:
-                returned_documents_list.append(returned_doc['url'])
-            self.log_agent.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
-            
-            parsed_documents = self.parse_documents(returned_documents)
-            final_documents_list = []
-            for parsed_document in parsed_documents:
-                final_documents_list.append(parsed_document['url'])
-            self.log_agent.print_and_log(f"{len(parsed_documents)} documents returned after parsing: {final_documents_list}")
+        response = openai.ChatCompletion.create(
+            model=self.agent_config.pre_query_llm_model,
+            messages=prompt_template,
+            max_tokens=10,
+            logit_bias=logit_bias
+        )
+        doc_check = response['choices'][0]['message']['content']
+            # This finds all instances of [n] in the LLM response
+        pattern_num = r"\d"
+        matches = re.findall(pattern_num, doc_check)
+        
+        relevant_documents = []
+        # Creates a lit of each unique mention of n in LLM response
+        unique_doc_nums = set([int(match) for match in matches])
+        for doc_num in unique_doc_nums:
+            # doc_num given to llm has an index starting a 1
+            # Subtract 1 to get the correct index in the list
+            # Access the document from the list using the index
+            relevant_documents.append(documents[doc_num - 1])
+
+        return relevant_documents
+
+    def parse_documents(self, returned_documents):
+
+        def _tiktoken_len(document):
+            tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
+            tokens = tokenizer.encode(
+                document,
+                disallowed_special=()
+            )
+            return len(tokens)
+        
+        def _docs_tiktoken_len(documents):
+            tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
+            token_count = 0
+            for document in documents:
+                tokens = 0
+                tokens += len(tokenizer.encode(
+                    document['content'],
+                    disallowed_special=()
+                ))
+                token_count += tokens
+            return token_count
+        
+        # Count the number of 'hard' and 'soft' documents
+        hard_count = sum(1 for doc in returned_documents if doc['doc_type'] == 'hard')
+        soft_count = sum(1 for doc in returned_documents if doc['doc_type'] == 'soft')
+
+        # Sort the list by score
+        sorted_documents = sorted(returned_documents, key=lambda x: x['score'], reverse=True)
+
+        for i, document in enumerate(sorted_documents, start=1):
+            token_count = _tiktoken_len(document['content'])
+            if token_count > self.agent_config.max_docs_tokens:
+                sorted_documents.pop(idx)
+                continue
+            document['token_count'] = token_count
+            document['doc_num'] = i
+        
+        embeddings_tokens = _docs_tiktoken_len(sorted_documents)
+        
+        # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
+        iterations = 0
+        original_documents_count = len(sorted_documents)
+        while embeddings_tokens > self.agent_config.max_docs_tokens:
+            if iterations >= original_documents_count:
+                break
+            # Find the index of the document with the highest token_count that exceeds text_splitter_goal_length
+            max_token_count_idx = max((idx for idx, document in enumerate(sorted_documents) if document['token_count'] > self.agent_config.text_splitter_goal_length), 
+                    key=lambda idx: sorted_documents[idx]['token_count'], default=None)
+            # If a document was found that meets the conditions, remove it from the list
+            if max_token_count_idx is not None:
+                doc_type = sorted_documents[max_token_count_idx]['doc_type']
+                if doc_type == 'soft':
+                    soft_count -= 1
+                else:
+                    hard_count -= 1
+                sorted_documents.pop(max_token_count_idx)
+                break
+            # Remove the lowest scoring 'soft' document if there is more than one,
+            elif soft_count > 1:
+                for idx, document in reversed(list(enumerate(sorted_documents))):
+                    if document['doc_type'] == 'soft':
+                        sorted_documents.pop(idx)
+                        soft_count -= 1
+                        break
+            # otherwise remove the lowest scoring 'hard' document
+            elif hard_count > 1:
+                for idx, document in reversed(list(enumerate(sorted_documents))):
+                    if document['doc_type'] == 'hard':
+                        sorted_documents.pop(idx)
+                        hard_count -= 1
+                        break
+            else:
+                # Find the index of the document with the highest token_count
+                max_token_count_idx = max(range(len(sorted_documents)), key=lambda idx: sorted_documents[idx]['token_count'])
+                # Remove the document with the highest token_count from the list
+                sorted_documents.pop(max_token_count_idx)
+
+            embeddings_tokens = _docs_tiktoken_len(sorted_documents)
+            # self.log_agent.print_and_log("removed lowest scoring embedding doc .")
+            # self.log_agent.print_and_log(f"context docs token count: {embeddings_tokens}")
+            iterations += 1
+        # self.log_agent.print_and_log(f"number of context docs now: {len(sorted_documents)}")
+        # Same as above but removes based on total count of docs instead of token count.
+        while len(sorted_documents) > self.agent_config.max_docs_used:
+            if soft_count > 1:
+                for idx, document in reversed(list(enumerate(sorted_documents))):
+                    if document['doc_type'] == 'soft':
+                        sorted_documents.pop(idx)
+                        soft_count -= 1
+                        break
+            elif hard_count > 1:
+                for idx, document in reversed(list(enumerate(sorted_documents))):
+                    if document['doc_type'] == 'hard':
+                        sorted_documents.pop(idx)
+                        hard_count -= 1
+                        break
+            # self.log_agent.print_and_log("removed lowest scoring embedding doc.")
+                            
+        for i, document in enumerate(sorted_documents, start=1):
+            document['doc_num'] = i
+        
+        return sorted_documents
+
+    def docs_prompt_template(self, query, documents):
+
+        with open(os.path.join(self.agent_config.prompt_template_path, 'query_agent_prompt_template.yaml'), 'r') as stream:
+            # Load the YAML data and print the result
+            prompt_template = yaml.safe_load(stream)
+
+        # Loop over documents and append them to each other and then adds the query
+        if documents:
+            content_strs = []
+            for doc in documents:
+                doc_num = doc['doc_num']
+                content_strs.append(f"{doc['content']} doc_num: [{doc_num}]")
+                documents_str = " ".join(content_strs)
+            prompt_message  = "Query: " + query + " Documents: " + documents_str
+        else:
+            prompt_message  = "Query: " + query
+
+        # Loop over the list of dictionaries in data['prompt_template']
+        for role in prompt_template:
+            if role['role'] == 'user':  # If the 'role' is 'user'
+                role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
                 
-            prompt = self.docs_prompt_template(query, parsed_documents)
+        # self.log_agent.print_and_log(f"prepared prompt: {json.dumps(prompt_template, indent=4)}")
+        
+        return prompt_template
+
+    def docs_prompt_llm(self, prompt):
+        
+        response = openai.ChatCompletion.create(
+            model=self.agent_config.query_llm_model,
+            messages=prompt,
+            max_tokens=self.agent_config.max_response_tokens
+        )
+        
+        # self.log_agent.print_and_log(response['choices'][0]['message']['content'])
+        
+        return response['choices'][0]['message']['content']
+        
+    def append_meta(self, input_text, parsed_documents):
+
+        # Covering LLM doc notations cases
+        # The modified pattern now includes optional opening parentheses or brackets before "Document"
+        # and optional closing parentheses or brackets after the number
+        pattern = r"[\[\(]?Document\s*\[?(\d+)\]?\)?[\]\)]?"
+        formatted_text = re.sub(pattern, r"[\1]", input_text, flags=re.IGNORECASE)
+
+        # This finds all instances of [n] in the LLM response
+        pattern_num = r"\[\d\]"
+        matches = re.findall(pattern_num, formatted_text)
+        print(matches)
+
+        if not matches:
+            self.log_agent.print_and_log("No supporting docs.")
+            answer_obj = {
+                "answer_text": input_text,
+                "llm": self.agent_config.query_llm_model,
+                "documents": []
+            }
+            return answer_obj
+        print(matches)
+
+        # Formatted text has all mutations of documents n replaced with [n]
+        answer_obj = {
+                "answer_text": formatted_text,
+                "llm": self.agent_config.query_llm_model,
+                "documents": []
+        }
+
+        if matches:
+            # Creates a lit of each unique mention of [n] in LLM response
+            unique_doc_nums = set([int(match[1:-1]) for match in matches])
+            for doc_num in unique_doc_nums:
+                # doc_num given to llm has an index starting a 1
+                # Subtract 1 to get the correct index in the list
+                doc_index = doc_num - 1
+                # Access the document from the list using the index
+                if 0 <= doc_index < len(parsed_documents):
+                    document = {
+                        "doc_num": parsed_documents[doc_index]['doc_num'],
+                        "url": parsed_documents[doc_index]['url'],
+                        "title": parsed_documents[doc_index]['title']
+                    }
+                    answer_obj["documents"].append(document)
+                else:
+                    self.log_agent.print_and_log(f"Document{doc_num} not found in the list.")
+                    
+        # self.log_agent.print_and_log(f"response with metadata: {answer_obj}")
+        
+        return answer_obj
+
+    def run_context_enriched_query(self, query, topic):
+        
+        self.log_agent.print_and_log(f'Running query: {query}')
+        
+        pre_query = self.pre_query(query)
+        self.log_agent.print_and_log(f"Pre-query response: {pre_query}")
+        
+        dense_embedding, sparse_embedding = self.get_query_embeddings(pre_query)
+        self.log_agent.print_and_log("Sparse and dense embeddings retrieved")
+        
+        returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, topic)
+        if not returned_documents:
+            self.log_agent.print_and_log("No supporting documents found!")
+        returned_documents_list = []
+        for returned_doc in returned_documents:
+            returned_documents_list.append(returned_doc['url'])
+        self.log_agent.print_and_log(f"{len(returned_documents)} documents returned from vectorstore: {returned_documents_list}")
+        
+        returned_documents = self.doc_check(query, returned_documents)
+        if not returned_documents:
+            self.log_agent.print_and_log("No supporting documents after doc_check!")
+        returned_documents_list = []
+        for returned_doc in returned_documents:
+            returned_documents_list.append(returned_doc['url'])
+        self.log_agent.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
+        
+        parsed_documents = self.parse_documents(returned_documents)
+        final_documents_list = []
+        for parsed_document in parsed_documents:
+            final_documents_list.append(parsed_document['url'])
+        self.log_agent.print_and_log(f"{len(parsed_documents)} documents returned after parsing: {final_documents_list}")
             
-            self.log_agent.print_and_log(f'Sending prompt to LLM')
-            llm_response = self.docs_prompt_llm(prompt)
-            self.log_agent.print_and_log(f'LLM response: {llm_response}')
-                 
-            parsed_response = self.append_meta(llm_response, parsed_documents)
-            self.log_agent.print_and_log(f'LLM response with appended metadata: {parsed_response}')
-            
-            return parsed_response
-    
-    # Currently under development
-    class APIAgent:
+        prompt = self.docs_prompt_template(query, parsed_documents)
+        
+        self.log_agent.print_and_log(f'Sending prompt to LLM')
+        llm_response = self.docs_prompt_llm(prompt)
+        self.log_agent.print_and_log(f'LLM response: {llm_response}')
+                
+        parsed_response = self.append_meta(llm_response, parsed_documents)
+        self.log_agent.print_and_log(f'LLM response with appended metadata: {parsed_response}')
+        
+        return parsed_response
+
+class APIAgent:
+        
+        ### APIAgent makes API calls on behalf the user ###
+        # Currently under development
+        
         def __init__(self, log_agent, agent_config):
+            
             self.log_agent = log_agent
             self.agent_config = agent_config
         
         # Selects the correct API and endpoint to run action on.
         # Eventually, we should create a merged file that describes all available API.
         def select_API_operationID(self, query):
+            
             API_spec_path = self.agent_config.API_spec_path
             # Load prompt template to be used with all APIs
             with open(os.path.join(self.agent_config.prompt_template_path, 'API_agent_select_operationID_prompt_template.yaml'), 'r') as stream:
@@ -667,9 +642,11 @@ class ShelbyAgent:
                     break
             if operationID_file is None:
                 self.log_agent.print_and_log("No matching operationID found.")
+            
             return operationID_file
                 
         def create_bodyless_function(self, query, operationID_file):
+            
             with open(os.path.join(self.agent_config.prompt_template_path, 'API_agent_create_bodyless_function_prompt_template.yaml'), 'r') as stream:
                 # Load the YAML data and print the result
                 prompt_template = yaml.safe_load(stream)
@@ -686,11 +663,12 @@ class ShelbyAgent:
                             messages=prompt_template,
                             max_tokens=500,
                         )
+            
             url_maybe  = response['choices'][0]['message']['content']
             return url_maybe
-  
-                    
+             
         def run_API_agent(self, query):
+            
             self.log_agent.print_and_log(f"new action: {query}")
             operationID_file = self.select_API_operationID(query)
             # Here we need to run a doc_agent query if operationID_file is None
@@ -701,7 +679,6 @@ class ShelbyAgent:
             
             # Here we send the request to GPT to evaluate the answer
             
-
             return response
     
 

@@ -18,12 +18,10 @@ jobs:
             STACKPATH_API_CLIENT_SECRET: ${{ secrets.STACKPATH_API_CLIENT_SECRET }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
             PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-            DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-
+            DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}  
 
             SLACK_BOT_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_BOT_TOKEN }}
             SLACK_APP_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_APP_TOKEN }}
-
 
             # Configs that may change based on deployment_target
             DEPLOYMENT_TARGET: slack
