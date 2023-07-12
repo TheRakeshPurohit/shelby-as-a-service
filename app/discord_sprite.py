@@ -17,34 +17,29 @@ agent_config = AppConfig('discord')
 intents = discord.Intents.default()
 intents.guilds = True
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"), intents=intents)
+
 #endregion
 
 @bot.event
 async def on_guild_join(guild):
     
-    # This checks if the specified channel_id exists in the server the bot is added to and leaves if it doesn't exist
-    # This prevents the bot from being added to servers that aren't approved
-    if not any(channel.id == int(agent_config.discord_channel_id) for channel in guild.channels):
-            log_agent.print_and_log(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
-            await guild.leave()
-    channel = bot.get_channel(int(agent_config.discord_channel_id))
-    
-    await channel.send(format_message(agent_config.discord_welcome_message, get_random_animal()))
+    channel = await check_server_for_channel_id(guild)
+    if channel:
+        await channel.send(format_message(agent_config.discord_welcome_message, get_random_animal()))
             
 @bot.event
 async def on_ready():
     
     # App start up actions
     for guild in bot.guilds:
-        if not any(channel.id == int(agent_config.discord_channel_id) for channel in guild.channels):
-            log_agent.print_and_log(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
-            await guild.leave()
-        
+        channel = await check_server_for_channel_id(guild)
+        if channel:
+            await channel.send(format_message(agent_config.discord_welcome_message, get_random_animal()))
+
     log_agent.print_and_log(f'Bot has logged in as {bot.user.name} (ID: {bot.user.id})')
     log_agent.print_and_log('------')
-    channel = bot.get_channel(int(agent_config.discord_channel_id))
 
-    await channel.send(format_message(agent_config.discord_welcome_message, get_random_animal()))
+    
 
 @bot.event
 async def on_message(message):
@@ -60,7 +55,8 @@ async def on_message(message):
             await message.channel.send(f'No, I will not tell you about the rabbits, <@{message.author.id}>,.')
             return
         # Must be in the approved channel
-        if message.channel.id != int(agent_config.discord_channel_id):
+        channel_id = await check_message_for_channel_id(message)
+        if not channel_id:
             return
         
         request = message.content.replace(f'<@{bot.user.id}>', '').strip()
@@ -122,6 +118,57 @@ def format_message(template, var=None):
     
     return template.format
 
+async def check_server_for_channel_id(guild):
+    
+    # This checks if the specified channel_id exists in the server the bot is added to and leaves if it doesn't exist
+    # This prevents the bot from being added to servers that aren't approved
+    
+    # Initialize a variable to store the matching channel ID
+    matching_channel_id = None
+
+    # Check each channel ID in the agent_config.discord_channel_ids list
+    for config_channel_id in agent_config.discord_channel_ids:
+        # Convert the config_channel_id to an integer
+        config_channel_id = int(config_channel_id)
+        
+        # Check if the config_channel_id is in the guild's channels
+        if any(channel.id == config_channel_id for channel in guild.channels):
+            matching_channel_id = config_channel_id
+            break  # Exit the loop when we find a match
+        
+    # If we didn't find a matching channel ID, leave the guild
+    if matching_channel_id is None:
+        log_agent.print_and_log(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
+        await guild.leave()
+        
+        return None
+    else:
+        # If we found a matching channel ID, get the channel
+        channel = bot.get_channel(matching_channel_id)
+        
+        return channel
+
+async def check_message_for_channel_id(message):
+
+    # Initialize a variable to store the matching channel ID
+    matching_channel_id = None
+
+    # Check each channel ID in the agent_config.discord_channel_ids list
+    for config_channel_id in agent_config.discord_channel_ids:
+        # Convert the config_channel_id to an integer
+        config_channel_id = int(config_channel_id)
+        
+        # Check if the config_channel_id is in the guild's channels
+        if message.channel.id == config_channel_id:
+            matching_channel_id = config_channel_id
+            break  # Exit the loop when we find a match
+        
+    # If we didn't find a matching channel ID, leave the guild
+    if matching_channel_id is None:
+        return None
+    else:
+        return matching_channel_id
+    
 if __name__ == "__main__":
     
     # Runs the bot through the asyncio.run() function built into the library

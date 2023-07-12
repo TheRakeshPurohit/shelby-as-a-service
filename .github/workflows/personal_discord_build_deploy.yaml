@@ -21,7 +21,7 @@ jobs:
             DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}  
 
             DISCORD_TOKEN: ${{ secrets.PERSONAL_SPRITE_DISCORD_TOKEN }}
-            DISCORD_CHANNEL_ID: ${{ secrets.PERSONAL_SPRITE_DISCORD_CHANNEL_ID }}
+            DISCORD_CHANNEL_IDS: ${{ secrets.PERSONAL_SPRITE_DISCORD_CHANNEL_IDS }}
             DISCORD_WELCOME_MESSAGE: "ima tell you about the {}."
             DISCORD_SHORT_MESSAGE: "<@{}>, brevity is the soul of wit, but not of good queries. Please provide more details in your request."
             DISCORD_MESSAGE_START: "Running request... relax, chill, and vibe a minute."
@@ -42,7 +42,7 @@ jobs:
             OPENAI_TIMEOUT_SECONDS: 180.0
             MAX_DOCS_TOKENS: 3500
             MAX_DOCS_USED: 5
-            MAX_RESPONSE_TOKENS: 400
+            MAX_RESPONSE_TOKENS: 300
             SELECT_OPERATIONID_LLM_MODEL: gpt-4
             CREATE_FUNCTION_LLM_MODEL: gpt-4
             POPULATE_FUNCTION_LLM_MODEL: gpt-4

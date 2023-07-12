@@ -50,7 +50,7 @@ class DeploymentConfig(BaseModel):
     vectorstore_top_k: int = 5
     max_docs_tokens: int = 3500
     max_docs_used: int = 5
-    max_response_tokens: int = 400
+    max_response_tokens: int = 300
     openai_timeout_seconds: float = 180.0
     
     # APIAgent
@@ -103,7 +103,7 @@ class AppConfig():
         match deployment_target:
             case 'discord':
                 self.discord_token: str = os.getenv('DISCORD_TOKEN') 
-                self.discord_channel_id: str = os.getenv('DISCORD_CHANNEL_ID')
+                self.discord_channel_ids: list[int] = [int(id) for id in os.getenv('DISCORD_CHANNEL_IDS').split(',')]
                 # "" are required for formating in github actions workflow, but they need to be removed for use by discord sprite
                 self.discord_welcome_message: str = os.getenv('DISCORD_WELCOME_MESSAGE', self.deployment_config.discord_welcome_message).strip('"')
                 self.discord_short_message: str = os.getenv('DISCORD_SHORT_MESSAGE', self.deployment_config.discord_short_message).strip('"')

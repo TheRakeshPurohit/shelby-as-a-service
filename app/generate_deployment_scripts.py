@@ -17,7 +17,7 @@ def generate_workflow(deployment_target):
             case 'discord':
                 kvps = f"""
                 DISCORD_TOKEN: ${{{{ secrets.{deployment_config.service_name.upper()}_SPRITE_DISCORD_TOKEN }}}}
-                DISCORD_CHANNEL_ID: ${{{{ secrets.{deployment_config.service_name.upper()}_SPRITE_DISCORD_CHANNEL_ID }}}}
+                DISCORD_CHANNEL_IDS: ${{{{ secrets.{deployment_config.service_name.upper()}_SPRITE_DISCORD_CHANNEL_IDS }}}}
                 DISCORD_WELCOME_MESSAGE: {deployment_config.discord_welcome_message}
                 DISCORD_SHORT_MESSAGE: {deployment_config.discord_short_message}
                 DISCORD_MESSAGE_START: {deployment_config.discord_message_start}

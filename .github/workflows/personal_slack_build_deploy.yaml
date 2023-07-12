@@ -38,7 +38,7 @@ jobs:
             OPENAI_TIMEOUT_SECONDS: 180.0
             MAX_DOCS_TOKENS: 3500
             MAX_DOCS_USED: 5
-            MAX_RESPONSE_TOKENS: 400
+            MAX_RESPONSE_TOKENS: 300
             SELECT_OPERATIONID_LLM_MODEL: gpt-4
             CREATE_FUNCTION_LLM_MODEL: gpt-4
             POPULATE_FUNCTION_LLM_MODEL: gpt-4
