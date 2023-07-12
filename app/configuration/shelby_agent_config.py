@@ -9,13 +9,11 @@ load_dotenv()
 
 ### Configuration Guide ###
 
-# Set your services in the DeploymentConfig class
-# These are used to create the github action workflows
-# When deployed with the github actions script these are injected into the container as env vars
+# Set your services in the DeploymentConfig class. These are used to automatically create the github action workflows
 
-
-# Vars set here will be loaded into github actions workflow and deployed into the container env overriding defaults
 class DeploymentConfig(BaseModel):
+    # Vars set here will be loaded into github actions workflow and deployed into the container env overriding defaults
+    
     ### Name your bot/sprite/service ###
     service_name: str = 'personal'
 
@@ -29,7 +27,7 @@ class DeploymentConfig(BaseModel):
     vectorstore_index: str = 'shelby-as-a-service'
     vectorstore_environment: str = 'us-central1-gcp'
     # The secrets for these services (API keys) must be set:
-    # 1. Local use: n your .env file at project root
+    # 1. Local use: in your .env file at project root
     # 2. Deployed: as github secrets (see .github/workflows/*.yaml for list of required secrets)
     
     ### Below here are optional settings that can be left on their defaults ### 
@@ -73,8 +71,9 @@ class DeploymentConfig(BaseModel):
     text_splitter_chunk_overlap: int = 100
     indexed_metadata: list[str] = ["data_source", "doc_type", "target_type", "resource_name"]
         
-### Nothing needs to be manually set in this class ###
 class AppConfig():
+    ### Nothing should be manually set in this class ###
+    
     def __init__(self, deployment_target: Optional[str] = None):
         ### AppConfig loads variables from the env or falls to defaults set in DeploymentConfig ###
         self.deployment_config: DeploymentConfig = DeploymentConfig()
