@@ -81,28 +81,28 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
 
-An easy bot that uses GPT and documents to answer questions. Supports Discord and Slack bots.
+## Production-ready LLM Agents. Just add API keys
 
 [![Discord Screen Shot][discord-screenshot]](documentation/discord-example.png)
 [![Slack Screen Shot][slack-screenshot]](documentation/slack-example.png)
 
-I've made myself redundant. Good. 
-
 ### Features
 
-Shelby-as-a-service (SAAS) lets anyone say 'hello world' with their own GPT bots. When a user makes a request the app, it it stuffs related documents and the request into a prompt, and sends it to GPT. The response and documents are then returned to the user.
+The gulf between 'hello world' and something useful for your is what shelby-as-a-service (SaaS) solves. 
 
-Context enriched querying is an easy app. Sharing it with your friends and co-workers is the hard part. This app takes care of the boring stuff, and lets you have fun. 
-
-* Requires only API keys and a list of document source URLs to run.
-* Automatically scrapes, processes, and uploads data from websites, gitbooks, sitemaps, and OpenAPI specs.
-* Superior Document retrieval.
-  * Performs semantic search with sparse/dense embeddings by default.
-  * Generates additional search keywords for better semantic search results.
-  * Checks if documents are relevant by asking GPT, "Which of these documents are relevant?"
-  * Superior document pre-processing with BalancedRecursiveCharacterTextSplitter and thoughtful parsing.
+* Easy:
+  * Configuration requires only API keys.
+  * Step-by-step guides.
+  * Automatically builds dockerfile and github actions workflow to deploy to container.
+* Context enriched queries, retrieval augmented generation (RAG), prompt stuffing, questions on docs, etc
+  * Automatically scrapes, processes, and uploads data from websites, gitbooks, sitemaps, and OpenAPI specs.
+  * Superior Document retrieval.
+    * Performs semantic search with sparse/dense embeddings by default.
+    * Generates additional search keywords for better semantic search results.
+    * Checks if documents are relevant by asking GPT, "Which of these documents are relevant?"
+    * Superior document pre-processing with BalancedRecursiveCharacterTextSplitter and thoughtful parsing.
+* Pre-configured Slack and Discord bots (lets call them 'Sprites' for this project).
 * Tweaking not required, but all the knobs are at your disposal in the configuration folder.
   * All configuration variables are stored and loaded through  shelby_agent_config.py
   * All data sources are added through template_document_sources.yaml
@@ -116,10 +116,9 @@ Context enriched querying is an easy app. Sharing it with your friends and co-wo
 * Enable memory for conversational queries
 * Enable the bot to make request to *any* API with an OpenAPI spec
 * Improve and add additional document sources
+* Speech to text job interview agent
 * Add service providers
 * Installable via PIP
-
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -147,16 +146,8 @@ Free:
 
 Paid:
 * OpenAI API (GPT-3.5 is tenable) -> https://platform.openai.com/overview
-* Stackpath -> https://www.stackpath.com/
+* Stackpath (I will add other compute providers if requested.) -> https://www.stackpath.com/
 
-
-### Built With
-
-* [![python][python]][python-url]
-* [![langchain][langchain]][langchain-url]
-* [![haystack][haystack]][haystack-url]
-* [![discord.py][discord.py]][discord.py-url]
-* [![slack-bolt][slack-bolt]][slack-bolt-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
