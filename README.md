@@ -89,7 +89,7 @@
 
 ### Features
 
-The gulf between 'hello world' and something useful for your is what shelby-as-a-service (SaaS) solves. 
+The gulf between 'hello world' and something useful is what shelby-as-a-service (SaaS) solves. 
 
 * Easy:
   * Configuration requires only API keys.
