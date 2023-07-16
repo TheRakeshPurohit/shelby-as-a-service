@@ -30,19 +30,21 @@ tatum:
       doc_type: "soft"
     "api.tatum.io":
       enabled: False
-      target_url: "data/minified_openAPI_specs/api.tatum.io/operationIDs"
+      target_url: "inputs/input_openAPI_specs/tatum"
       target_type: "openapi"
       doc_type: "hard"
+      api_url_format: "https://apidoc.tatum.io/tag/{tag}#operation/{operationId}"
 stackpath:
   description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
   resources:
     "stackpath.dev/docs":
-      enabled: False
+      enabled: True
       target_url: "https://stackpath.dev/docs"
       target_type: "generic"
       doc_type: "soft"
     "stackpath.dev/reference":
       enabled: False
-      target_url: "data/minified_openAPI_specs/gateway.stackpath.com/operationIDs"
+      target_url: "inputs/input_openAPI_specs/stackpath"
       target_type: "openapi"
       doc_type: "hard"
+      api_url_format: "https://stackpath.dev/reference/{operationId}"

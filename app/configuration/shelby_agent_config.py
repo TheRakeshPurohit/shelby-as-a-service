@@ -65,7 +65,7 @@ class DeploymentConfig(BaseModel):
     vectorstore_upsert_batch_size: int = 20
     vectorstore_metric: str = "dotproduct"
     vectorstore_pod_type: str = "p1"
-    preprocessor_min_length: int = 300
+    preprocessor_min_length: int = 100
     text_splitter_goal_length: int = 1500
     text_splitter_max_length: int = 2000
     text_splitter_chunk_overlap: int = 100
