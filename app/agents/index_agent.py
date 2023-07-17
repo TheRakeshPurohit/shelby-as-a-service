@@ -1,9 +1,9 @@
 # region Imports
-import os, shutil, gc
+import os, shutil, traceback
 from typing import List, Union, Iterator
 import re, string, yaml, json
 from urllib.parse import urlparse
-from collections import defaultdict
+
 
 import pinecone, tiktoken
 from dotenv import load_dotenv
@@ -45,10 +45,9 @@ class IndexAgent:
                 # create new index
                 response = self.create_index()
                 self.log_agent.print_and_log(f"Created index: {response}")
-                
             self.vectorstore = pinecone.Index(self.agent_config.vectorstore_index)
-            stats = self.vectorstore.describe_index_stats()
-            self.log_agent.print_and_log(stats)
+ 
+            ### Adds sources from yaml config file to queue ###
             
             self.document_sources_resources = []
             # Iterate over each source aka namespace
@@ -63,22 +62,25 @@ class IndexAgent:
                 
         except Exception as e:
             # Logs error and sends error to sprite
-            self.log_agent.print_and_log(f"An error occurred: {e}")
-            
+            error_info = traceback.format_exc()
+            self.log_agent.print_and_log(f"An error occurred: {e}\n{error_info}")
+        
             pass
              
     def ingest_docs(self):
+        
+        self.log_agent.print_and_log(f'Initial index stats: {self.vectorstore.describe_index_stats()}\n')
         
         for data_resource in self.document_sources_resources:
             # Retries if there is an error
             retry_count = 2
             for i in range(retry_count):
                 try: 
-                    self.log_agent.print_and_log(f'\nNow indexing: {data_resource.resource_name}\n')
+                    self.log_agent.print_and_log(f'Now indexing: {data_resource.resource_name}\n')
                     # Load documents
                     documents = data_resource.scraper.load()
                     
-                    self.log_agent.print_and_log(f'Docs loaded for indexing: {data_resource.resource_name}')
+                    self.log_agent.print_and_log(f'Total documents loaded for indexing: {len(documents)}')
                     
                     if not documents:
                         self.log_agent.print_and_log(f'Skipping data_resource: no data loaded for {data_resource.resource_name}')
@@ -86,16 +88,33 @@ class IndexAgent:
                     
                     # Removes bad chars, and chunks text
                     document_chunks = data_resource.preprocessor.run(documents)
+                    self.log_agent.print_and_log(f'Total document chunks after processing: {len(document_chunks)}')
                     
                     # Checks against local docs if there are changes or new docs
-                    has_changes = self.check_chunks(data_resource, document_chunks)
+                    has_changes, new_or_changed_chunks = data_resource.preprocessor.compare_chunks(data_resource, document_chunks)
+                    
+                    text_chunks, document_chunks = data_resource.preprocessor.create_text_chunks(data_resource, document_chunks)
+                    self.log_agent.print_and_log(f'Total document chunks after final check: {len(document_chunks)}')
+                    
+                    # If there are changes or new docs, delete existing local files and write new files
                     if not has_changes:
                         self.log_agent.print_and_log(f'Skipping data_resource: no new data found for {data_resource.resource_name}')
                         break
+                    self.log_agent.print_and_log(f'Found {len(new_or_changed_chunks)} new or changed documents')
+
+                    # Get count of vectors in index matching the "resource" metadata field
+                    index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
+                    existing_resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
+                    self.log_agent.print_and_log(f"Existing vector count for {data_resource.resource_name}: {existing_resource_vector_count}")
                     
-                    # If there are changes or new docs, delete existing local files and write new files
-                    text_chunks, document_chunks = self.create_text_chunks(data_resource, document_chunks)
+                    self.log_agent.print_and_log(f'Pre-change index stats: {self.vectorstore.describe_index_stats()}\n')
                     
+                    # If the "resource" already has vectors delete the existing vectors before upserting new vectors
+                    # We have to delete all because the difficulty in specifying specific documents in pinecone
+                    if existing_resource_vector_count != 0:
+                        cleared_resource_vector_count = self.clear_resource_name(data_resource).get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
+                        self.log_agent.print_and_log(f'Removing pre-existing vectors. New count: {cleared_resource_vector_count} (should be 0)')
+                        
                     # Get dense_embeddings
                     dense_embeddings = data_resource.embedding_retriever.embed_documents(text_chunks)
 
@@ -103,18 +122,8 @@ class IndexAgent:
                     # Pretrain "corpus"
                     data_resource.bm25_encoder.fit(text_chunks)
                     sparse_embeddings = data_resource.bm25_encoder.encode_documents(text_chunks)
-                    self.log_agent.print_and_log(f'Embedding complete for: {data_resource.resource_name}')
+                    self.log_agent.print_and_log(f'Embeddings created. Dense: {len(dense_embeddings)} Sparse: {len(sparse_embeddings)}')
                     
-                    # Get count of vectors in index matching the "resource" metadata field
-                    index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
-                    self.log_agent.print_and_log(f"stats matching 'resource_name' metadata field: {index_resource_stats}")
-                    resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
-
-                    # If the "resource" already has vectors delete the existing vectors before upserting new vectors
-                    # We have to delete all because the difficulty in specifying specific documents in pinecone
-                    if resource_vector_count != 0:
-                        self.clear_resource_name(data_resource)
-                        
                     # Get total count of vectors in index namespace and create new vectors with an id of index_vector_count + 1
                     index_stats = data_resource.vectorstore.describe_index_stats()
                     index_vector_count = index_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
@@ -132,157 +141,34 @@ class IndexAgent:
                         index_vector_count += 1
                         vectors_to_upsert.append(prepared_vector)
 
-                    self.log_agent.print_and_log(f"{len(vectors_to_upsert)} chunks as vectors to upsert")
+                    self.log_agent.print_and_log(f'Upserting {len(vectors_to_upsert)} vectors')
                     data_resource.vectorstore.upsert(
                         vectors=vectors_to_upsert,               
                         namespace=data_resource.namespace,
                         batch_size=self.agent_config.vectorstore_upsert_batch_size,
                         show_progress=True                 
                     )
-                    self.log_agent.print_and_log(f'Indexing complete for: {data_resource.resource_name}')
-                    index_stats = data_resource.vectorstore.describe_index_stats()
-                    self.log_agent.print_and_log(index_stats)
                     
-                    self.write_chunks(data_resource, document_chunks)
+                    index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
+                    self.log_agent.print_and_log(f'Post-upsert index stats: {index_resource_stats}\n')
+                    new_resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
+                    self.log_agent.print_and_log(f'Indexing complete for: {data_resource.resource_name}\nPrevious vector count: {existing_resource_vector_count}\nNew vector count: {new_resource_vector_count}\n')
                     
-                    # When finished processing, delete heavy objects
-                    del documents, document_chunks, text_chunks, dense_embeddings, sparse_embeddings, vectors_to_upsert
-                    # Call the garbage collector
-                    gc.collect()
+                    data_resource.preprocessor.write_chunks(data_resource, document_chunks)
+                    
                     # If completed successfully, break the retry loop
                     break
+                
                 except Exception as e:
-                    self.log_agent.print_and_log(f"An error occurred: {e}")
+                    error_info = traceback.format_exc()
+                    self.log_agent.print_and_log(f"An error occurred: {e}\n{error_info}")
                     if i < retry_count - 1:  # i is zero indexed
                         continue  # this will start the next iteration of loop thus retrying your code block
                     else:
                         raise  # if exception in the last retry then raise it.
     
-    def check_chunks(self, data_resource, document_chunks):
+        self.log_agent.print_and_log(f'Final index stats: {self.vectorstore.describe_index_stats()}')
         
-        if data_resource.content_type == 'open_api_spec':
-            folder_path = f'index/outputs/{data_resource.namespace}/open_api_spec/endpoints'
-        else: 
-            folder_path = f'index/outputs/{data_resource.namespace}/{data_resource.resource_name}'
-        # Create the directory if it does not exist
-        os.makedirs(folder_path, exist_ok=True)
-
-        existing_files = os.listdir(folder_path)
-        has_changes = False
-
-        # This will keep track of the counts for each title
-        title_counter = {}
-        
-        # This will hold the titles of new or different chunks
-        new_or_changed_titles = []
-
-        for document_chunk in document_chunks:
-            if data_resource.content_type == 'open_api_spec':
-                file_name = document_chunk['title']
-            else:    
-                sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
-
-                # Check if we've seen this title before, if not initialize to 0
-                if sanitized_title not in title_counter:
-                    title_counter[sanitized_title] = 0
-                file_name = f'{sanitized_title}_{title_counter[sanitized_title]}.json'
-                # Increment the counter for this title
-                title_counter[sanitized_title] += 1
-
-            if file_name not in existing_files:
-                has_changes = True
-                new_or_changed_titles.append(document_chunk['title'])
-            else:
-                existing_file_path = os.path.join(folder_path, file_name)
-                with open(existing_file_path, 'r') as f:
-                    existing_data = json.load(f)
-                    if existing_data != document_chunk:
-                        has_changes = True
-                        new_or_changed_titles.append(document_chunk['title'])
-                
-
-        self.log_agent.print_and_log(f'New or changed documents: {new_or_changed_titles}')
-
-        return has_changes
-
-    def create_text_chunks(self, data_resource, document_chunks):
-            
-        if data_resource.content_type == 'open_api_spec':
-            folder_path = f'index/outputs/{data_resource.namespace}/open_api_spec/endpoints'
-        else: 
-            folder_path = f'index/outputs/{data_resource.namespace}/{data_resource.resource_name}'
-
-        # Clear the folder first
-        shutil.rmtree(folder_path)
-
-        checked_document_chunks = []
-        checked_text_chunks = []
-        
-        # This will keep track of the counts for each title
-        title_counter = {}
-
-        for document_chunk in document_chunks:
-            if data_resource.content_type == 'open_api_spec':
-                file_name = document_chunk['title']
-            else:    
-                sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
-                
-                # Check if we've seen this title before, if not initialize to 0
-                if sanitized_title not in title_counter:
-                    title_counter[sanitized_title] = 0
-                file_name = f'{sanitized_title}_{title_counter[sanitized_title]}.json'
-
-                # Increment the counter for this title
-                title_counter[sanitized_title] += 1
-
-            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
-                continue
-            checked_document_chunks.append(document_chunk)
-            checked_text_chunks.append(text_chunk.lower())
-            
-        return checked_text_chunks, checked_document_chunks
-    
-    def write_chunks(self, data_resource, document_chunks):
-         
-        if data_resource.content_type == 'open_api_spec':
-            folder_path = f'index/outputs/{data_resource.namespace}/open_api_spec/endpoints'
-        else: 
-            folder_path = f'index/outputs/{data_resource.namespace}/{data_resource.resource_name}'
-
-        os.makedirs(folder_path, exist_ok=True)
-
-        checked_document_chunks = []
-        checked_text_chunks = []
-        
-        # This will keep track of the counts for each title
-        title_counter = {}
-
-        for document_chunk in document_chunks:
-            if data_resource.content_type == 'open_api_spec':
-                file_name = document_chunk['title']
-            else:    
-                sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
-                
-                # Check if we've seen this title before, if not initialize to 0
-                if sanitized_title not in title_counter:
-                    title_counter[sanitized_title] = 0
-                file_name = f'{sanitized_title}_{title_counter[sanitized_title]}.json'
-
-                # Increment the counter for this title
-                title_counter[sanitized_title] += 1
-
-            file_path = os.path.join(folder_path, file_name)
-
-            with open(file_path, 'w') as f:
-                json.dump(document_chunk, f, indent=4)
-
-            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
-                continue
-            checked_document_chunks.append(document_chunk)
-            checked_text_chunks.append(text_chunk.lower())
-            
     def delete_index(self):
         
         res = self.document_sources_resources[0].vectorstore.describe_index_stats()
@@ -317,9 +203,7 @@ class IndexAgent:
             delete_all=False, 
             filter={'resource_name': data_resource.resource_name}
         )
-        self.log_agent.print_and_log(f"Removed pre-existing vectors in index with metadata fields 'resource_name': {data_resource.resource_name}")
-        index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
-        self.log_agent.print_and_log(f"New stats matching 'resource_name' metadata field: {index_resource_stats}")
+        return data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
         
     def create_index(self):
         metadata_config = {
@@ -363,6 +247,8 @@ class DataSourceConfig:
         self.index_agent = index_agent
         self.agent_config = self.index_agent.agent_config
         self.log_agent = self.index_agent.log_agent
+        
+        self.tiktoken_len = self.index_agent.tiktoken_len
         
         self.index_name = index_agent.agent_config.vectorstore_index
         self.indexed_metadata = index_agent.agent_config.indexed_metadata
@@ -411,31 +297,25 @@ class DataSourceConfig:
                 self.content_type = "text"
                 
             case 'sitemap':
-                # May need to change tag for specific websites
+                # May need to change for specific websites
                 def parse_content_by_id(content):
 
                     # Attempt to find element by 'content-container' ID
                     content_element = content.find(id='content-container')
-
                     if not content_element:
                         # If 'content-container' not found, attempt to find 'content'
                         content_element = content.find(id='content')
-
                     if not content_element:
                         # If neither found, return an empty string
                         return ''
-                    
                     # Find all elements with "visibility: hidden" style and class containing "toc"
                     unwanted_elements = content_element.select('[style*="visibility: hidden"], [class*="toc"]')
-
                     # Remove unwanted elements from content_element
                     for element in unwanted_elements:
                         element.decompose()
-                        
                     # Remove header tags
                     for header in content_element.find_all('header'):
                         header.decompose()
-                        
                     # Extract text from the remaining content
                     text = content_element.get_text(separator=' ')
 
@@ -484,13 +364,14 @@ class CustomPreProcessor:
     def __init__(self, data_source_config: DataSourceConfig):
         
         self.index_agent = data_source_config.index_agent
-        self.agent_config = data_source_config.index_agent.agent_config
-        self.log_agent = data_source_config.index_agent.log_agent
+        self.agent_config = data_source_config.agent_config
+        self.log_agent = data_source_config.log_agent
         self.data_source_config = data_source_config
-
-        self.tiktoken_encoding_model=self.agent_config.tiktoken_encoding_model
-        self.tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
         
+        self.tiktoken_encoding_model = self.agent_config.tiktoken_encoding_model
+        
+        self.tiktoken_len = self.index_agent.tiktoken_len
+
         # Defines which chars can be kept; Alpha-numeric chars, punctionation, and whitespaces.
         self.printable = string.printable
 
@@ -521,8 +402,8 @@ class CustomPreProcessor:
             self.data_source_config.log_agent.print_and_log(doc.metadata['title'])
             
             # Skip if too small
-            if self._tiktoken_len(doc.page_content) < self.data_source_config.index_agent.agent_config.preprocessor_min_length:
-                self.data_source_config.index_agent.log_agent.print_and_log(f'page too small: {self._tiktoken_len(doc.page_content)}')
+            if self.tiktoken_len(doc.page_content) < self.data_source_config.index_agent.agent_config.preprocessor_min_length:
+                self.data_source_config.index_agent.log_agent.print_and_log(f'page too small: {self.tiktoken_len(doc.page_content)}')
                 continue
             
             # Split into chunks
@@ -537,7 +418,7 @@ class CustomPreProcessor:
         if not processed_document_chunks:
             return
         token_counts = [
-            self._tiktoken_len(chunk) for chunk in processed_text_chunks
+            self.tiktoken_len(chunk) for chunk in processed_text_chunks
         ]
         self.log_agent.print_and_log(f'Min: {min(token_counts)}')
         self.log_agent.print_and_log(f'Avg: {int(sum(token_counts) / len(token_counts))}')
@@ -586,15 +467,88 @@ class CustomPreProcessor:
 
         return document_chunk, text_chunk
     
-    def _tiktoken_len(self, text):
+    def compare_chunks(self, data_resource, document_chunks):
         
-        tokens = self.tokenizer.encode(
-            text,
-            disallowed_special=()
-        )
-        
-        return len(tokens)
+        folder_path = f'index/outputs/{data_resource.namespace}/{data_resource.resource_name}'
+        # Create the directory if it does not exist
+        os.makedirs(folder_path, exist_ok=True)
+        existing_files = os.listdir(folder_path)
+        has_changes = False
+        # This will keep track of the counts for each title
+        title_counter = {}
+        # This will hold the titles of new or different chunks
+        new_or_changed_chunks = []
+        for document_chunk in document_chunks:
+            sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
+            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
+            # Skip overly long chunks
+            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+                continue
+            # Check if we've seen this title before, if not initialize to 0
+            if sanitized_title not in title_counter:
+                title_counter[sanitized_title] = 0
+            file_name = f'{sanitized_title}_{title_counter[sanitized_title]}.json'
+            # Increment the counter for this title
+            title_counter[sanitized_title] += 1
+            if file_name not in existing_files:
+                has_changes = True
+                new_or_changed_chunks.append(document_chunk['title'])
+            else:
+                existing_file_path = os.path.join(folder_path, file_name)
+                with open(existing_file_path, 'r') as f:
+                    existing_data = json.load(f)
+                    if existing_data != document_chunk:
+                        has_changes = True
+                        new_or_changed_chunks.append(document_chunk['title'])
+                
+        return has_changes, new_or_changed_chunks
 
+    def create_text_chunks(self, data_resource, document_chunks):
+        
+        checked_document_chunks = []
+        checked_text_chunks = []
+        # This will keep track of the counts for each title
+        title_counter = {}
+        for document_chunk in document_chunks:
+            sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
+            # Check if we've seen this title before, if not initialize to 0
+            if sanitized_title not in title_counter:
+                title_counter[sanitized_title] = 0
+            # Increment the counter for this title
+            title_counter[sanitized_title] += 1
+            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
+            # Skip overly long chunks
+            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+                continue
+            checked_document_chunks.append(document_chunk)
+            checked_text_chunks.append(text_chunk.lower())
+            
+        return checked_text_chunks, checked_document_chunks
+    
+    def write_chunks(self, data_resource, document_chunks):
+         
+        folder_path = f'index/outputs/{data_resource.namespace}/{data_resource.resource_name}'
+        # Clear the folder first
+        shutil.rmtree(folder_path)
+        os.makedirs(folder_path, exist_ok=True)
+        # This will keep track of the counts for each title
+        title_counter = {}
+        for document_chunk in document_chunks:
+            sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
+            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
+            # Skip overly long chunks
+            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+                continue
+            # Check if we've seen this title before, if not initialize to 0
+            if sanitized_title not in title_counter:
+                title_counter[sanitized_title] = 0
+            file_name = f'{sanitized_title}_{title_counter[sanitized_title]}.json'
+            # Increment the counter for this title
+            title_counter[sanitized_title] += 1
+            file_path = os.path.join(folder_path, file_name)
+            with open(file_path, 'w') as f:
+                json.dump(document_chunk, f, indent=4)
+            
 class CustomScraper:
     
     ### CustomScraper is a generic web scraper ###
@@ -616,12 +570,9 @@ class OpenAPILoader:
     def __init__(self, data_source_config: DataSourceConfig):
         
         self.index_agent = data_source_config.index_agent
-        self.agent_config = data_source_config.index_agent.agent_config
-        self.log_agent = data_source_config.index_agent.log_agent
+        self.agent_config = data_source_config.agent_config
+        self.log_agent = data_source_config.log_agent
         self.data_source_config = data_source_config
-        
-        self.tiktoken_encoding_model = data_source_config.index_agent.agent_config.tiktoken_encoding_model
-        self.tokenizer = tiktoken.encoding_for_model(self.tiktoken_encoding_model)
     
     def load(self):
         
@@ -654,10 +605,5 @@ class OpenAPILoader:
         
         return open_api_specs
     
-    def _tiktoken_len(self, text):
-        tokens = self.tokenizer.encode(
-            text,
-            disallowed_special=()
-        )
-        return len(tokens)
+   
         

@@ -3,10 +3,10 @@ deepgram:
   resources:
     "developers.deepgram.com/reference":
       enabled: True
-      target_url: "https://developers.deepgram.com/sitemap.xml"
-      filter_url: "https://developers.deepgram.com/reference/"
-      target_type: "sitemap"
+      target_url: "index/inputs/input_open_api_specs/deepgram"
+      target_type: "open_api_spec"
       doc_type: "hard"
+      api_url_format: "https://developers.deepgram.com/reference/{operationId}"
     "developers.deepgram.com/docs":
       enabled: True
       target_url: "https://developers.deepgram.com/sitemap.xml"

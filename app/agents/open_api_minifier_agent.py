@@ -1,15 +1,10 @@
-import os
+import os, shutil
 import json, yaml
-from collections import defaultdict
 import string, re
 from urllib.parse import urlparse
 
-import tiktoken
-
-
 class OpenAPIMinifierAgent:
     
-
     def __init__(self, data_source_config):
         
         self.index_agent = data_source_config.index_agent
@@ -19,7 +14,8 @@ class OpenAPIMinifierAgent:
         
         self.api_url_format = data_source_config.api_url_format
         
-        self.tokenizer = tiktoken.encoding_for_model("text-embedding-ada-002")
+        self.tiktoken_len = self.index_agent.tiktoken_len
+
         
         self.operationID_counter = 0
 
@@ -63,24 +59,59 @@ class OpenAPIMinifierAgent:
         
     def run(self, open_api_specs):
         
-        minified_endpoints = []
-
-        for open_api_spec in open_api_specs:
-            # Create list of processed and parsed individual endpoints
-            minified_endpoints.extend(self.minify(open_api_spec))
-            
-            # Sort alphabetically by tag and then operation_id
-            minified_endpoints = sorted(minified_endpoints, key=lambda x: (x['tag'], x['operation_id']))
-
-        minified_endpoints = self.create_endpoint_documents(minified_endpoints, open_api_spec)
+        # Merge all specs and save a copy locally
+        full_open_api_specs = self.create_full_spec(open_api_specs)
         
-        # Need to implement a merge in the case a an org has multiple specs
-        self.copy_full_spec(open_api_spec)
+        # Create list of processed and parsed individual endpoints
+        minified_endpoints = self.minify(full_open_api_specs)
+        
+        # Sort alphabetically by tag and then operation_id
+        minified_endpoints = sorted(minified_endpoints, key=lambda x: (x['tag'], x['operation_id']))
+
+        minified_endpoints = self.create_endpoint_documents(minified_endpoints, full_open_api_specs)
         
         self.create_key_point_guide(minified_endpoints)
         
         return minified_endpoints
     
+    def create_full_spec(self, open_api_specs):
+        
+        folder_path = f'index/outputs/{self.data_source_config.namespace}/open_api_spec/full_spec'
+        # Ensure output directory exists
+        os.makedirs(folder_path, exist_ok=True)
+        shutil.rmtree(folder_path)
+        os.makedirs(folder_path, exist_ok=True)
+        # Define output file path
+        output_file_path = os.path.join(folder_path, f'{self.data_source_config.namespace}_open_api_spec.json')
+        
+        merged_open_api_spec = None
+        
+        for open_api_spec in open_api_specs:
+                if merged_open_api_spec is None:
+                    merged_open_api_spec = open_api_spec
+                else:
+                    # Merging the 'paths' assuming there are no overlapping paths
+                    merged_open_api_spec['paths'].update(open_api_spec['paths'])
+                    
+                    # Also merge 'components' if they exist
+                    if 'components' in open_api_spec:
+                        if 'components' not in merged_open_api_spec:
+                            merged_open_api_spec['components'] = {}
+                        for component_type, components in open_api_spec['components'].items():
+                            if component_type not in merged_open_api_spec['components']:
+                                merged_open_api_spec['components'][component_type] = {}
+                            merged_open_api_spec['components'][component_type].update(components)
+        
+        merged_open_api_spec['paths'] = dict(sorted(merged_open_api_spec['paths'].items()))
+        if 'components' in merged_open_api_spec:
+            for component_type in merged_open_api_spec['components']:
+                merged_open_api_spec['components'][component_type] = dict(sorted(merged_open_api_spec['components'][component_type].items()))
+        
+        with open(output_file_path, 'w') as output_file:
+            json.dump(merged_open_api_spec, output_file, indent=4)
+            
+        return merged_open_api_spec
+
     def minify(self, open_api_spec):
         
         server_url = open_api_spec['servers'][0]['url']  # Fetch the server URL from the open_api_spec specification
@@ -456,22 +487,59 @@ class OpenAPIMinifierAgent:
         with open(output_file_path, 'w') as output_file:
                 output_file.write(output_string)
     
-    def copy_full_spec(self, open_api_spec):
-        folder_path = f'index/outputs/{self.data_source_config.namespace}/open_api_spec/full_spec'
-        # Ensure output directory exists
+    def compare_chunks(self, data_resource, document_chunks):
+        folder_path = f'index/outputs/{data_resource.namespace}/open_api_spec/endpoints'
+        # Create the directory if it does not exist
         os.makedirs(folder_path, exist_ok=True)
-        # Define output file path
-        output_file_path = os.path.join(folder_path, f'{self.data_source_config.namespace}_open_api_spec.json')
-        with open(output_file_path, 'w') as output_file:
-            json.dump(open_api_spec, output_file, indent=4)
+        existing_files = os.listdir(folder_path)
+        has_changes = False
+        # This will hold the titles of new or different chunks
+        new_or_changed_chunks = []
+        for document_chunk in document_chunks:
+            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
+            # Skip overly long chunks
+            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+                continue
+            file_name = document_chunk['title']
+            if file_name not in existing_files:
+                has_changes = True
+                new_or_changed_chunks.append(document_chunk['title'])
+            else:
+                existing_file_path = os.path.join(folder_path, file_name)
+                with open(existing_file_path, 'r') as f:
+                    existing_data = json.load(f)
+                    if existing_data != document_chunk:
+                        has_changes = True
+                        new_or_changed_chunks.append(document_chunk['title'])
+                
+        return has_changes, new_or_changed_chunks
 
-    def tiktoken_len(self, text):
-        
-        tokens = self.tokenizer.encode(
-            text,
-            disallowed_special=()
-        )
-        return len(tokens)
+    def create_text_chunks(self, data_resource, document_chunks):
 
-
+        checked_document_chunks = []
+        checked_text_chunks = []
+        for document_chunk in document_chunks:
+            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
+            # If chunk too big
+            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+                continue
+            checked_document_chunks.append(document_chunk)
+            checked_text_chunks.append(text_chunk.lower())
+            
+        return checked_text_chunks, checked_document_chunks
     
+    def write_chunks(self, data_resource, document_chunks):
+         
+        folder_path = f'index/outputs/{data_resource.namespace}/open_api_spec/endpoints'
+        # Clear the folder first
+        shutil.rmtree(folder_path)
+        os.makedirs(folder_path, exist_ok=True)
+        for document_chunk in document_chunks:
+            text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
+            # Skip overly long chunks
+            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+                continue
+            file_name = document_chunk['title']
+            file_path = os.path.join(folder_path, file_name)
+            with open(file_path, 'w') as f:
+                json.dump(document_chunk, f, indent=4)
