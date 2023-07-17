@@ -138,7 +138,7 @@ class OpenAPIMinifierAgent:
                     'tag': tag,
                     'content': content_string,
                     'operation_id': operation_id,
-                    'doc_url': api_url,
+                    'url': api_url,
                     'server_url': f'{server_url}{path}',
                     "content": content_string
                 }
@@ -325,9 +325,14 @@ class OpenAPIMinifierAgent:
             endpoint['tag_summary'] = tag_summary
             endpoint['tag_number'] = tag_number
             
+            endpoint['resource_name'] = self.data_source_config.resource_name,
+            endpoint['target_type'] = self.data_source_config.target_type,
+            endpoint['doc_type'] = self.data_source_config.doc_type
+            
             endpoint['doc_number'] = self.operationID_counter
             
             title = f"{tag_number}_{endpoint['tag']}_{endpoint['operation_id']}_{self.operationID_counter}.json"
+            
             endpoint['title'] = title
             
             self.operationID_counter += 1

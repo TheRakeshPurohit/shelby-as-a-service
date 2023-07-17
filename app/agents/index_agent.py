@@ -146,7 +146,7 @@ class IndexAgent:
                     self.write_chunks(data_resource, document_chunks)
                     
                     # When finished processing, delete heavy objects
-                    del data_resource, documents, document_chunks, text_chunks, dense_embeddings, sparse_embeddings, vectors_to_upsert
+                    del documents, document_chunks, text_chunks, dense_embeddings, sparse_embeddings, vectors_to_upsert
                     # Call the garbage collector
                     gc.collect()
                     # If completed successfully, break the retry loop
@@ -283,7 +283,6 @@ class IndexAgent:
             checked_document_chunks.append(document_chunk)
             checked_text_chunks.append(text_chunk.lower())
             
-    
     def delete_index(self):
         
         res = self.document_sources_resources[0].vectorstore.describe_index_stats()

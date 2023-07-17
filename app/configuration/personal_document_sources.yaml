@@ -17,13 +17,13 @@ tatum:
   description: "blockchain and web3 infrastructure and services including JS and C# SDKs with support for 70 networks."
   resources:
     "docs.tatum.com":
-      enabled: False
+      enabled: True
       load_all_paths: True
       target_url: "https://docs.tatum.com"
       target_type: "gitbook"
       doc_type: "soft"
     "docs.tatum.io":
-      enabled: False
+      enabled: True
       load_all_paths: True
       target_url: "https://docs.tatum.io"
       target_type: "gitbook"
@@ -38,12 +38,12 @@ stackpath:
   description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
   resources:
     "stackpath.dev/docs":
-      enabled: True
+      enabled: False
       target_url: "https://stackpath.dev/docs"
       target_type: "generic"
       doc_type: "soft"
     "stackpath.dev/reference":
-      enabled: True
+      enabled: False
       target_url: "index/inputs/input_open_api_specs/stackpath"
       target_type: "open_api_spec"
       doc_type: "hard"
