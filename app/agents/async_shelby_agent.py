@@ -21,9 +21,9 @@ class ShelbyAgent:
         load_dotenv()
         self.agent_config = AppConfig(deployment_target) 
         self.log_agent = LoggerAgent('ShelbyAgent', 'ShelbyAgent.log', level='INFO')
-        self.action_agent = ActionAgent(self.log_agent, self.agent_config)
-        self.query_agent = QueryAgent(self.log_agent, self.agent_config)
-        self.API_agent = APIAgent(self.log_agent, self.agent_config)
+        self.action_agent = ActionAgent(self, self.log_agent, self.agent_config)
+        self.query_agent = QueryAgent(self, self.log_agent, self.agent_config)
+        self.API_agent = APIAgent(self, self.log_agent, self.agent_config)
         openai.api_key = self.agent_config.openai_api_key
 
     def request_thread(self, request):
@@ -75,13 +75,24 @@ class ShelbyAgent:
             response = await loop.run_in_executor(executor, self.request_thread, request)
             
             return response
-
+        
+    def check_response(self, response):
+        # Check if keys exist in dictionary
+        parsed_respoonse = response.get('choices', [{}])[0].get('message', {}).get('content')
+        
+        if not parsed_respoonse:
+            self.log_agent.print_and_log(f'Error in response: {response}')
+            return None
+        
+        return parsed_respoonse
+        
 class ActionAgent:
     
     ### ActionAgent orchestrates the path requests flow through workflows ###
     
-    def __init__(self, log_agent, agent_config):
+    def __init__(self, shelby_agent, log_agent, agent_config):
         
+        self.shelby_agent = shelby_agent
         self.log_agent = log_agent
         self.agent_config = agent_config
 
@@ -159,8 +170,12 @@ class ActionAgent:
             max_tokens=1,
             logit_bias=logit_bias
         )
+        
+        topic_response = self.shelby_agent.check_response(response)
+        if not topic_response:
+            return None
 
-        topic_key = int(response['choices'][0]['message']['content'])
+        topic_key = int(topic_response)
 
         if topic_key == 0:
             return 0
@@ -182,8 +197,9 @@ class QueryAgent:
     
     ### QueryAgent answers questions ###
     
-    def __init__(self, log_agent, agent_config):
+    def __init__(self, shelby_agent, log_agent, agent_config):
         
+        self.shelby_agent = shelby_agent
         self.log_agent = log_agent
         self.agent_config = agent_config
 
@@ -203,8 +219,12 @@ class QueryAgent:
             messages=prompt_template,
             max_tokens=25
         )
-        response = response['choices'][0]['message']['content']
-        pre_query = f'query: {query}, keywords: {response}'
+        
+        pre_query_response = self.shelby_agent.check_response(response)
+        if not pre_query_response:
+            return None
+
+        pre_query = f'query: {query}, keywords: {pre_query_response}'
         
         return pre_query
     
@@ -286,22 +306,13 @@ class QueryAgent:
             documents_str = " ".join(content_strs)
             doc_counter += 1
         prompt_message  = "Query: " + query + " Documents: " + documents_str
-                    
-        logit_bias = {
-                    # 1-9
-                    "16": 100,
-                    "17": 100,
-                    "18": 100,
-                    "19": 100,
-                    "20": 100,
-                    "21": 100,
-                    "22": 100,
-                    "23": 100,
-                    "24": 100,
-                    # \n
-                    "198": 100
-                }
         
+        logit_bias_weight = 100
+        # 0-9
+        logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(documents) + 1)}             
+        # \n
+        logit_bias["198"] = logit_bias_weight
+ 
         # Loop over the list of dictionaries in data['prompt_template']
         for role in prompt_template:
             if role['role'] == 'user':  # If the 'role' is 'user'
@@ -313,13 +324,21 @@ class QueryAgent:
             max_tokens=10,
             logit_bias=logit_bias
         )
-        doc_check = response['choices'][0]['message']['content']
-            # This finds all instances of [n] in the LLM response
+
+        doc_check = self.shelby_agent.check_response(response)
+        if not doc_check:
+            return None
+        
+        # This finds all instances of n in the LLM response
         pattern_num = r"\d"
         matches = re.findall(pattern_num, doc_check)
-        
+
+        if (len(matches) == 1 and matches[0] == '0') or len(matches) == 0:
+            self.log_agent.print_and_log(f'Error in doc_check: {response}')
+            return None
+
         relevant_documents = []
-        # Creates a lit of each unique mention of n in LLM response
+        # Creates a list of each unique mention of n in LLM response
         unique_doc_nums = set([int(match) for match in matches])
         for doc_num in unique_doc_nums:
             # doc_num given to llm has an index starting a 1
@@ -465,10 +484,11 @@ class QueryAgent:
             messages=prompt,
             max_tokens=self.agent_config.max_response_tokens
         )
+        prompt_response = self.shelby_agent.check_response(response)
+        if not prompt_response:
+            return None
         
-        # self.log_agent.print_and_log(response['choices'][0]['message']['content'])
-        
-        return response['choices'][0]['message']['content']
+        return prompt_response
         
     def append_meta(self, input_text, parsed_documents):
 
@@ -570,8 +590,9 @@ class APIAgent:
         ### APIAgent makes API calls on behalf the user ###
         # Currently under development
         
-        def __init__(self, log_agent, agent_config):
+        def __init__(self, shelby_agent, log_agent, agent_config):
             
+            self.shelby_agent = shelby_agent
             self.log_agent = log_agent
             self.agent_config = agent_config
         
@@ -596,25 +617,18 @@ class APIAgent:
                         for role in prompt_template:
                             if role['role'] == 'user': 
                                 role['content'] = prompt_message  
+                                
+                        logit_bias_weight = 100
+                        # 0-9
+                        logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + 5 + 1)}             
+                        # \n
+                        logit_bias["198"] = logit_bias_weight
+                        # x
+                        logit_bias["87"] = logit_bias_weight
+ 
                         # Creates a dic of tokens that are the only acceptable answers
                         # This forces GPT to choose one.
-                        logit_bias = {
-                            # 0-9
-                            "15": 100,
-                            "16": 100,
-                            "17": 100,
-                            "18": 100,
-                            "19": 100,
-                            "20": 100,
-                            "21": 100,
-                            "22": 100,
-                            "23": 100,
-                            "24": 100,
-                            # \n
-                            "198": 100,
-                            # x
-                            "87": 100,
-                        }
+                  
                         response = openai.ChatCompletion.create(
                             model=self.agent_config.select_operationID_llm_model,
                             messages=prompt_template,
@@ -623,13 +637,16 @@ class APIAgent:
                             logit_bias=logit_bias,
                             stop='x'
                         )
-                answer = response['choices'][0]['message']['content']
+                operation_response = self.shelby_agent.check_response(response)
+                if not operation_response:
+                    return None
+        
                 # need to check if there are no numbers in answer
-                if 'x' in answer or answer == '':
+                if 'x' in operation_response or operation_response == '':
                     # Continue until you find a good operationID.
                     continue
                 else:
-                    digits = answer.split('\n')  
+                    digits = operation_response.split('\n')  
                     number_str = ''.join(digits)  
                     number = int(number_str)  
                     directory_path = f"data/minified_openAPI_specs/{entry.name}/operationIDs/"
@@ -663,9 +680,11 @@ class APIAgent:
                             messages=prompt_template,
                             max_tokens=500,
                         )
-            
-            url_maybe  = response['choices'][0]['message']['content']
-            return url_maybe
+            url_response = self.shelby_agent.check_response(response)
+            if not url_response:
+                return None
+                
+            return url_response
              
         def run_API_agent(self, query):
             

@@ -14,7 +14,7 @@ deepgram:
       target_type: "sitemap"
       doc_type: "soft"
 tatum:
-  description: "blockchain and web3 infrastructure and services including JS and C# SDKs with support for 70 networks."
+  description: "Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API."
   resources:
     "docs.tatum.com":
       enabled: True
