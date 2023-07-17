@@ -1,0 +1,11 @@
+{
+    "tag": "Stellar",
+    "operation_id": "XlmGetFee",
+    "doc_url": "https://apidoc.tatum.io/tag/Stellar#operation/XlmGetFee",
+    "server_url": "https://api.tatum.io/v3/xlm/fee",
+    "content": "path /v3/xlm/fee\noperationid xlmgetfee\nsummary get actual xlm fee\ndescription 5 credits per api callget xlm blockchain fee in 1/10000000 of xlm stroop\nresponses\n200\nschema\ntype number\ndescription current fee in 1/10000000 of xlm stroop\ndescription ok",
+    "tag_summary": "xlm blockchain enables access to the most commonly used xlm methods these methods bring a small level of abstraction\nand are used for applications that communicate with the blockchain directly some of the methods are used alongside tatum private ledger\nto connect the blockchain and the private ledger like wallet generation or getting information about transactions\nexamples of working with the stellar blockchain can be found in tatum xlm sdk\ntatum supports 2 chains\n mainnet  a regular live chain\ntestnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from a faucet eg https//friendbotstellarorg/addraddress\nin order to start using the xlm blockchain we first need to create an xlm account in order to have the account activated it must be credited with 05 xlm  because of this requirement it is common to use one account for all customers and differentiate them using a memo  a short text/number included in every transaction as an account distinguisher\nwhen an offchain deposit address is created for the ledger account a memo is generated eg 12345 for that account when a transaction to the blockchain is performed it should contain the address of the recipient and the memo as an account distinguisher",
+    "tag_number": 41,
+    "doc_number": 381,
+    "title": "41_Stellar_XlmGetFee_381.json"
+}

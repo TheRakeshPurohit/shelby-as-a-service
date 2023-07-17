@@ -26,6 +26,6 @@ template_source_name_2:
       doc_type: "soft"
     "template_source_name_2.com/reference":
       enabled: True
-      target_url: "data/minified_openAPI_specs/gateway.stackpath.com/operationIDs" # Minified openapispec from https://github.com/ShelbyJenkins/LLM-OpenAPI-minifier
-      target_type: "openapi"
+      target_url: "index/input_open_api_specs/tatum" # Minified openapispec from https://github.com/ShelbyJenkins/LLM-OpenAPI-minifier
+      target_type: "open_api_spec"
       doc_type: "hard"

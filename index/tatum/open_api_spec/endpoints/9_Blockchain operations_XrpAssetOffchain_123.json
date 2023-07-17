@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain operations",
+    "operation_id": "XrpAssetOffchain",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain operations#operation/XrpAssetOffchain",
+    "server_url": "https://api.tatum.io/v3/offchain/xrp/asset",
+    "content": "path /v3/offchain/xrp/asset\noperationid xrpassetoffchain\nsummary create xrp based asset\ndescription 2 credits per api call\ncreate an xrpbased asset in a virtual account the asset must be created and configured on the xrpl blockchain before creating a trust line\nthis api call will create an internal virtual currency you can create virtual accounts with offchain support\nrequestbody\ncreatexrpasset\ntype object\nproperties\nissueraccount\ndescription blockchain address of the issuer of the assets\nmaxlength 34\nminlength 33\ntype string\ntoken\ndescription asset name\ntype string\npattern af0940\nmaxlength 40\nminlength 40\nbasepair\ndescription base pair for asset transaction value will be calculated according to this base pair eg 1 token123 is equal to 1 eur if basepair is set to eur\ntype string\nrequired\nbasepair\nissueraccount\ntoken\nrequired true\nresponses",
+    "tag_summary": "an endpoint to handle operations between a virtual account and the blockchain eg to create blockchain transactions from virtual accounts create custom fungible tokens and custom assets and register them as a regular currency into the virtual account",
+    "tag_number": 9,
+    "doc_number": 123,
+    "title": "9_Blockchain operations_XrpAssetOffchain_123.json"
+}

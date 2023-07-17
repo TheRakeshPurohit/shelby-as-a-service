@@ -1,0 +1,11 @@
+{
+    "tag": "Order Book",
+    "operation_id": "chartRequest",
+    "doc_url": "https://apidoc.tatum.io/tag/Order Book#operation/chartRequest",
+    "server_url": "https://api.tatum.io/v3/trade/chart",
+    "content": "path /v3/trade/chart\noperationid chartrequest\nparameters\ndescription direction of sorting\nin query\nname direction\nschema\ntype string\nsummary obtain chart data from historical closed trades\ndescription 2 credits for api call\nobtain data from the closed trades for entering in the chart time interval is set between from and to and there is defined time frame there can be obtained at most 200 time points in the time interval\nrequestbody\nchartrequest\ntype object\nrequired\npair\nfrom\nto\ntimeframe\nproperties\npair\ntype string\ndescription trading pair\nminlength 3\nmaxlength 30\npattern aazz09/azaz09\nfrom\ntype number\nminimum 0\ndescription start interval in utc millis\nto\ntype number\nminimum 0\ndescription end interval in utc millis\ntimeframe\ntype string\ndescription time frame of the chart\nrequired true\nresponses\n200\nschema\ntype array\nchart\ntype object\ndescription 1 point in the chart this point represents the tick in the grapch based on the specified time frame\nrequired\ntimestamp\nhigh\nlow\nopen\nclose\nvolume\nproperties\ntimestamp\ntype number\ndescription milliseconds in utc of the time interval\nhigh\ntype string\ndescription highest trade value in the current interval\nlow\ntype string\ndescription lowest trade value in the current interval\nopen\ntype string\ndescription open trade value in the current interval\nclose\ntype string\ndescription close trade value in the current interval\nvolume\ntype string\ndescription total volume of assets traded in the current interval volume is in currency1 asset\ndescription ok",
+    "tag_summary": "endpoint to handle order book operations like creating bid / ask trades between tatum private virtual accounts obtaining trade histories creating futures etc it is possible to build an exchange based on the ledger accounts",
+    "tag_number": 37,
+    "doc_number": 347,
+    "title": "37_Order Book_chartRequest_347.json"
+}

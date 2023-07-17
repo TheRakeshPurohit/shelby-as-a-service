@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain addresses",
+    "operation_id": "getAllDepositAddresses",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain addresses#operation/getAllDepositAddresses",
+    "server_url": "https://api.tatum.io/v3/offchain/account/{id}/address",
+    "content": "path /v3/offchain/account/id/address\noperationid getalldepositaddresses\nparameters\ndescription the id of the virtual account to get deposit addresses for\nin path\nname id\nrequired true\nschema\ntype string\nsummary get all deposit addresses for a virtual account\ndescription 1 credit per api call\nget all deposit addresses generated for a virtual account\nresponses\n200\nschema\naddress\nrequired\naddress\ncurrency\nproperties\naddress\ndescription blockchain address\ntype string\ncurrency\ndescription currency of generated address btc ltc doge bch eth xrp xlm bnb trx erc20 trc20\ntype string\nderivationkey\ndescription derivation key index for given address\nformat int32\ntype integer\nmaximum 2147483647\nxpub\ndescription extended public key to derive address from in case of xrp this is account address since address is defined as destinationtag which is address field in case of xlm this is account address since address is defined as message which is address field\ntype string\ndestinationtag\ndescription in case of xrp destinationtag is the distinguisher of the account\ntype number\nmemo\ndescription in case of bnb message is the distinguisher of the account\ntype string\nmessage\ndescription in case of xlm message is the distinguisher of the account\ntype string\ntype object\ntype array\ndescription ok",
+    "tag_summary": "manage deposit addresses associated with your virtual account\ndepending on how virtual accounts are connected to the blockchain the virtual accounts can be\n\nvirtual accounts with associated deposit addresses\ncustomers can send funds to and receive funds from other blockchain addresses\nvirtual accounts with no deposit addresses\nthese accounts have a cryptocurrency assigned but do not have any associated deposit addresses the customers can send funds to and receive funds from another virtual accounts and can send funds to blockchain addresses however the customers cannot receive funds from blockchain addresses",
+    "tag_number": 7,
+    "doc_number": 76,
+    "title": "7_Blockchain addresses_getAllDepositAddresses_76.json"
+}

@@ -1,0 +1,11 @@
+{
+    "tag": "Solana",
+    "operation_id": "SolanaGenerateWallet",
+    "doc_url": "https://apidoc.tatum.io/tag/Solana#operation/SolanaGenerateWallet",
+    "server_url": "https://api.tatum.io/v3/solana/wallet",
+    "content": "path /v3/solana/wallet\noperationid solanageneratewallet\nsummary generate solana wallet\ndescription 1 credit per api call\ngenerate solana private key and account address\nresponses\n200\nsolanawallet\ntype object\nproperties\nmnemonic\ndescription generated mnemonic for wallet\ntype string\naddress\ndescription generated account address\ntype string\nprivatekey\ndescription generated private key for account\ntype string\ndescription ok",
+    "tag_summary": "solana is a blockchain network focused on fast transactions and high throughput it uses a unique method of ordering transactions to improve its speed users can pay their transaction fees and interact with smart contracts with sol the networks native cryptocurrency\nfor now solana is in beta and there is a rate limitation applied for all projects for solana to 40 req/s on the platform\ntatum supports 2 chains\nmainnet beta  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//solfaucetcom/",
+    "tag_number": 40,
+    "doc_number": 373,
+    "title": "40_Solana_SolanaGenerateWallet_373.json"
+}

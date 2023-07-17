@@ -1,0 +1,11 @@
+{
+    "tag": "Sites",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetSite path: https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum get a site\nresponses\n200\ndeliverygetsiteresponse\ntype obj\ndeliverysite\ntype obj\nprops\nid\ntype str\ndesc a sites unique identifier\nstackid\ntype str\ndesc the id of the stack to which a site belongs\nlabel\ntype str\ndesc the sites name\nstatus\ntype str\ndesc the sites status\nfeatures\ntype arr\ndeliverysitefeature\ntype str\ndefault unknown\ndesc a site feature\n\na sites feature determines how stackpath delivers content to incoming https requests\n\n  unknown stackpath is unable to determine a sites feature\n  cdn a site has cdn caching\n  waf a site has waf protection\n  api a site has apispecific protections\n  serverlessedgeengine a site can serve edgeengine serverless scripts\ndesc a sites features\n\nsite features control how its content is delivered to end users\ncreatedat\ntype str\nformat datetime\ndesc the date a site was created\nupdatedat\ntype str\nformat datetime\ndesc the date a site was last updated\napiurls\ntype str\ndesc a list of api urls which receive different processing through the waf than website requests\nmonitoring\ntype bool\nformat bool\ndesc whether or not a sites waf service is in a monitor state\n\nsites in waf monitoring mode accept incoming requests and log but take no action on policy and rule violations\ndesc the response from a request to retrieve a single site",
+    "operation_id": "GetSite",
+    "doc_url": "https://stackpath.dev/reference/GetSite",
+    "server_url": "https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}",
+    "tag_summary": "",
+    "tag_number": 27,
+    "doc_number": 161,
+    "title": "27_Sites_GetSite_161.json"
+}

@@ -1,0 +1,11 @@
+{
+    "tag": "Solana",
+    "operation_id": "SolanaGetBalance",
+    "doc_url": "https://apidoc.tatum.io/tag/Solana#operation/SolanaGetBalance",
+    "server_url": "https://api.tatum.io/v3/solana/account/balance/{address}",
+    "content": "path /v3/solana/account/balance/address\noperationid solanagetbalance\nparameters\ndescription account address you want to get balance of\nin path\nname address\nrequired true\nschema\ntype string\nsummary get solana account balance\ndescription 1 credit per api callget solana account balance in sol this method does not prints any balance of the spl or nft tokens on the account\nresponses\n200\nsolbalance\ntype object\nbalance\ntype string\ndescription balance in sol\ndescription ok",
+    "tag_summary": "solana is a blockchain network focused on fast transactions and high throughput it uses a unique method of ordering transactions to improve its speed users can pay their transaction fees and interact with smart contracts with sol the networks native cryptocurrency\nfor now solana is in beta and there is a rate limitation applied for all projects for solana to 40 req/s on the platform\ntatum supports 2 chains\nmainnet beta  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//solfaucetcom/",
+    "tag_number": 40,
+    "doc_number": 374,
+    "title": "40_Solana_SolanaGetBalance_374.json"
+}

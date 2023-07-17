@@ -1,0 +1,11 @@
+{
+    "tag": "Account",
+    "operation_id": "deleteAllBlockAmount",
+    "doc_url": "https://apidoc.tatum.io/tag/Account#operation/deleteAllBlockAmount",
+    "server_url": "https://api.tatum.io/v3/ledger/account/block/account/{id}",
+    "content": "path /v3/ledger/account/block/account/id\noperationid deleteallblockamount\nparameters\ndescription account id\nin path\nname id\nrequired true\nschema\ntype string\nsummary unblock all blocked amounts in an account\ndescription 1 credit per api call 1 credit for each deleted blockage 1 api call  2 blockages   3 creditsunblocks previously blocked amounts in an account increases the available balance in the account where the amount was blocked\nresponses",
+    "tag_summary": "a tatum account is the primary building block of tatumpowered applications it is an envelope that holds essential information about balances the state of the account or customer and to whom the account belongs\naccounts in tatum are stored within tatum private ledger tatum private ledger contains information about accounts the customers that own the accounts transactions that affect the accounts or virtual currencies present in the ledger\nby default the private ledger is not connected to any blockchain it is possible to create an application on it without any blockchain at all using tatum private ledger and the building blocks included within it it is possible to quickly swap the whole application from the ledger to any blockchain supported by tatum all of the api calls will remain the same the only thing that changes is the blockchain the application lives on\nmost blockchains do not have any compliance layer at all it is not possible to freeze funds at a blockchain address or deactivate an address the tatum account has builtin compliance and it is possible to block funds in the account freeze outgoing transactions from the account or even completely deactivate the account",
+    "tag_number": 0,
+    "doc_number": 3,
+    "title": "0_Account_deleteAllBlockAmount_3.json"
+}

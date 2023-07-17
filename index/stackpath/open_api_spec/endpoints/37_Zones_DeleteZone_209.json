@@ -1,0 +1,11 @@
+{
+    "tag": "Zones",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DeleteZone path: https://gateway.stackpath.com/dns/v1/stacks/{stack_id}/zones/{zone_id} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname zoneid\ndesc a dns zone id\nin path\nrequired true\nschema\ntype str\nsum delete a zone\nresponses",
+    "operation_id": "DeleteZone",
+    "doc_url": "https://stackpath.dev/reference/DeleteZone",
+    "server_url": "https://gateway.stackpath.com/dns/v1/stacks/{stack_id}/zones/{zone_id}",
+    "tag_summary": "",
+    "tag_number": 37,
+    "doc_number": 209,
+    "title": "37_Zones_DeleteZone_209.json"
+}

@@ -1,0 +1,11 @@
+{
+    "tag": "Site Features",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DisableSiteEdgeEngine2 path: https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/scripting content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum disable serverless scripting\nresponses",
+    "operation_id": "DisableSiteEdgeEngine2",
+    "doc_url": "https://stackpath.dev/reference/DisableSiteEdgeEngine2",
+    "server_url": "https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/scripting",
+    "tag_summary": "",
+    "tag_number": 26,
+    "doc_number": 154,
+    "title": "26_Site Features_DisableSiteEdgeEngine2_154.json"
+}

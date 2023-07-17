@@ -1,0 +1,11 @@
+{
+    "tag": "XinFin",
+    "operation_id": "XdcGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/XinFin#operation/XdcGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/xdc/address/{xpub}/{index}",
+    "content": "path /v3/xdc/address/xpub/index\noperationid xdcgenerateaddress\nparameters\ndescription extended public key of wallet\nin path\nname xpub\nrequired true\nschema\ntype string\ndescription derivation index of desired address to be generated\nin path\nname index\nrequired true\nschema\ntype number\nsummary generate xdc account address from extended public key\ndescription 1 credit per api call\ngenerate xdc account deposit address from extended public key deposit address is generated for the specific\nindex  each extended public key can generate up to 231 addresses starting from index 0 until 231\nresponses\n200\nschema\ntype object\naddress\ntype string\ndescription xdc address\ndescription ok",
+    "tag_summary": "xdc network xinfin is enterprise ready hybrid blockchain for global trade and finance combining the power of public  private blockchains with interoperable smart contracts\n\ntatum supports 2 chains\nmainnet  a regular live chain\ntestnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//apothemnetwork/#gettestxdc",
+    "tag_number": 50,
+    "doc_number": 446,
+    "title": "50_XinFin_XdcGenerateAddress_446.json"
+}

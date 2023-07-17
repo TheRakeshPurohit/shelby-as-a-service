@@ -1,0 +1,11 @@
+{
+    "tag": "Celo",
+    "operation_id": "CeloGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Celo#operation/CeloGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/celo/address/{xpub}/{index}",
+    "content": "path /v3/celo/address/xpub/index\noperationid celogenerateaddress\nparameters\ndescription extended public key of wallet\nin path\nname xpub\nrequired true\nschema\ntype string\ndescription derivation index of desired address to be generated\nin path\nname index\nrequired true\nschema\ntype number\nsummary generate celo account address from extended public key\ndescription 1 credit per api call\ngenerate celo account deposit address from extended public key deposit address is generated for the specific index  each extended public key can generate\nup to 231 addresses starting from index 0 until 231\nresponses\n200\nschema\ntype object\naddress\ntype string\ndescription celo address\ndescription ok",
+    "tag_summary": "celo is fork of celo with more than 1000 tps and possibility to pay for\ntransactions in its own stable coin cusd celo blockchain enables access to most commonly used celo methods\nthese methods bring small level of abstraction\n       and are used for the type of applications that want to communicate with blockchain directly some of the methods are used alongside tatum private ledger\n       to connect blockchain and private ledger together like wallet generation or getting information about transactions\n      tatum supports 2 chains\n      mainnet  regular live chain\n      alfajorec  test chain used for testing purposes coins on test chain have no value and can be obtained from\n      faucet eg https//celoorg/developers/faucet\n      tatum supports bip44 hd wallets it is very convenient and secure since it can generate 231 addresses from 1 mnemonic phrase it is possible to generate this type of wallet with 1 simple api call",
+    "tag_number": 13,
+    "doc_number": 146,
+    "title": "13_Celo_CeloGenerateAddress_146.json"
+}

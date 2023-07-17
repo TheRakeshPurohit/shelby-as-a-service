@@ -1,0 +1,11 @@
+{
+    "tag": "Notification subscriptions",
+    "operation_id": "getSubscriptionsCount",
+    "doc_url": "https://apidoc.tatum.io/tag/Notification subscriptions#operation/getSubscriptionsCount",
+    "server_url": "https://api.tatum.io/v3/subscription/count",
+    "content": "path /v3/subscription/count\noperationid getsubscriptionscount\nparameters\ndescription max number of items per page is 50\nin query\nname pagesize\nschema\ntype number\nmaximum 50\nminimum 1\nrequired true\ndescription offset to obtain next page of the data\nin query\nname offset\nschema\ntype number\ndescription value for filtering by address\nin query\nname address\nschema\ntype string\nsummary count of subscriptions\ndescription 1 credit per api callcount of subscriptions that were found from /v3/subscription\nresponses\n200\nentitiescount\ntype object\ntotal\ndescription total entities\ntype number\ndescription ok",
+    "tag_summary": "endpoints to handle subscriptions to the tatum platform subscriptions allow users to enable some additional features or reports that are not enabled by default\nlike outgoing offchain transaction scanning accounts with balances above the limit etc",
+    "tag_number": 36,
+    "doc_number": 346,
+    "title": "36_Notification subscriptions_getSubscriptionsCount_346.json"
+}

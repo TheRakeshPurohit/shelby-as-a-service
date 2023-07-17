@@ -1,0 +1,11 @@
+{
+    "tag": "Elrond",
+    "operation_id": "EgldGetTransactionCount",
+    "doc_url": "https://apidoc.tatum.io/tag/Elrond#operation/EgldGetTransactionCount",
+    "server_url": "https://api.tatum.io/v3/egld/transaction/count/{address}",
+    "content": "path /v3/egld/transaction/count/address\noperationid egldgettransactioncount\nparameters\ndescription address\nin path\nname address\nrequired true\nschema\ntype string\nmaxlength 62\nminlength 62\nsummary get count of outgoing egld transactions\ndescription 1 credit per api call\nget a number of outgoing egld transactions for the address when a transaction is sent there can be multiple outgoing transactions\nwhich are not yet processed by the blockchain to distinguish between them there is a counter called a nonce which represents\nthe order of the transaction in the list of outgoing transactions\nresponses\n200\nschema\ntype number\ndescription number of transactions that were made from this address can be used as a nonce parameter in send transaction calls\ndescription ok",
+    "tag_summary": "elrond egld is a distributed transactional computation protocol which relies on a sharded state architecture and a secure proof of stake consensus mechanism\n\ntatum supports 2 chains\nmainnet  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//r3d4fr/elrond/devnet/",
+    "tag_number": 19,
+    "doc_number": 200,
+    "title": "19_Elrond_EgldGetTransactionCount_200.json"
+}

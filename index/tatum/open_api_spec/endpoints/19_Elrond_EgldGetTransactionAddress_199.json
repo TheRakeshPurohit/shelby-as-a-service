@@ -1,0 +1,11 @@
+{
+    "tag": "Elrond",
+    "operation_id": "EgldGetTransactionAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Elrond#operation/EgldGetTransactionAddress",
+    "server_url": "https://api.tatum.io/v3/egld/transaction/address/{address}",
+    "content": "path /v3/egld/transaction/address/address\noperationid egldgettransactionaddress\nparameters\ndescription address\nin path\nname address\nrequired true\nschema\ntype string\nmaxlength 62\nminlength 62\nsummary get count of outgoing egld transactions\ndescription 1 credit per api call\nthis endpoint allows one to retrieve the latest 20 transactions sent from an address\nresponses\n200\nschema\ntype object\ndescription list of transactions sent from an address\ndescription ok",
+    "tag_summary": "elrond egld is a distributed transactional computation protocol which relies on a sharded state architecture and a secure proof of stake consensus mechanism\n\ntatum supports 2 chains\nmainnet  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//r3d4fr/elrond/devnet/",
+    "tag_number": 19,
+    "doc_number": 199,
+    "title": "19_Elrond_EgldGetTransactionAddress_199.json"
+}

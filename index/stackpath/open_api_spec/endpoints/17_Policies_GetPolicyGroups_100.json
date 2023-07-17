@@ -1,0 +1,11 @@
+{
+    "tag": "Policies",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetPolicyGroups path: https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/policy_groups content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum get all policy groups\nresponses\n200\nwafgetpolicygroupsresponse\ntype obj\npolicygroups\ntype arr\nwafpolicygroup\ntype obj\nprops\nid\ntype str\ndesc a policy groups id\nname\ntype str\nreadonly true\ndesc a policy groups name\npolicies\ntype arr\nschemawafpolicy\ntype obj\nprops\nid\ntype str\ndesc a waf policys unique identifier\nname\ntype str\nreadonly true\ndesc a waf policys name\ndesc\ntype str\nreadonly true\ndesc a waf policys description\nwafpolicyaction\ntype str\ndefault block\nreadonly true\ndesc the potential actions that the waf will take when a policy is triggered\nenabled\ntype bool\nformat bool\ndesc whether or not a waf policy is enabled\ndesc an individually toggleable waf policy\n\npolicies are predefined waf rules created by stackpath for common firewall functionality\ndesc a list of the policies in a policy group\ndesc a group of waf policies with similar effect\ndesc the requested waf policy groups\ndesc a response from a request to retrieve a waf sites policy groups",
+    "operation_id": "GetPolicyGroups",
+    "doc_url": "https://stackpath.dev/reference/GetPolicyGroups",
+    "server_url": "https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/policy_groups",
+    "tag_summary": "",
+    "tag_number": 17,
+    "doc_number": 100,
+    "title": "17_Policies_GetPolicyGroups_100.json"
+}

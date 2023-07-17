@@ -1,0 +1,11 @@
+{
+    "tag": "Tron",
+    "operation_id": "TronGetCurrentBlock",
+    "doc_url": "https://apidoc.tatum.io/tag/Tron#operation/TronGetCurrentBlock",
+    "server_url": "https://api.tatum.io/v3/tron/info",
+    "content": "path /v3/tron/info\noperationid trongetcurrentblock\nsummary get the current tron block\ndescription 5 credits per api call\nget current tron block\nresponses\n200\nschema\ntype object\nproperties\nblocknumber\ndescription block height\ntype number\nhash\ndescription block hash\ntype string\ntestnet\ndescription wether the block is from mainnet of shasta testnet\ntype boolean\ndescription ok",
+    "tag_summary": "tron blockchain enables access to most commonly used tron methods its possible to generate tron account send trx trc10 and trc20 assets its also possible to generate custom trc10 or trc20 tokens using api\ntatum supports 2 chains\nmainnet  regular live chain\nshasta testnet  test chain used for testing purposes coins on test chain have no value and can be obtained from\nfaucet eg https//wwwtrongridio/shasta/",
+    "tag_number": 43,
+    "doc_number": 406,
+    "title": "43_Tron_TronGetCurrentBlock_406.json"
+}

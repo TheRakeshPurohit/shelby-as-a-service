@@ -1,0 +1,11 @@
+{
+    "tag": "Ethereum",
+    "operation_id": "EthGetTransactionCount",
+    "doc_url": "https://apidoc.tatum.io/tag/Ethereum#operation/EthGetTransactionCount",
+    "server_url": "https://api.tatum.io/v3/ethereum/transaction/count/{address}",
+    "content": "path /v3/ethereum/transaction/count/address\noperationid ethgettransactioncount\nparameters\ndescription address\nin path\nname address\nrequired true\nschema\ntype string\nmaxlength 42\nminlength 42\ndescription type of ethereum testnet defaults to ethereumsepolia\nin header\nname xtestnettype\nrequired false\nschema\ndefault ethereumsepolia\ntype string\nsummary get count of outgoing ethereum transactions\ndescription 1 credit per api call\nget a number of outgoing ethereum transactions for the address when a transaction is sent there can be multiple outgoing transactions\nwhich are not yet processed by the blockchain to distinguish between them there is a counter called a nonce which represents\nthe order of the transaction in the list of outgoing transactions\nresponses\n200\nschema\ntype number\ndescription number of transactions that were made from this address can be used as a nonce parameter in send transaction calls\ndescription ok",
+    "tag_summary": "ethereum is a decentralized opensource blockchain with tatum you can access the most commonly used ethereum methods these methods bring a certain level of abstraction and are used for applications that communicate with the blockchain directly some of the methods are used alongside virtual accounts to connect the blockchain and a virtual account like generating a wallet or getting information about transactions\ntatum supports the following ethereum networks\n\nmainnet the primary public production blockchain\nsepolia a proofofwork testnet and the default testnet for ethereum the testnet cryptocurrency has no value and you can obtain it from a faucet for example fauceth",
+    "tag_number": 20,
+    "doc_number": 213,
+    "title": "20_Ethereum_EthGetTransactionCount_213.json"
+}

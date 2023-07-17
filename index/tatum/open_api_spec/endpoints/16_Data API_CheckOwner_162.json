@@ -1,0 +1,11 @@
+{
+    "tag": "Data API",
+    "operation_id": "CheckOwner",
+    "doc_url": "https://apidoc.tatum.io/tag/Data API#operation/CheckOwner",
+    "server_url": "https://api.tatum.io/v3/data/owners/address",
+    "content": "path /v3/data/owners/address\noperationid checkowner\nparameters\ndescription the blockchain to work with\nin query\nname chain\nrequired true\nschema\nchainenum\ntype string\ndescription the blockchain address of the wallet\nin query\nname address\nrequired true\nschema\ntype string\ndescription the blockchain address of the token nft collection or any fungible token\nin query\nname tokenaddress\nrequired true\nschema\ntokenaddress\ntype string\ndescription contract address of the token\ndescription the id of a specific nft token\nin query\nname tokenid\nschema\ntokenid\ntype string\ndescription id of the token\nmaxlength 78\nformat uint256\nsummary check owner of token\ndescription 1 credit per api call\ncheck if wallet address owns any specified token erc20 erc721 or erc1155 on the following blockchains\n\ncelo  celo / celotestnet\nethereum  ethereum / ethereumsepolia\nbnb binance smart chain  bsc / bsctestnet\npolygon  polygon / polygonmumbai\n\nto get started\n\nprovide a chain name wallet address and address of any fungible token nft or multitoken collection our api will return true if provided wallet address owns them\nif wallet address does not own the specific token response body is false and status code is 200\nit is also possible to check if wallet address owns a specific nft by specifying a tokenid\nresponses\n200\ntype boolean\ndescription ok",
+    "tag_summary": "tatum data api is a comprehensive solution designed for developers to easily access onchain data such as token balances nft owners and metadata all through a suite of userfriendly apis\nwith tatum data api developers can seamlessly integrate blockchain functionality into their applications enabling them to deliver innovative web3 solutions this powerful indexing solution supports multiple blockchains ensuring developers have access to the latest data across different networks\ntatum data api offers a reliable scalable and costeffective way for developers to access onchain data making it an essential tool for any blockchain project",
+    "tag_number": 16,
+    "doc_number": 162,
+    "title": "16_Data API_CheckOwner_162.json"
+}

@@ -1,0 +1,11 @@
+{
+    "tag": "SSL",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DeleteCertificate path: https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/certificates/{certificate_id} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname certificateid\ndesc a certificate id\nin path\nrequired true\nschema\ntype str\nsum delete a certificate\nresponses",
+    "operation_id": "DeleteCertificate",
+    "doc_url": "https://stackpath.dev/reference/DeleteCertificate",
+    "server_url": "https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/certificates/{certificate_id}",
+    "tag_summary": "",
+    "tag_number": 23,
+    "doc_number": 130,
+    "title": "23_SSL_DeleteCertificate_130.json"
+}

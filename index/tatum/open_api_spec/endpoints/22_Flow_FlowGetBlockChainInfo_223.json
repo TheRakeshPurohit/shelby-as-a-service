@@ -1,0 +1,11 @@
+{
+    "tag": "Flow",
+    "operation_id": "FlowGetBlockChainInfo",
+    "doc_url": "https://apidoc.tatum.io/tag/Flow#operation/FlowGetBlockChainInfo",
+    "server_url": "https://api.tatum.io/v3/flow/block/current",
+    "content": "path /v3/flow/block/current\noperationid flowgetblockchaininfo\nsummary get flow current block number\ndescription 1 credit per api callget flow current block number\nresponses\n200\ntype number\ndescription ok",
+    "tag_summary": "flow blockchain enables access to the most commonly used flow methods these methods bring a small level of abstraction\n and are used for applications that communicate with the blockchain directly some of the methods are used alongside tatum private ledger\n to connect the blockchain and the private ledger like wallet generation or getting information about transactions\ntatum supports flow and fusd stable coin\ntatum supports 2 chains\n  mainnet  a regular live chain\n  testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from a faucet eg https//testnetfaucetonfloworg/\nto obtain fusd on testnet you can swap them using https//swaptestnetbloctoapp/#/swap\nto create accounts or mint nfts on mainnet you have to have paid api key tatum covers the transaction fees on flow blockchain out of the box so mainnet operations are available only on the paid api key\ntatum handles automatically proposal key management  we internally rotate the proposal keys for you so you dont have to take care of that and can easily scale your transaction throughput\ntatum supports bip44 hd wallets because they can generate 231 addresses from 1 mnemonic phrase they are very convenient and secure it is possible to generate this type of wallet with 1 simple api call\nits not possible to pregenerate addresses on the flow blockchain you can generate only public keys which are used to generate address using a create account transaction to the flow blockchain\nyou have to have existing account on the flow to initialize new address creation transactions on the flow blockchain are free",
+    "tag_number": 22,
+    "doc_number": 223,
+    "title": "22_Flow_FlowGetBlockChainInfo_223.json"
+}

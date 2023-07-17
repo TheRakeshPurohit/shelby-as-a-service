@@ -1,0 +1,11 @@
+{
+    "tag": "BNB Beacon Chain",
+    "operation_id": "BnbBroadcast",
+    "doc_url": "https://apidoc.tatum.io/tag/BNB Beacon Chain#operation/BnbBroadcast",
+    "server_url": "https://api.tatum.io/v3/bnb/broadcast",
+    "content": "path /v3/bnb/broadcast\noperationid bnbbroadcast\nsummary broadcast signed bnb transaction\ndescription 5 credits per api call\nbroadcast signed transaction to binance blockchain this method is used internally or tatum client libraries\nit is possible to create custom signing mechanism and use this method only for broadcasting data to the blockchain\nrequestbody\nbroadcast\nproperties\ntxdata\ndescription raw signed transaction to be published to network\nmaxlength 500000\nminlength 1\ntype string\nsignatureid\ntype string\nminlength 24\nmaxlength 24\ndescription identifier of kms pending transaction id to be completed with the broadcast\nrequired\ntxdata\ntype object\nrequired true\nresponses\n200\ntransactionhash\ntype object\ntxid\ndescription the hash id of the transaction\ntype string\nrequired\ntxid\ndescription ok",
+    "tag_summary": "bnb beacon chain is a blockchain developed by binance with tatum you can access the most commonly used bnb beacon chain methods these methods bring a certain level of abstraction and are used for applications that communicate with the blockchain directly\nbnb beacon chain does not provide the smart contract functionality\ntatum supports the following bnb beacon chain networks\n\nmainnet the primary public production blockchain\ntestnet a chain used for testing purposes the testnet cryptocurrency has no value and you can obtain it from a faucet for example get it from the bnb smart chain faucet and transfer it to your bnb beacon chain address using the binance wallet",
+    "tag_number": 3,
+    "doc_number": 31,
+    "title": "3_BNB Beacon Chain_BnbBroadcast_31.json"
+}

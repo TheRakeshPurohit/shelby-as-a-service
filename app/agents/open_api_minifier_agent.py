@@ -22,8 +22,7 @@ class OpenAPIMinifierAgent:
         self.tokenizer = tiktoken.encoding_for_model("text-embedding-ada-002")
         
         self.operationID_counter = 0
-        
-        self.output_directory = 'app/index/minified_open_api_specs'
+
         # Decide what fields you want to keep in the documents
         self.keys_to_keep = { 
             # Root level keys to populate
@@ -38,7 +37,7 @@ class OpenAPIMinifierAgent:
             "enums": False,
             "nested_descriptions": True, 
             "examples": False, 
-            "tag_descriptions": True,
+            "tag_summaries": False,
             "deprecated": False,
         }
         self.methods_to_handle = {"get", "post", "patch", "delete"}
@@ -60,92 +59,51 @@ class OpenAPIMinifierAgent:
             "object": "obj"
         }
         
-        self.key_abbreviations_enabled = False
+        self.key_abbreviations_enabled = True
         
-    def load(self):
+    def run(self, open_api_specs):
         
-        openapi_specs = self.load_spec()
-        
-        endpoints_by_tag_metadata_dict = defaultdict(list)
-        tag_summary_dict = defaultdict(list)
-        
-        for openapi_spec in openapi_specs:
+        minified_endpoints = []
+
+        for open_api_spec in open_api_specs:
             # Create list of processed and parsed individual endpoints
-            endpoints_by_tag_metadata, tag_summary_dict_output = self.minify(openapi_spec)
+            minified_endpoints.extend(self.minify(open_api_spec))
             
-            # Append the outputs to the lists
-            for key, val in endpoints_by_tag_metadata.items():
-                endpoints_by_tag_metadata_dict[key].extend(val)    
-            for key, val in tag_summary_dict_output.items():
-                tag_summary_dict[key].extend(val)    
+            # Sort alphabetically by tag and then operation_id
+            minified_endpoints = sorted(minified_endpoints, key=lambda x: (x['tag'], x['operation_id']))
 
-        # Sort the data
-        sorted_items = sorted(endpoints_by_tag_metadata_dict.items())  
-        sorted_endpoints_by_tag_metadata_dict = defaultdict(list, sorted_items)
-        sorted_items = sorted(tag_summary_dict.items())  
-        sorted_tag_summary_dict = defaultdict(list, sorted_items)
+        minified_endpoints = self.create_endpoint_documents(minified_endpoints, open_api_spec)
         
-        sorted_endpoints_by_tag_metadata_dict, root_output_directory = self.create_endpoint_files(sorted_endpoints_by_tag_metadata_dict, openapi_spec)
-        self.create_key_point_guide(sorted_endpoints_by_tag_metadata_dict, sorted_tag_summary_dict, root_output_directory)
-        self.count_tokens_in_directory(self.output_directory)
+        # Need to implement a merge in the case a an org has multiple specs
+        self.copy_full_spec(open_api_spec)
+        
+        self.create_key_point_guide(minified_endpoints)
+        
+        return minified_endpoints
     
-    def load_spec(self):
-        """Load YAML or JSON files."""
-        documents = []
-        file_extension = None
-        for filename in os.listdir(self.data_source_config.target_url):
-            if file_extension is None:
-                if filename.endswith('.yaml'):
-                    file_extension = '.yaml'
-                elif filename.endswith('.json'):
-                    file_extension = '.json'
-                else:
-                    self.data_source_config.index_agent.log_agent.print_and_log(f"Unsupported file format: {filename}")
-                    continue
-            elif not filename.endswith(file_extension):
-                self.data_source_config.index_agent.log_agent.print_and_log(f"Inconsistent file formats in directory: {filename}")
-                continue
-            file_path = os.path.join(self.data_source_config.target_url, filename)
-            with open(file_path, 'r') as file:
-                if file_extension == '.yaml':
-                    documents.append(yaml.safe_load(file))
-                elif file_extension == '.json':
-                    documents.append(json.load(file))
+    def minify(self, open_api_spec):
         
-        return documents
-
-    def minify(self, openapi_spec):
+        server_url = open_api_spec['servers'][0]['url']  # Fetch the server URL from the open_api_spec specification
+        # server_url = urlparse(server_url)
         
-        server_url = openapi_spec['servers'][0]['url']  # Fetch the server URL from the openapi_spec specification
+        minified_endpoints = []
         
-        # If the tags key + description doesn't exist at the root of the spec, tags will be added from the endpoints
-        tag_summary_dict = {}
-        tags = openapi_spec.get('tags')
-        if tags:
-            # Iterate through the list of tags
-            for tag in tags:
-                # Extract name and description
-                name = tag.get("name")
-                description = tag.get("description")
-                # Add to the dictionary
-                if name and description:
-                    tag_summary_dict[name] = description.lower()
-
-        # Dictionary with each unique tag as a key, and the value is a list of finalized endpoints with that tag
-        endpoints_by_tag = defaultdict(list)
-        endpoints_by_tag_metadata = defaultdict(list)
-        endpoint_counter = 0
-        for path, methods in openapi_spec['paths'].items():
+        with open(os.path.join(self.agent_config.prompt_template_path, 'open_api_minifier_agent_endpoint_prompt_template.yaml'), 'r') as yaml_file:
+            # Load the YAML data and print the result
+            yaml_content = yaml.safe_load(yaml_file)
+            
+        prompt_template = yaml_content.get('prompt_template')
+        
+        for path, methods in open_api_spec['paths'].items():
             for method, endpoint in methods.items():
                 if method not in self.methods_to_handle:
                     continue
                 if endpoint.get('deprecated', False) and not self.keys_to_keep["deprecated"]:
                     continue
-                endpoint_counter += 1
                 
                 # Adds schema to each endpoint
                 if self.keys_to_keep["schemas"]:
-                    extracted_endpoint_data = self.resolve_refs(openapi_spec, endpoint)
+                    extracted_endpoint_data = self.resolve_refs(open_api_spec, endpoint)
                 else:
                     extracted_endpoint_data = endpoint
                 
@@ -165,75 +123,55 @@ class OpenAPIMinifierAgent:
                     # Replace common keys with abbreviations and sets all text to lower case
                     extracted_endpoint_data = self.abbreviate(extracted_endpoint_data, self.key_abbreviations)
                 
-                # Get the tags of the current endpoint
+                # Get the tag of the current endpoint
                 tags = endpoint.get('tags', [])
-                tags = [tag for tag in tags]
-                if not tags:
-                    tag = 'default'
-                # For each tag, add the finalized endpoint to the corresponding list in the dictionary
-                for tag in tags:
-                    endpoints_by_tag[tag].append(extracted_endpoint_data)
-
-                operation_id = endpoint.get('operationId', '').lower()
-
+                tag = tags[0] if tags else 'default'
+                
+                
+                operation_id = endpoint.get('operationId', '')
+                processed_endpoint = self.write_dict_to_text(extracted_endpoint_data)
+                content_string = f'{prompt_template} operationId: {operation_id} path: {server_url}{path} content: {processed_endpoint}'
+                
+  
                 api_url = self.api_url_format.format(tag=tag, operationId=operation_id)
-
-                content_string = self.write_dict_to_text(extracted_endpoint_data)
-                metadata = {
+                
+                endpoint_dict = {
                     'tag': tag,
-                    'tag_number': 0,
-                    'doc_number': 0,
+                    'content': content_string,
                     'operation_id': operation_id,
                     'doc_url': api_url,
-                    'server_url': f'{server_url}{path}'
-                }
-                endpoint_dict = {
-                    "metadata": metadata,
+                    'server_url': f'{server_url}{path}',
                     "content": content_string
                 }
 
-                endpoints_by_tag_metadata[tag].append(endpoint_dict)
-
-        # Sort alphabetically by tag name
-        sorted_items = sorted(endpoints_by_tag.items())
-        endpoints_by_tag = defaultdict(list, sorted_items)
-        # Sort alphabetically by tag name
-        sorted_items = sorted(endpoints_by_tag_metadata.items())
-        endpoints_by_tag_metadata = defaultdict(list, sorted_items)
+                minified_endpoints.append(endpoint_dict)
         
-        # In the case tag_summary_dict is empty or missing tags this adds them here
-        for tag in endpoints_by_tag.keys():
-            # If the tag is not already in tag_summary_dict, add it with an empty description
-            if tag not in tag_summary_dict:
-                tag_summary_dict[tag] = ""
-
-        print(f'{endpoint_counter} endpoints found')
-        return endpoints_by_tag_metadata, tag_summary_dict
-                
-    def resolve_refs(self, openapi_spec, endpoint):
+        return minified_endpoints
+     
+    def resolve_refs(self, open_api_spec, endpoint):
         if isinstance(endpoint, dict):
             new_endpoint = {}
             for key, value in endpoint.items():
                 if key == '$ref':
                     ref_path = value.split('/')[1:]
-                    ref_object = openapi_spec
+                    ref_object = open_api_spec
                     for p in ref_path:
                         ref_object = ref_object.get(p, {})
                     
                     # Recursively resolve references inside the ref_object
-                    ref_object = self.resolve_refs(openapi_spec, ref_object)
+                    ref_object = self.resolve_refs(open_api_spec, ref_object)
 
                     # Use the last part of the reference path as key
                     new_key = ref_path[-1]
                     new_endpoint[new_key] = ref_object
                 else:
                     # Recursively search in nested dictionaries
-                    new_endpoint[key] = self.resolve_refs(openapi_spec, value)
+                    new_endpoint[key] = self.resolve_refs(open_api_spec, value)
             return new_endpoint
 
         elif isinstance(endpoint, list):
             # Recursively search in lists
-            return [self.resolve_refs(openapi_spec, item) for item in endpoint]
+            return [self.resolve_refs(open_api_spec, item) for item in endpoint]
 
         else:
             # Base case: return the endpoint as is if it's neither a dictionary nor a list
@@ -242,8 +180,8 @@ class OpenAPIMinifierAgent:
     def populate_keys(self, endpoint, path):
         # Gets the main keys from the specs
         extracted_endpoint_data = {}
-        extracted_endpoint_data['path'] = path
-        extracted_endpoint_data['operationId'] = endpoint.get('operationId')
+        # extracted_endpoint_data['path'] = path
+        # extracted_endpoint_data['operationId'] = endpoint.get('operationId')
 
         if self.keys_to_keep["parameters"]:
                 extracted_endpoint_data['parameters'] = endpoint.get('parameters')
@@ -372,38 +310,60 @@ class OpenAPIMinifierAgent:
             # Return data unchanged if it's not a dict, list or string
             return data
 
-    def create_endpoint_files(self, endpoints_by_tag_metadata, openapi_spec):
+    def create_endpoint_documents(self, minified_endpoints, open_api_spec):
         
-        # Creates a directory named after the API url
-        server_url = openapi_spec['servers'][0]['url']  
-        parsed_url = urlparse(server_url)
-        root_output_directory = os.path.join(self.output_directory, parsed_url.netloc)
-
-        # Create a subdirectory for the operationIDs
-        operationIDs_directory = os.path.join(root_output_directory, 'operationIDs')
-        os.makedirs(operationIDs_directory, exist_ok=True)
-
+        tag_summaries = self.get_tag_summaries(minified_endpoints, open_api_spec)
         
-        # Now, iterate over each unique tag
-        for tag, endpoints_with_tag in endpoints_by_tag_metadata.items():
+        for endpoint in minified_endpoints:
+            
+            tag = endpoint.get('tag') or 'default'
 
+            # Get the corresponding tag summary and number
+            tag_summary_list = [summary for summary in tag_summaries if summary['name'] == tag]
+            tag_summary = tag_summary_list[0]['summary'] if tag_summary_list else ''
+            tag_number = tag_summary_list[0]['tag_number'] if tag_summary_list else 0
+                
+            endpoint['tag_summary'] = tag_summary
+            endpoint['tag_number'] = tag_number
+            
+            endpoint['doc_number'] = self.operationID_counter
+            
+            title = f"{tag_number}_{endpoint['tag']}_{endpoint['operation_id']}_{self.operationID_counter}.json"
+            endpoint['title'] = title
+            
+            self.operationID_counter += 1
 
-            for endpoint in endpoints_with_tag:
-                endpoint['metadata']['doc_number'] = self.operationID_counter
+        return minified_endpoints
     
-                # Create a file name 
-                file_name = f"{tag}-{self.operationID_counter}.json"
-                # Define the file path
-                file_path = os.path.join(operationIDs_directory, file_name)
+    def get_tag_summaries(self, minified_endpoints, open_api_spec):
+        
+        tag_summaries = []
 
-                # Write the data to a JSON file
-                with open(file_path, 'w') as file:
-                    json.dump(endpoint, file)
+        # Handle root level tags
+        root_tags = open_api_spec.get('tags')
+        if root_tags:
+            for tag in root_tags:
+                if tag not in [t['name'] for t in tag_summaries]:
+                    name = tag.get("name")
+                    summary = tag.get("description")
+                    if name and summary:
+                        tag_summaries.append({'name': name, 'summary': self.write_dict_to_text(summary)})
+                    else:
+                        tag_summaries.append({'name': name, 'summary': ''})
+                        
+        for endpoint in minified_endpoints:
+            tag = endpoint.get('tag') or 'default'
+            # Only add tag if it is not already in tag_summaries
+            if tag not in [t['name'] for t in tag_summaries]:
+                tag_summaries.append({'name': tag, 'summary': ''})
+                        
+        tag_summaries = sorted(tag_summaries, key=lambda x: (x['name']))
+        
+        for i, tag in enumerate(tag_summaries):
+                tag['tag_number'] = i
 
-                self.operationID_counter += 1
-
-        return endpoints_by_tag_metadata, root_output_directory
-
+        return tag_summaries
+               
     def write_dict_to_text(self, data):
         def remove_html_tags_and_punctuation(input_str):
             # Strip HTML tags
@@ -411,7 +371,7 @@ class OpenAPIMinifierAgent:
             # Define the characters that should be considered as punctuation
             modified_punctuation = set(string.punctuation) - {'/', '#'}
             # Remove punctuation characters
-            return ''.join(ch for ch in no_html_str if ch not in modified_punctuation).strip()
+            return ''.join(ch for ch in no_html_str if ch not in modified_punctuation).lower().strip()
         
         # List to accumulate the formatted text parts
         formatted_text_parts = []
@@ -449,69 +409,57 @@ class OpenAPIMinifierAgent:
         # but filter out any empty strings before joining
         return '\n'.join(filter(lambda x: x.strip(), formatted_text_parts))
 
-    def create_key_point_guide(self, endpoints_by_tag_metadata, tag_summary_dict, root_output_directory):
+    def create_key_point_guide(self, minified_endpoints):
+        
+        with open(os.path.join(self.agent_config.prompt_template_path, 'open_api_minifier_agent_keypoint_prompt_template.yaml'), 'r') as yaml_file:
+            # Load the YAML data and print the result
+            yaml_content = yaml.safe_load(yaml_file)
+        prompt_template = yaml_content.get('prompt_template')
+        
+        folder_path = f'index/{self.data_source_config.namespace}/open_api_spec/keypoint'
         # Ensure output directory exists
-        os.makedirs(root_output_directory, exist_ok=True)
+        os.makedirs(folder_path, exist_ok=True)
         # Define output file path
-        output_file_path = os.path.join(root_output_directory,f'{self.data_source_config.namespace}_keypoint_guide_file.txt')
+        output_file_path = os.path.join(folder_path, f'{self.data_source_config.namespace}_keypoint_guide_file.txt')
 
-        output_string = ''
+        output_string = f'{prompt_template}\n'
+        current_tag_number = ''
+        tag_string = ''
+        
+        for endpoint in minified_endpoints:
+            if current_tag_number != endpoint.get('tag_number'):
+                # New tag
+                if tag_string != '':
+                    output_string += f'{tag_string}\n'
+                    tag_string = ''
+                current_tag_number = endpoint.get('tag_number')
+                # If we're adding tag descriptions and they exist they're added here.
+                tag_summary = endpoint.get('tag_summary')
+                if self.keys_to_keep["tag_summaries"] and tag_summary is not None and tag_summary != '':
+                    tag_string = f"{endpoint.get('tag')}-{tag_summary}\n"
+                else:
+                    tag_string = f"{endpoint.get('tag')}-\n"
+                
+            doc_number = endpoint.get('doc_number')
+            operation_id = endpoint.get('operation_id')
 
-        # Now, iterate over each unique tag
-        for tag, endpoints_with_tag in endpoints_by_tag_metadata.items():
-            tag_number = endpoints_with_tag[0].get('metadata', {}).get('tag_number', '')
+            tag_string += f'{operation_id}={doc_number}!'
 
-            # If we're adding tag descriptions and they exist they're added here.
-            tag_description = tag_summary_dict.get(tag)
-            if self.keys_to_keep["tag_descriptions"] and tag_description is not None and tag_description != '':
-                tag_description = tag_summary_dict.get(tag)
-                tag_description = self.write_dict_to_text(tag_description)
-                tag_string = f'{tag}! {tag_description}!!\n'
-            else:
-                tag_string = f'{tag}!\n'
+        output_string += f'{tag_string}\n'
 
-            for endpoint in endpoints_with_tag:
-                # tagtag_number-description\noperation_iddoc_numberoperation_iddoc_number\n
-                metadata = endpoint.get('metadata', '')
-                doc_number = metadata.get('doc_number', '')
-                operation_id = metadata.get('operation_id', '')
-
-                tag_string += f'{operation_id}-{doc_number}!'
-
-            output_string += f'{tag_string}\n'
-
-        print(f'keypoint file token count: {self.tiktoken_len(output_string)}')
+        self.log_agent.print_and_log(f'keypoint file token count: {self.tiktoken_len(output_string)}')
         # Write sorted info_strings to the output file
         with open(output_file_path, 'w') as output_file:
                 output_file.write(output_string)
-
-    def count_tokens_in_directory(self, directory):
-        token_counts = []
-        max_tokens = 0
-        max_file = ''
-        
-        for dirpath, dirnames, filenames in os.walk(directory):
-            for filename in filenames:
-                if filename.endswith('.json'):
-                    filepath = os.path.join(dirpath, filename)
-                    with open(filepath, 'r') as file:
-                        file_content = json.load(file)
-                        content = file_content.get("content", "")
-                        token_count = self.tiktoken_len(content)
-                        token_counts.append(token_count)
-                        if token_count > max_tokens:
-                            max_tokens = token_count
-                            max_file = filepath
-
-        print("Total files:", len(token_counts))
-        if not token_counts:
-            return
-        print("Min:", min(token_counts))
-        print("Avg:", int(sum(token_counts) / len(token_counts)))
-        print("Max:", max_tokens, "File:", max_file)
-        print("Total tokens:", int(sum(token_counts)))
-
-        return token_counts
+    
+    def copy_full_spec(self, open_api_spec):
+        folder_path = f'index/{self.data_source_config.namespace}/open_api_spec/full_spec'
+        # Ensure output directory exists
+        os.makedirs(folder_path, exist_ok=True)
+        # Define output file path
+        output_file_path = os.path.join(folder_path, f'{self.data_source_config.namespace}_open_api_spec.json')
+        with open(output_file_path, 'w') as output_file:
+            json.dump(open_api_spec, output_file, indent=4)
 
     def tiktoken_len(self, text):
         

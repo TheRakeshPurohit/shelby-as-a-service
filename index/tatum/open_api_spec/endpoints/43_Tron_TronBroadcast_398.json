@@ -1,0 +1,11 @@
+{
+    "tag": "Tron",
+    "operation_id": "TronBroadcast",
+    "doc_url": "https://apidoc.tatum.io/tag/Tron#operation/TronBroadcast",
+    "server_url": "https://api.tatum.io/v3/tron/broadcast",
+    "content": "path /v3/tron/broadcast\noperationid tronbroadcast\nsummary broadcast a tron transaction\ndescription 5 credits per api call\nbroadcast tron transaction this method is used internally from tatum client libraries\nit is possible to create custom signing mechanism and use this method only for broadcasting data to the blockchain\nrequestbody\ntronbroadcast\ntype object\nrequired\ntxdata\ntxdata\ntype string\ndescription raw signed transaction to be published to network\nminlength 1\nmaxlength 50000\nrequired true\nresponses\n200\ntransactionhash\ntype object\ntxid\ndescription the hash id of the transaction\ntype string\nrequired\ntxid\ndescription ok",
+    "tag_summary": "tron blockchain enables access to most commonly used tron methods its possible to generate tron account send trx trc10 and trc20 assets its also possible to generate custom trc10 or trc20 tokens using api\ntatum supports 2 chains\nmainnet  regular live chain\nshasta testnet  test chain used for testing purposes coins on test chain have no value and can be obtained from\nfaucet eg https//wwwtrongridio/shasta/",
+    "tag_number": 43,
+    "doc_number": 398,
+    "title": "43_Tron_TronBroadcast_398.json"
+}

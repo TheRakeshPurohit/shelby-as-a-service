@@ -1,0 +1,11 @@
+{
+    "tag": "Infrastructure",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetWAFOrganizations path: https://gateway.stackpath.com/waf/v1/organizations content: params\nname pagerequestfirst\ndesc the number of items desired\nin query\nrequired false\nschema\ntype str\nname pagerequestafter\ndesc the cursor value after which data will be returned\nin query\nrequired false\nschema\ntype str\nname pagerequestfilter\ndesc sqlstyle constraint filters\nin query\nrequired false\nschema\ntype str\nname pagerequestsortby\ndesc sort the response by the given field\nin query\nrequired false\nschema\ntype str\nsum get whois organizations\ndesc stackpath regularly searches ip address space for organizations to allow or block in custom rules\nresponses\n200\nwafgetwaforganizationsresponse\ntype obj\nprops\npaginationpageinfo\ntype obj\nprops\ntotalcount\ntype str\ndesc the total number of items in the dataset\nhaspreviouspage\ntype bool\nformat bool\ndesc whether or not a previous page of data exists\nhasnextpage\ntype bool\nformat bool\ndesc whether or not another page of data is available\nstartcursor\ntype str\ndesc the cursor for the first item in the set of data returned\nendcursor\ntype str\ndesc the cursor for the last item in the set of data returned\ndesc information about a paginated response\n\nthis is modeled after the graphql relay spec to support both cursor based pagination and traditional offset based pagination\nresults\ntype arr\nwafwaforganization\ntype obj\nname\ntype str\ndesc an organizations name\ndesc a whois organization\ndesc the requested whois organizations\ndesc a response for a request to get a whois organization",
+    "operation_id": "GetWAFOrganizations",
+    "doc_url": "https://stackpath.dev/reference/GetWAFOrganizations",
+    "server_url": "https://gateway.stackpath.com/waf/v1/organizations",
+    "tag_summary": "",
+    "tag_number": 10,
+    "doc_number": 61,
+    "title": "10_Infrastructure_GetWAFOrganizations_61.json"
+}

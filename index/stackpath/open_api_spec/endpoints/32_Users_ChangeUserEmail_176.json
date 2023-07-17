@@ -1,0 +1,11 @@
+{
+    "tag": "Users",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: ChangeUserEmail path: https://gateway.stackpath.com/identity/v1/users/{user_id}/change_email content: params\nname userid\ndesc a user id\nin path\nrequired true\nschema\ntype str\nsum update a users email address\ndesc this immediately invalidates the users stackpath customer portal logins and api tokens\nreqbody\nidentitychangeuseremailrequest\ntype obj\nprops\nemail\ntype str\ndesc the users new email address\npassword\ntype str\ndesc the users login password\nrequired true\nresponses",
+    "operation_id": "ChangeUserEmail",
+    "doc_url": "https://stackpath.dev/reference/ChangeUserEmail",
+    "server_url": "https://gateway.stackpath.com/identity/v1/users/{user_id}/change_email",
+    "tag_summary": "",
+    "tag_number": 32,
+    "doc_number": 176,
+    "title": "32_Users_ChangeUserEmail_176.json"
+}

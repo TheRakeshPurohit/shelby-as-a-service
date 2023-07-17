@@ -1,0 +1,11 @@
+{
+    "tag": "WAF Features",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetTags path: https://gateway.stackpath.com/waf/v1/tags content: params\nname pagerequestfirst\ndesc the number of items desired\nin query\nrequired false\nschema\ntype str\nname pagerequestafter\ndesc the cursor value after which data will be returned\nin query\nrequired false\nschema\ntype str\nname pagerequestfilter\ndesc sqlstyle constraint filters\nin query\nrequired false\nschema\ntype str\nname pagerequestsortby\ndesc sort the response by the given field\nin query\nrequired false\nschema\ntype str\nsum get all tags\ndesc get tags available for use in waf rule conditons tags describe aspects of an incoming web request and acn be used to create complex applicationlevel custom rules\nresponses\n200\nwafgettagsresponse\ntype obj\nprops\nresults\ntype arr\nwaftag\ntype obj\nprops\nname\ntype str\ndesc a tags name\ndesc\ntype str\ndesc a tags human readable description\ndesc aspects of an incoming http request\n\nstackpath provides shortcuts for the rules used in waf policies for the creation of more complex waf rules\ndesc the requested waf tags\npaginationpageinfo\ntype obj\nprops\ntotalcount\ntype str\ndesc the total number of items in the dataset\nhaspreviouspage\ntype bool\nformat bool\ndesc whether or not a previous page of data exists\nhasnextpage\ntype bool\nformat bool\ndesc whether or not another page of data is available\nstartcursor\ntype str\ndesc the cursor for the first item in the set of data returned\nendcursor\ntype str\ndesc the cursor for the last item in the set of data returned\ndesc information about a paginated response\n\nthis is modeled after the graphql relay spec to support both cursor based pagination and traditional offset based pagination\ndesc a response from a request to retrieve waf tags",
+    "operation_id": "GetTags",
+    "doc_url": "https://stackpath.dev/reference/GetTags",
+    "server_url": "https://gateway.stackpath.com/waf/v1/tags",
+    "tag_summary": "",
+    "tag_number": 35,
+    "doc_number": 199,
+    "title": "35_WAF Features_GetTags_199.json"
+}

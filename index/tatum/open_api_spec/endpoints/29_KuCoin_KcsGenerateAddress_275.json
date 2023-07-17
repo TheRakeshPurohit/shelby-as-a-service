@@ -1,0 +1,11 @@
+{
+    "tag": "KuCoin",
+    "operation_id": "KcsGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/KuCoin#operation/KcsGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/kcs/address/{xpub}/{index}",
+    "content": "path /v3/kcs/address/xpub/index\noperationid kcsgenerateaddress\nparameters\ndescription extended public key of wallet\nin path\nname xpub\nrequired true\nschema\ntype string\ndescription derivation index of desired address to be generated\nin path\nname index\nrequired true\nschema\ntype number\nsummary generate kcs account address from extended public key\ndescription 1 credit per api call\ngenerate kcs account deposit address from extended public key deposit address is generated for the specific index  each extended public key can generate\nup to 231 addresses starting from index 0 until 231\nresponses\n200\nschema\ntype object\naddress\ntype string\ndescription kcs address\ndescription ok",
+    "tag_summary": "kcs kcs is an ethereum evm 100 compatible blockchain and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\nmumbai testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucettestnetkccnetwork/",
+    "tag_number": 29,
+    "doc_number": 275,
+    "title": "29_KuCoin_KcsGenerateAddress_275.json"
+}

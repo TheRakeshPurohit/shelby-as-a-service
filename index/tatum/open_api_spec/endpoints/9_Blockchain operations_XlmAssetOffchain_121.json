@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain operations",
+    "operation_id": "XlmAssetOffchain",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain operations#operation/XlmAssetOffchain",
+    "server_url": "https://api.tatum.io/v3/offchain/xlm/asset",
+    "content": "path /v3/offchain/xlm/asset\noperationid xlmassetoffchain\nsummary create an xlmbased asset\ndescription 2 credits per api call\ncreate an xlmbased asset in a virtual account the asset must be created and configured on the stellar blockchain before creating a trust line\nthis api call will create an internal virtual currency you can create virtual accounts with offchain support\nrequestbody\ncreatexlmasset\ntype object\nproperties\nissueraccount\ndescription blockchain address of the issuer of the assets\nmaxlength 56\nminlength 56\ntype string\ntoken\ndescription asset name\ntype string\npattern azaz09112\nmaxlength 12\nminlength 1\nbasepair\ndescription base pair for asset transaction value will be calculated according to this base pair eg 1 token123 is equal to 1 eur if basepair is set to eur\ntype string\nrequired\nbasepair\nissueraccount\ntoken\nrequired true\nresponses",
+    "tag_summary": "an endpoint to handle operations between a virtual account and the blockchain eg to create blockchain transactions from virtual accounts create custom fungible tokens and custom assets and register them as a regular currency into the virtual account",
+    "tag_number": 9,
+    "doc_number": 121,
+    "title": "9_Blockchain operations_XlmAssetOffchain_121.json"
+}

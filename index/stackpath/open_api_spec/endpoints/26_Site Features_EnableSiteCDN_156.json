@@ -1,0 +1,11 @@
+{
+    "tag": "Site Features",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: EnableSiteCDN path: https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/cdn content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum enable cdn\nresponses",
+    "operation_id": "EnableSiteCDN",
+    "doc_url": "https://stackpath.dev/reference/EnableSiteCDN",
+    "server_url": "https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/cdn",
+    "tag_summary": "",
+    "tag_number": 26,
+    "doc_number": 156,
+    "title": "26_Site Features_EnableSiteCDN_156.json"
+}

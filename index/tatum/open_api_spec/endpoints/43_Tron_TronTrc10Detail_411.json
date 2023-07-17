@@ -1,0 +1,11 @@
+{
+    "tag": "Tron",
+    "operation_id": "TronTrc10Detail",
+    "doc_url": "https://apidoc.tatum.io/tag/Tron#operation/TronTrc10Detail",
+    "server_url": "https://api.tatum.io/v3/tron/trc10/detail/{idOrOwnerAddress}",
+    "content": "path /v3/tron/trc10/detail/idorowneraddress\noperationid trontrc10detail\nparameters\nin path\nname idorowneraddress\nrequired true\ndescription the id of the trc10 token or the address of the tokens owner\nschema\ntype string\nsummary get information about a trc10 token\ndescription 5 credits per api call\nget information about a tron trc10 token\nresponses\n200\ntrontrc10detail\ntype object\nproperties\nowneraddress\ntype string\nminlength 34\nmaxlength 34\ndescription the address of the trc10 tokens owner in the hexadecimal format\nname\ntype string\nminlength 1\nmaxlength 100\ndescription the name of the trc10 token\nabbr\ntype string\nminlength 1\nmaxlength 100\ndescription the abbreviated name of the trc10 token\ndescription\ntype string\nminlength 1\nmaxlength 100\ndescription the description of the trc10 token\nurl\ntype string\nminlength 1\nmaxlength 100\ndescription the url of the trc10 token\ntotalsupply\ntype number\nminimum 0\ndescription the total supply of tokens in the trc10 token\nprecision\ntype number\nminimum 0\nmaximum 5\ndescription the number of decimal places\nid\ntype number\ndescription the id of the trc10 token\ndescription ok",
+    "tag_summary": "tron blockchain enables access to most commonly used tron methods its possible to generate tron account send trx trc10 and trc20 assets its also possible to generate custom trc10 or trc20 tokens using api\ntatum supports 2 chains\nmainnet  regular live chain\nshasta testnet  test chain used for testing purposes coins on test chain have no value and can be obtained from\nfaucet eg https//wwwtrongridio/shasta/",
+    "tag_number": 43,
+    "doc_number": 411,
+    "title": "43_Tron_TronTrc10Detail_411.json"
+}

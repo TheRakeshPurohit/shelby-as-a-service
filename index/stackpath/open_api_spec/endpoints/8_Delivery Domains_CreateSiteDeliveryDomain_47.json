@@ -1,0 +1,11 @@
+{
+    "tag": "Delivery Domains",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: CreateSiteDeliveryDomain path: https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/delivery_domains content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum add a delivery domain to a site\nreqbody\ndeliverycreatesitedeliverydomainrequest\ntype obj\ndomain\ntype str\ndesc the delivery domain to add to a site\nrequired true\nresponses\n200\ndeliverycreatesitedeliverydomainresponse\ntype obj\nschemadeliverydeliverydomain\ntype obj\nprops\ndomain\ntype str\ndesc a sites domain name\nvalidatedat\ntype str\nformat datetime\ndesc the date the domain was validated to be pointing to us\ndesc an individual delivery domain\ndesc the response from a request to add a hostname to a cdn site scope",
+    "operation_id": "CreateSiteDeliveryDomain",
+    "doc_url": "https://stackpath.dev/reference/CreateSiteDeliveryDomain",
+    "server_url": "https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/delivery_domains",
+    "tag_summary": "",
+    "tag_number": 8,
+    "doc_number": 47,
+    "title": "8_Delivery Domains_CreateSiteDeliveryDomain_47.json"
+}

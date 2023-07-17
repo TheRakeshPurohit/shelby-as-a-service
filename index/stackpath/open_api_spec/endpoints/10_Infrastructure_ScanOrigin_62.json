@@ -1,0 +1,11 @@
+{
+    "tag": "Infrastructure",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: ScanOrigin path: https://gateway.stackpath.com/cdn/v1/origins/scan content: sum scan an origin\ndesc scan an origin from stackpaths cdn retrieve information regarding the origin such as its ip address and whether or not it supports ssl\nreqbody\ncdnscanoriginrequest\ntype obj\ndomain\ntype str\ndesc the hostname to scan\nrequired true\nresponses\n200\ncdnscanoriginresponse\ntype obj\nprops\nipaddress\ntype str\ndesc the ip address that was scanned\nhostname\ntype str\ndesc the hostname that was scanned\nscanoriginresponseoriginscanssldetails\ntype obj\nprops\nvalid\ntype bool\nformat bool\ndesc whether or not the scanned domain has a valid ssl certificate\nerror\ntype str\ndesc errors encountered processing https requests to the scanned domain\ndesc ssl details in an origin scan response\ndomaininuse\ntype bool\nformat bool\ndesc whether or not the scanned domain is already in use on the stackpath platform\ndesc the response from a request to scan a url from the stackpath edge network",
+    "operation_id": "ScanOrigin",
+    "doc_url": "https://stackpath.dev/reference/ScanOrigin",
+    "server_url": "https://gateway.stackpath.com/cdn/v1/origins/scan",
+    "tag_summary": "",
+    "tag_number": 10,
+    "doc_number": 62,
+    "title": "10_Infrastructure_ScanOrigin_62.json"
+}

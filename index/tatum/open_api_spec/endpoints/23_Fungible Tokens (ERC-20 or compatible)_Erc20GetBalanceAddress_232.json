@@ -1,0 +1,11 @@
+{
+    "tag": "Fungible Tokens (ERC-20 or compatible)",
+    "operation_id": "Erc20GetBalanceAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Fungible Tokens (ERC-20 or compatible)#operation/Erc20GetBalanceAddress",
+    "server_url": "https://api.tatum.io/v3/blockchain/token/address/{chain}/{address}",
+    "content": "path /v3/blockchain/token/address/chain/address\noperationid erc20getbalanceaddress\nparameters\ndescription network name\nin path\nname chain\nrequired true\nschema\ntype string\ndescription the blockchain address that you want to get the token balance of\nin path\nname address\nrequired true\nschema\ntype string\nsummary get the total number of fungible tokens that a blockchain address holds\ndescription 1 credit per api call\nget the number of all fungible tokens that a blockchain address holds across a blockchain the tokens are returned grouped by the smart contracts they were minted on\nthis api is supported for the following blockchains\n\nalgorand\ncelo\nethereum\npolygon\nsolana\nresponses\n200\nschema\ntype array\nerc20balanceforaddress\ntype object\nproperties\ncontractaddress\ntype string\ndescription the address of the smart contract that the fungible tokens were minted on\namount\ntype string\ndescription the number of the fungible tokens\ndescription ok",
+    "tag_summary": "fungible tokens are interchangeable and are used as a blockchain representation of the currency fungible tokens are described by the erc20 standard on the ethereum blockchain or by the equivalent standard on the other blockchains\neach api related to fungible tokens supports its own set of the blockchains the list of the supported blockchains is provided in the operation description further in this section",
+    "tag_number": 23,
+    "doc_number": 232,
+    "title": "23_Fungible Tokens (ERC-20 or compatible)_Erc20GetBalanceAddress_232.json"
+}

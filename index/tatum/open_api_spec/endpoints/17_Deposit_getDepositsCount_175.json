@@ -1,0 +1,11 @@
+{
+    "tag": "Deposit",
+    "operation_id": "getDepositsCount",
+    "doc_url": "https://apidoc.tatum.io/tag/Deposit#operation/getDepositsCount",
+    "server_url": "https://api.tatum.io/v3/ledger/deposits/count",
+    "content": "path /v3/ledger/deposits/count\noperationid getdepositscount\nparameters\ndescription max number of items per page is 50\nin query\nname pagesize\nschema\ntype number\nmaximum 50\nminimum 1\nrequired false\ndescription page number\nin query\nname page\nschema\ntype number\ndescription direction of sorting can be asc or desc\nin query\nname sort\nschema\ntype string\ndescription type of the deposit\nin query\nname status\nschema\ntype string\ndescription filter by currency\nname currency\nin query\nschema\ntype string\ndescription filter by txid\nname txid\nin query\nschema\ntype string\nmaxlength 80\nminlength 10\ndescription filter by to address\nname to\nin query\nschema\ntype string\ndescription filter by account id\nname accountid\nin query\nschema\ntype string\nsummary count of found entities for get deposits request\ndescription 1 credit per api callcounts total entities found by get deposits request\nresponses\n200\nentitiescount\ntype object\ntotal\ndescription total entities\ntype number\ndescription ok",
+    "tag_summary": "",
+    "tag_number": 17,
+    "doc_number": 175,
+    "title": "17_Deposit_getDepositsCount_175.json"
+}

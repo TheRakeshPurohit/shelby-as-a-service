@@ -1,0 +1,4 @@
+prompt_template: |
+  this is a single endpoint from an open api spec document
+  it has been minified by removing unnecessary kvps
+  additionally common terms have been abbreviated 

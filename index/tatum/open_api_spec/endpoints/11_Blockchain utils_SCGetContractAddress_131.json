@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain utils",
+    "operation_id": "SCGetContractAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain utils#operation/SCGetContractAddress",
+    "server_url": "https://api.tatum.io/v3/blockchain/sc/address/{chain}/{hash}",
+    "content": "path /v3/blockchain/sc/address/chain/hash\noperationid scgetcontractaddress\nparameters\ndescription the blockchain to work with\nin path\nname chain\nrequired true\nschema\ntype string\ndescription the id hash of the deployment transaction\nin path\nname hash\nrequired true\nschema\ntype string\nsummary get the blockchain address of a smart contract by the deployment transaction id\ndescription 1 credit per api call\nget the blockchain address of a smart contract by the id of its deployment transaction\nthis api is supported for the following blockchains\n\nalgorand\nbnb smart chain\ncelo\nelrond\nethereum\nflow\nharmony\nklaytn\npolygon\ntron\nxinfin\nresponses\n200\nschema\ntype object\ncontractaddress\ntype string\ndescription the blockchain address of the smart contract\ndescription ok",
+    "tag_summary": "the utility apis help you use some native blockchain features such as getting the address of a smart contract or estimating the block number\neach utility api supports its own set of the blockchains the list of the supported blockchains is provided in the api description further in this section",
+    "tag_number": 11,
+    "doc_number": 131,
+    "title": "11_Blockchain utils_SCGetContractAddress_131.json"
+}

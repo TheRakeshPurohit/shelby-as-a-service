@@ -1,0 +1,11 @@
+{
+    "tag": "Rules",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DisableRule path: https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/rules/{rule_id}/disable content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nname ruleid\ndesc a waf rule id\nin path\nrequired true\nschema\ntype str\nsum disable a rule\nresponses",
+    "operation_id": "DisableRule",
+    "doc_url": "https://stackpath.dev/reference/DisableRule",
+    "server_url": "https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/rules/{rule_id}/disable",
+    "tag_summary": "",
+    "tag_number": 22,
+    "doc_number": 122,
+    "title": "22_Rules_DisableRule_122.json"
+}

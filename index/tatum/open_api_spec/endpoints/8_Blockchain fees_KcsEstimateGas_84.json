@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain fees",
+    "operation_id": "KcsEstimateGas",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain fees#operation/KcsEstimateGas",
+    "server_url": "https://api.tatum.io/v3/kcs/gas",
+    "content": "path /v3/kcs/gas\noperationid kcsestimategas\nsummary estimate the fee for a kucoin community chain transaction\ndescription 2 credits per api call\nget an estimated gas price and the number of gas units needed for a kucoin community chain transaction\nnote the estimated gas price is returned in wei however when making the transaction itself and providing the custom fee you have to provide the gas price in gwei make sure to convert the estimated gas price from wei to gwei before submitting your transaction\nrequestbody\nkcsestimategas\ntype object\nproperties\nfrom\ntype string\nmaxlength 42\nminlength 42\ndescription sender address\nto\ndescription blockchain address to send assets\nmaxlength 42\nminlength 42\ntype string\namount\ndescription amount to be sent in kcs\npattern ddd\ntype string\ndata\ntype string\nmaxlength 50000\ndescription additional data that can be passed to a blockchain transaction as a data property must be in the hexadecimal format\npattern 0x0h09af\nrequired\nto\namount\nfrom\nrequired true\nresponses\n200\ngasestimated\ntype object\nrequired\ngaslimit\ngasprice\nproperties\ngasprice\ntype string\ndescription the estimated price for one gas unit in wei\ngaslimit\ntype number\ndescription the number of the gas units needed to process the transaction at the estimated gas price\ndescription ok",
+    "tag_summary": "",
+    "tag_number": 8,
+    "doc_number": 84,
+    "title": "8_Blockchain fees_KcsEstimateGas_84.json"
+}

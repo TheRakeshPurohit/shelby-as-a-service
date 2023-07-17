@@ -1,0 +1,11 @@
+{
+    "tag": "EdgeRules",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetScopeRule path: https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/sites/{site_id}/scopes/{scope_id}/rules/{rule_id} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nname scopeid\ndesc a scope id\nin path\nrequired true\nschema\ntype str\nname ruleid\ndesc an edgerule id\nin path\nrequired true\nschema\ntype str\nsum get an edgerule\nresponses\n200\ncdngetscoperuleresponse\ntype obj\ncdnscoperule\ntype obj\nprops\nid\ntype str\ndesc an edgerules unique identifier\nname\ntype str\ndesc an edgerules name\nslug\ntype str\ndesc a human and machine readable name for an edgerule\ncreatedat\ntype str\nformat datetime\ndesc the date an edgerule was created\nupdatedat\ntype str\nformat datetime\ndesc the date an edgerule was last updated\ndesc a edgerule associated with a cdn site\n\nedgerules can modify incoming http requests to a cdn site before theyre sent to the origin\ndesc the response from a request to retrieve an individual edgerule",
+    "operation_id": "GetScopeRule",
+    "doc_url": "https://stackpath.dev/reference/GetScopeRule",
+    "server_url": "https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/sites/{site_id}/scopes/{scope_id}/rules/{rule_id}",
+    "tag_summary": "",
+    "tag_number": 9,
+    "doc_number": 52,
+    "title": "9_EdgeRules_GetScopeRule_52.json"
+}

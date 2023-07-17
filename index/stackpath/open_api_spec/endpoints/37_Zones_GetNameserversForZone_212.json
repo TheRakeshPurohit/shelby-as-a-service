@@ -1,0 +1,11 @@
+{
+    "tag": "Zones",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetNameserversForZone path: https://gateway.stackpath.com/dns/v1/stacks/{stack_id}/zones/{zone_id}/discover_nameservers content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname zoneid\ndesc a dns zone id\nin path\nrequired true\nschema\ntype str\nsum get a zones nameservers\nresponses\n200\nzonegetnameserversforzoneresponse\ntype obj\nprops\nconfigured\ntype bool\nformat bool\ndesc whether or not all required name servers are configured in the zone\ncurrentnameservers\ntype str\ndesc the zones currently configured nameservers\nrequirednameservers\ntype str\ndesc the nameservers required in the zones configuration\ndesc a response from a request to retrieve information about a dns zones authoritative nameservers",
+    "operation_id": "GetNameserversForZone",
+    "doc_url": "https://stackpath.dev/reference/GetNameserversForZone",
+    "server_url": "https://gateway.stackpath.com/dns/v1/stacks/{stack_id}/zones/{zone_id}/discover_nameservers",
+    "tag_summary": "",
+    "tag_number": 37,
+    "doc_number": 212,
+    "title": "37_Zones_GetNameserversForZone_212.json"
+}

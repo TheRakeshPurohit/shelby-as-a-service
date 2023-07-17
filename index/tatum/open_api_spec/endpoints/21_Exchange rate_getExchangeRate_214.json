@@ -1,0 +1,11 @@
+{
+    "tag": "Exchange rate",
+    "operation_id": "getExchangeRate",
+    "doc_url": "https://apidoc.tatum.io/tag/Exchange rate#operation/getExchangeRate",
+    "server_url": "https://api.tatum.io/v3/tatum/rate/{currency}",
+    "content": "path /v3/tatum/rate/currency\noperationid getexchangerate\nparameters\ndescription the fiat or crypto asset to exchange\nin path\nname currency\nrequired true\nschema\nfiatorcryptocurrency\ntype string\ndescription the target fiat asset to get the exchange rate for\nin query\nname basepair\nschema\nfiatcurrency\ntype string\ndefault eur\nsummary get the current exchange rate for exchanging fiat/crypto assets\ndescription 1 credit per api call\nget the current exchange rate for exchanging fiat/crypto assets\nby default the base pair the target asset is eur when obtaining the exchange rate for an asset for example btc the value returned by the api expresses the amount of eur that can be currently exchanged into 1 btc\nresponses\n200\nexchangerate\ndescription fiat value in euro of the fiat or crypto asset\nproperties\nid\ndescription fiat or crypto asset\ntype string\nvalue\ndescription fiat value of the asset in given base pair\ntype string\nbasepair\ndescription base pair\ndefault eur\ntype string\ntimestamp\ndescription date of validity of rate in utc\ntype number\nsource\ndescription source of base pair\ntype string\nbatchid\ndescription used for identification in batch calls\ntype string\ntype object\nrequired\nid\nvalue\nbasepair\ntimestamp\nsource\ndescription ok",
+    "tag_summary": "",
+    "tag_number": 21,
+    "doc_number": 214,
+    "title": "21_Exchange rate_getExchangeRate_214.json"
+}

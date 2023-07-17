@@ -1,0 +1,11 @@
+{
+    "tag": "Elrond",
+    "operation_id": "EgldBroadcast",
+    "doc_url": "https://apidoc.tatum.io/tag/Elrond#operation/EgldBroadcast",
+    "server_url": "https://api.tatum.io/v3/egld/broadcast",
+    "content": "path /v3/egld/broadcast\noperationid egldbroadcast\nsummary broadcast signed egld transaction\ndescription 2 credits per api call\nbroadcast signed transaction to egld blockchain this method is used internally from tatum kms or tatum client libraries\nit is possible to create custom signing mechanism and use this method only for broadcasting data to the blockchain\nrequestbody\nbroadcastkms\nproperties\ntxdata\ndescription raw signed transaction to be published to network\nmaxlength 500000\nminlength 1\ntype string\nsignatureid\ndescription id of prepared payment template to sign required only when broadcasting transaction signed by tatum kms\nformat uuid\ntype string\nindex\ndescription only if the signature id is mnemonicbased and you run kms v62 or later the index of the address to send the assets from that was generated from the mnemonic\ntype number\nminimum 0\nmaximum 2147483647\nrequired\ntxdata\ntype object\nrequired true\nresponses\n200\ntransactionhash\ntype object\ntxid\ndescription the hash id of the transaction\ntype string\nrequired\ntxid\ndescription ok",
+    "tag_summary": "elrond egld is a distributed transactional computation protocol which relies on a sharded state architecture and a secure proof of stake consensus mechanism\n\ntatum supports 2 chains\nmainnet  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//r3d4fr/elrond/devnet/",
+    "tag_number": 19,
+    "doc_number": 192,
+    "title": "19_Elrond_EgldBroadcast_192.json"
+}

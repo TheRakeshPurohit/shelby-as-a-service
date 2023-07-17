@@ -1,0 +1,11 @@
+{
+    "tag": "Notification subscriptions",
+    "operation_id": "getAllWebhooks",
+    "doc_url": "https://apidoc.tatum.io/tag/Notification subscriptions#operation/getAllWebhooks",
+    "server_url": "https://api.tatum.io/v3/subscription/webhook",
+    "content": "path /v3/subscription/webhook\noperationid getallwebhooks\nparameters\ndescription max number of items per page is 50\nin query\nname pagesize\nschema\ntype number\nmaximum 50\nminimum 1\nrequired true\ndescription offset to obtain the next page of data\nin query\nname offset\nschema\ntype number\ndescription direction of sorting\nin query\nname direction\nschema\ntype string\ndescription flag indicating whether the webhook was successful or not\nin query\nname failed\nschema\ntype boolean\nsummary list all executed webhooks\ndescription 1 credit per api calllist all webhooks\nresponses\n200\nschema\nwebhook\ntype object\nrequired\nid\ntype\nsubscriptionid\nurl\ndata\nfailed\nresponse\nproperties\ntype\ntype string\ndescription type of the subscription\nid\ntype string\ndescription id of the webhook\nsubscriptionid\ntype string\ndescription id of the subscription\nurl\ntype string\ndescription id of the subscription\ndata\ntype object\ndescription data of webhook\nnexttime\ntype number\ndescription next webhook execution try time\ntimestamp\ntype number\ndescription webhook execution time\nretrycount\ntype number\ndescription number\nfailed\ntype boolean\ndescription flag indicating whether this webhook was successful or not\nresponse\ntype object\ndescription response from the server in case the webhook was unsuccessful\nrequired\nnetworkerror\nproperties\ncode\ntype number\ndescription http status\ndata\ntype string\ndescription response from the server\nnetworkerror\ntype boolean\ndescription flag indicating whether an error has been caused by the network\ntype array\ndescription ok",
+    "tag_summary": "endpoints to handle subscriptions to the tatum platform subscriptions allow users to enable some additional features or reports that are not enabled by default\nlike outgoing offchain transaction scanning accounts with balances above the limit etc",
+    "tag_number": 36,
+    "doc_number": 342,
+    "title": "36_Notification subscriptions_getAllWebhooks_342.json"
+}

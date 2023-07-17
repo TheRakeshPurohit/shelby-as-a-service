@@ -1,0 +1,11 @@
+{
+    "tag": "Raw Log Access",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetRawLogAccessList path: https://gateway.stackpath.com/waf/v1alpha/stacks/{stack_id}/sites/{site_id}/raw_log_access content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum get raw log access list\ndesc blockcallout\n\n  type danger\n  body this is an alpha api call and should be considered very unstable please do not execute this in a production environment see our versioning guidelinesdocversioning for more information\n\n/block\n\nretrieve a list of ips or cidrs with access to waf raw logs\nresponses\n200\nwafgetrawlogaccesslistresponse\ntype obj\nresults\ntype arr\nwafrawlogaccessip\ntype obj\nprops\nip\ntype str\ndesc the ip or cidr with access to waf raw logs\nexpiryat\ntype str\nformat datetime\ndesc the date an access to waf raw logs will expire\ndesc information about ip or cidr with access to waf raw logs\ndesc the requested information about ips or cidrs that have access to waf site raw logs\ndesc a response from a request to retrieve a list of ips or cidrs with access to waf raw logs",
+    "operation_id": "GetRawLogAccessList",
+    "doc_url": "https://stackpath.dev/reference/GetRawLogAccessList",
+    "server_url": "https://gateway.stackpath.com/waf/v1alpha/stacks/{stack_id}/sites/{site_id}/raw_log_access",
+    "tag_summary": "",
+    "tag_number": 19,
+    "doc_number": 104,
+    "title": "19_Raw Log Access_GetRawLogAccessList_104.json"
+}

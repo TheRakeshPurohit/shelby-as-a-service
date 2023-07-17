@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain operations",
+    "operation_id": "storeTokenAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain operations#operation/storeTokenAddress",
+    "server_url": "https://api.tatum.io/v3/offchain/token/{name}/{address}",
+    "content": "path /v3/offchain/token/name/address\noperationid storetokenaddress\nparameters\ndescription on algorand this is the asset id on tron this is the token id on the other blockchains this is the address of the smart contract\nin path\nname address\nrequired true\nschema\nmaxlength 100\nminlength 1\ntype string\ndescription the name of the token the token symbol\nin path\nname name\nrequired true\nschema\nmaxlength 30\nminlength 1\npattern azaz09\ntype string\nsummary set the contract address of an erc20 erc20equivalent or trc10 token\ndescription 2 credits per api call\nset the contract address of an erc20 erc20equivalent for example bep20 hrm20 and so on or trc10 token to be able to communicate with the smart contract\nafter creating and deploying the token to the blockchain the smart contract address is generated and must be set within tatum if the address is not set the tatum platform will not be able to detect incoming deposits of the tokens and transfer the tokens from virtual accounts to blockchain addresses\nnote\n\nfor algorand the contract address is the asset id assetid for example 55351976\nfor tron the contract address is the token id tokenid for example 1234567\nresponses",
+    "tag_summary": "an endpoint to handle operations between a virtual account and the blockchain eg to create blockchain transactions from virtual accounts create custom fungible tokens and custom assets and register them as a regular currency into the virtual account",
+    "tag_number": 9,
+    "doc_number": 127,
+    "title": "9_Blockchain operations_storeTokenAddress_127.json"
+}

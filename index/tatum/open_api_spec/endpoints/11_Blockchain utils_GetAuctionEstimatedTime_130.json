@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain utils",
+    "operation_id": "GetAuctionEstimatedTime",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain utils#operation/GetAuctionEstimatedTime",
+    "server_url": "https://api.tatum.io/v3/blockchain/auction/time/{chain}/{date}",
+    "content": "path /v3/blockchain/auction/time/chain/date\noperationid getauctionestimatedtime\nparameters\ndescription the blockchain to work with\nin path\nname chain\nrequired true\nschema\ntype string\ndescription the date and time in the iso 8601 standard format\nin path\nname date\nrequired true\nschema\ntype string\nsummary estimate the block height for a future point in time\ndescription 1 credit per api call\nget an estimated block height number for some future point in time\nnote that this api returnes an estimation of what the block height might be and not the exact block height\nthis api is supported for the following blockchains\n\nbnb smart chain\ncelo\nethereum\nharmony\nklaytn\npolygon\nresponses\n200\nschema\ntype number\ndescription the estimated block hight number\ndescription ok",
+    "tag_summary": "the utility apis help you use some native blockchain features such as getting the address of a smart contract or estimating the block number\neach utility api supports its own set of the blockchains the list of the supported blockchains is provided in the api description further in this section",
+    "tag_number": 11,
+    "doc_number": 130,
+    "title": "11_Blockchain utils_GetAuctionEstimatedTime_130.json"
+}

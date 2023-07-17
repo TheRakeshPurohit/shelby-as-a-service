@@ -1,0 +1,11 @@
+{
+    "tag": "BNB Smart Chain",
+    "operation_id": "BscGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/BNB Smart Chain#operation/BscGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/bsc/address/{xpub}/{index}",
+    "content": "path /v3/bsc/address/xpub/index\noperationid bscgenerateaddress\nparameters\ndescription extended public key of wallet\nin path\nname xpub\nrequired true\nschema\ntype string\ndescription derivation index of desired address to be generated\nin path\nname index\nrequired true\nschema\ntype number\nsummary generate bsc account address from extended public key\ndescription 1 credit per api call\ngenerate bsc account deposit address from extended public key deposit address is generated for the specific index  each extended public key can generate\nup to 231 addresses starting from index 0 until 231\nresponses\n200\ngeneratedaddressbsc\ntype object\naddress\ntype string\ndescription bsc address\ndescription ok",
+    "tag_summary": "binance smart chain is an ethereum evm 100 compatible blockchain and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\ntestnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//testnetbinanceorg/faucetsmart",
+    "tag_number": 4,
+    "doc_number": 41,
+    "title": "4_BNB Smart Chain_BscGenerateAddress_41.json"
+}

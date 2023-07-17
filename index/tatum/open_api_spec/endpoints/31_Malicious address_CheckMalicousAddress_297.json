@@ -1,0 +1,11 @@
+{
+    "tag": "Malicious address",
+    "operation_id": "CheckMalicousAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Malicious address#operation/CheckMalicousAddress",
+    "server_url": "https://api.tatum.io/v3/security/address/{address}",
+    "content": "path /v3/security/address/address\noperationid checkmalicousaddress\nparameters\ndescription blockchain address to check\nin path\nname address\nrequired true\nschema\ntype string\nsummary check malicous address\ndescription 1 credit per api call\ncheck if the blockchain address is malicous malicous address can contain assets from the darkweb is connected to the scam projects or contains stolen funds\nsupported chains eth btc ltc\nresponses\n200\nschema\ntype object\nstatus\ntype string\ndescription whether address is malicous or not\ndescription ok",
+    "tag_summary": "an endpoint to check if the blockchain address is safe to work with or not",
+    "tag_number": 31,
+    "doc_number": 297,
+    "title": "31_Malicious address_CheckMalicousAddress_297.json"
+}

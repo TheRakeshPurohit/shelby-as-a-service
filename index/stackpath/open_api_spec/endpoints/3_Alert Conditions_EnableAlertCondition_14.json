@@ -1,0 +1,11 @@
+{
+    "tag": "Alert Conditions",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: EnableAlertCondition path: https://gateway.stackpath.com/monitoring/v2/stacks/{stack_id}/monitors/{monitor_id}/alerts/conditions/{condition_id}/enable content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname monitorid\ndesc a monitor id\nin path\nrequired true\nschema\ntype str\nname conditionid\ndesc a monitoring alert condition id\nin path\nrequired true\nschema\ntype str\nsum enable an alert condition\nresponses",
+    "operation_id": "EnableAlertCondition",
+    "doc_url": "https://stackpath.dev/reference/EnableAlertCondition",
+    "server_url": "https://gateway.stackpath.com/monitoring/v2/stacks/{stack_id}/monitors/{monitor_id}/alerts/conditions/{condition_id}/enable",
+    "tag_summary": "",
+    "tag_number": 3,
+    "doc_number": 14,
+    "title": "3_Alert Conditions_EnableAlertCondition_14.json"
+}

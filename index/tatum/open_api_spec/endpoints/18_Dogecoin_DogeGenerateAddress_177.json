@@ -1,0 +1,11 @@
+{
+    "tag": "Dogecoin",
+    "operation_id": "DogeGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Dogecoin#operation/DogeGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/dogecoin/address/{xpub}/{index}",
+    "content": "path /v3/dogecoin/address/xpub/index\noperationid dogegenerateaddress\nparameters\ndescription extended public key of wallet\nin path\nname xpub\nrequired true\nschema\ntype string\ndescription derivation index of desired address to be generated\nin path\nname index\nrequired true\nschema\ntype number\nsummary generate dogecoin deposit address from extended public key\ndescription 1 credit per api call\ngenerate dogecoin deposit address from extended public key deposit address is generated for the specific index  each extended public key can generate\nup to 231 addresses starting from index 0 until 231  1\nresponses\n200\nschema\ntype object\naddress\ntype string\ndescription dogecoin address\ndescription ok",
+    "tag_summary": "dogecoin blockchain enables access to the most commonly used dogecoin methods these methods bring a small level of abstraction\n and are used for applications that communicate with the blockchain directly some of the methods are used alongside tatum private ledger\n to connect the blockchain and the private ledger like wallet generation or getting information about transactions\ntatum supports 2 chains\n  mainnet  a regular live chain\n  testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from a faucet eg https//testnetfaucetcom/dogetestnet/\ntatum supports bip44 hd wallets because they can generate 231 addresses from 1 mnemonic phrase they are very convenient and secure it is possible to generate this type of wallet with 1 simple api call",
+    "tag_number": 18,
+    "doc_number": 177,
+    "title": "18_Dogecoin_DogeGenerateAddress_177.json"
+}

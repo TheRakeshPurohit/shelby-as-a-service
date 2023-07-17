@@ -1,0 +1,11 @@
+{
+    "tag": "Auction",
+    "operation_id": "GetAuction",
+    "doc_url": "https://apidoc.tatum.io/tag/Auction#operation/GetAuction",
+    "server_url": "https://api.tatum.io/v3/blockchain/auction/{chain}/{contractAddress}/{id}",
+    "content": "path /v3/blockchain/auction/chain/contractaddress/id\noperationid getauction\nparameters\ndescription blockchain to work with\nin path\nname chain\nrequired true\nschema\ntype string\ndescription contract address\nin path\nname contractaddress\nrequired true\nschema\ntype string\ndescription auction id\nin path\nname id\nrequired true\nschema\ntype string\nsummary get information about an auctioned asset at the nft auction\ndescription 1 credit per api call\nget information about a specific auctioned asset at the nft auction\nthis api is supported for the following blockchains\n\nbnb smart chain\ncelo\nethereum\nharmony\npolygon\nresponses\n200\nschema\ntype object\nproperties\namount\ntype string\ndescription amount of nfts to sold in this auction valid only for erc1155 listings\nbidder\ntype string\ndescription address of the highest buyer if exists\nerc20address\ntype string\ndescription address of the erc20 token smart contract which should be used for paying for the asset\niserc721\ntype boolean\ndescription if the listing is for erc721 or erc1155 token\nstartedat\ntype string\ndescription block height this auction started at\nendedat\ntype string\ndescription block height this auction ended at\nnftaddress\ntype string\ndescription address of the nft smart contract\nendingprice\ntype string\ndescription final auction price of the nft asset in native currency or erc20 token based on the presence of erc20address field\nseller\ntype string\ndescription address of the seller\nhighestbid\ntype string\ndescription current highest bid of the nft asset in native currency or erc20 token based on the presence of erc20address field\ndescription ok",
+    "tag_summary": "",
+    "tag_number": 2,
+    "doc_number": 26,
+    "title": "2_Auction_GetAuction_26.json"
+}

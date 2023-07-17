@@ -1,0 +1,11 @@
+{
+    "tag": "Order Book",
+    "operation_id": "deleteAccountTrades",
+    "doc_url": "https://apidoc.tatum.io/tag/Order Book#operation/deleteAccountTrades",
+    "server_url": "https://api.tatum.io/v3/trade/account/{id}",
+    "content": "path /v3/trade/account/id\noperationid deleteaccounttrades\nparameters\ndescription account id\nin path\nname id\nrequired true\nschema\ntype string\nsummary cancel all existing trades for account\ndescription 1 credit for api call 1 credit for each cancelled trade 1 api call  2 cancellations   3 creditscancel all trades for account\nresponses",
+    "tag_summary": "endpoint to handle order book operations like creating bid / ask trades between tatum private virtual accounts obtaining trade histories creating futures etc it is possible to build an exchange based on the ledger accounts",
+    "tag_number": 37,
+    "doc_number": 348,
+    "title": "37_Order Book_deleteAccountTrades_348.json"
+}

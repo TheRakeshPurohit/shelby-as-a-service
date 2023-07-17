@@ -1,0 +1,11 @@
+{
+    "tag": "Harmony",
+    "operation_id": "OneGetBalance",
+    "doc_url": "https://apidoc.tatum.io/tag/Harmony#operation/OneGetBalance",
+    "server_url": "https://api.tatum.io/v3/one/account/balance/{address}",
+    "content": "path /v3/one/account/balance/address\noperationid onegetbalance\nparameters\ndescription account address you want to get balance of\nin path\nname address\nrequired true\nschema\ntype string\ndescription shard to read data from\nin query\nname shardid\nrequired false\nschema\ndefault 0\ntype number\nsummary get one account balance\ndescription 1 credit per api call\nget one account balance in one this method does not prints any balance of the hrm20 or hrm721 tokens on the account\nresponses\n200\nonebalance\ntype object\nbalance\ntype string\ndescription balance in one\ndescription ok",
+    "tag_summary": "harmonyone is an oneeum l2 scaling solution 100 evm compatible and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\ntestnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucetpopsone/",
+    "tag_number": 25,
+    "doc_number": 250,
+    "title": "25_Harmony_OneGetBalance_250.json"
+}

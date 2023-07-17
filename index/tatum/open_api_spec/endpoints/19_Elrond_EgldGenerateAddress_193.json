@@ -1,0 +1,11 @@
+{
+    "tag": "Elrond",
+    "operation_id": "EgldGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Elrond#operation/EgldGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/egld/address/{mnemonic}/{index}",
+    "content": "path /v3/egld/address/mnemonic/index\noperationid egldgenerateaddress\nparameters\ndescription mnemonic to use for generation of address\nin path\nname mnemonic\nrequired true\nschema\ntype string\ndescription derivation index of desired address to be generated\nin path\nname index\nrequired true\nschema\ntype number\nsummary generate egld account address from mnemonic\ndescription 1 credit per api call\ngenerate egld account deposit address from mnemonic phrase deposit address is generated for the specific\nindex  each mnemonic phrase can generate up to 231 addresses starting from index 0 until 231\nresponses\n200\nschema\ntype object\naddress\ntype string\ndescription egld address\ndescription ok",
+    "tag_summary": "elrond egld is a distributed transactional computation protocol which relies on a sharded state architecture and a secure proof of stake consensus mechanism\n\ntatum supports 2 chains\nmainnet  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//r3d4fr/elrond/devnet/",
+    "tag_number": 19,
+    "doc_number": 193,
+    "title": "19_Elrond_EgldGenerateAddress_193.json"
+}

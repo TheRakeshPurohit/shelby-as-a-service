@@ -1,0 +1,11 @@
+{
+    "tag": "Monitors",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetMonitorErrors path: https://gateway.stackpath.com/monitoring/v2/stacks/{stack_id}/monitors/{monitor_id}/errors content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname monitorid\ndesc a monitor id\nin path\nrequired true\nschema\ntype str\nsum get monitoring errors\nresponses\n200\nv2getmonitorerrorsresponse\ntype obj\nresults\ntype arr\nv2monitorerror\ntype obj\nprops\nmonitorid\ntype str\ndesc the monitor identifier associated with the error\nlocations\ntype arr\nmonitoringv2location\ntype obj\nprops\nid\ntype str\ndesc a locations unique identifier\nname\ntype str\ndesc a locations name\ncity\ntype str\ndesc a locations city\ncitycode\ntype str\ndesc a locations city expressed as an iata airport code\ncountry\ntype str\ndesc a locations country\ncountrycode\ntype str\ndesc a locations iso31661 alpha2 country code\nprovider\ntype str\ndesc a locations network provider\nipaddresses\ntype str\ndesc the ip addresses of a location\n\nthe ip addresses where monitoring checks originate from\nhasipv4\ntype bool\nformat bool\ndesc whether or not a location supports ipv4 monitoring checks\nhasipv6\ntype bool\nformat bool\ndesc whether or not a location supports ipv6 monitoring checks\ndesc a location which performs monitoring checks\ndesc a list of locations that have the error\nerror\ntype str\ndesc the error text for a monitor error\ncreatedat\ntype str\nformat datetime\ndesc the date a monitor error was created\ndesc an error that ocurred during a monitoring check\ndesc the requested monitor errors\ndesc a response from a request to retrieve errors for a monitor",
+    "operation_id": "GetMonitorErrors",
+    "doc_url": "https://stackpath.dev/reference/GetMonitorErrors",
+    "server_url": "https://gateway.stackpath.com/monitoring/v2/stacks/{stack_id}/monitors/{monitor_id}/errors",
+    "tag_summary": "",
+    "tag_number": 14,
+    "doc_number": 80,
+    "title": "14_Monitors_GetMonitorErrors_80.json"
+}

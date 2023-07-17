@@ -1,0 +1,11 @@
+{
+    "tag": "Polygon",
+    "operation_id": "PolygonGetBalance",
+    "doc_url": "https://apidoc.tatum.io/tag/Polygon#operation/PolygonGetBalance",
+    "server_url": "https://api.tatum.io/v3/polygon/account/balance/{address}",
+    "content": "path /v3/polygon/account/balance/address\noperationid polygongetbalance\nparameters\ndescription account address you want to get balance of\nin path\nname address\nrequired true\nschema\ntype string\nsummary get polygon account balance\ndescription 1 credit per api call\nget polygon account balance in matic this method does not prints any balance of the erc20 or erc721 tokens on the account\nresponses\n200\nmaticbalance\ntype object\nbalance\ntype string\ndescription balance in matic\ndescription ok",
+    "tag_summary": "polygon matic is an ethereum evm 100 compatible blockchain and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\nmumbai testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucetmaticnetwork/",
+    "tag_number": 38,
+    "doc_number": 362,
+    "title": "38_Polygon_PolygonGetBalance_362.json"
+}

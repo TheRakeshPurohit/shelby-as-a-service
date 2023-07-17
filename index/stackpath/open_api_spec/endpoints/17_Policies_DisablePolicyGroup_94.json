@@ -1,0 +1,11 @@
+{
+    "tag": "Policies",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DisablePolicyGroup path: https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/policy_groups/{policy_group_id}/disable content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nname policygroupid\ndesc a waf policy group id\nin path\nrequired true\nschema\ntype str\nsum disable all policies in a group\nresponses",
+    "operation_id": "DisablePolicyGroup",
+    "doc_url": "https://stackpath.dev/reference/DisablePolicyGroup",
+    "server_url": "https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/policy_groups/{policy_group_id}/disable",
+    "tag_summary": "",
+    "tag_number": 17,
+    "doc_number": 94,
+    "title": "17_Policies_DisablePolicyGroup_94.json"
+}

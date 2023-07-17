@@ -1,0 +1,11 @@
+{
+    "tag": "Polygon",
+    "operation_id": "PolygonGetCurrentBlock",
+    "doc_url": "https://apidoc.tatum.io/tag/Polygon#operation/PolygonGetCurrentBlock",
+    "server_url": "https://api.tatum.io/v3/polygon/block/current",
+    "content": "path /v3/polygon/block/current\noperationid polygongetcurrentblock\nsummary get current block number\ndescription 1 credit per api call\nget polygon current block number this is the number of the latest block in the blockchain\nresponses\n200\nschema\ntype number\ndescription current block number\ndescription ok",
+    "tag_summary": "polygon matic is an ethereum evm 100 compatible blockchain and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\nmumbai testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucetmaticnetwork/",
+    "tag_number": 38,
+    "doc_number": 364,
+    "title": "38_Polygon_PolygonGetCurrentBlock_364.json"
+}

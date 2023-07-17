@@ -1,0 +1,11 @@
+{
+    "tag": "Service utils",
+    "operation_id": "getCredits",
+    "doc_url": "https://apidoc.tatum.io/tag/Service utils#operation/getCredits",
+    "server_url": "https://api.tatum.io/v3/tatum/usage",
+    "content": "path /v3/tatum/usage\noperationid getcredits\nsummary get information about your credit consumption for the last month\ndescription 1 credit per api call\nget information about your credit consumption for the last month used credits per day\nresponses\n200\nschema\nconsumption\ntype object\nproperties\nday\ntype string\ndescription the date in the mm/dd/yyyy format\nusage\ntype number\ndescription the number of credits used on the specified day\ntype array\ndescription ok",
+    "tag_summary": "",
+    "tag_number": 39,
+    "doc_number": 368,
+    "title": "39_Service utils_getCredits_368.json"
+}

@@ -1,0 +1,11 @@
+{
+    "tag": "Withdrawal",
+    "operation_id": "broadcastBlockchainTransaction",
+    "doc_url": "https://apidoc.tatum.io/tag/Withdrawal#operation/broadcastBlockchainTransaction",
+    "server_url": "https://api.tatum.io/v3/offchain/withdrawal/broadcast",
+    "content": "path /v3/offchain/withdrawal/broadcast\noperationid broadcastblockchaintransaction\nsummary broadcast signed transaction and complete withdrawal\ndescription 2 credits per api call\nbroadcast signed raw transaction end complete withdrawal associated with it\nwhen broadcast succeeded but it is impossible to complete withdrawal transaction id of transaction is returned and withdrawal must be completed manually\nrequestbody\nbroadcastwithdrawal\nproperties\ncurrency\ndescription currency of signed transaction to be broadcast btc ltc doge bnb xlm trx bch eth xrp erc20 trc20\nmaxlength 40\nminlength 2\ntype string\ntxdata\ndescription raw signed transaction to be published to network\nmaxlength 500000\nminlength 1\ntype string\nwithdrawalid\ndescription withdrawal id to be completed by transaction broadcast\nmaxlength 24\nminlength 24\ntype string\nsignatureid\ndescription id of prepared payment template to sign this is should be stored on a client side to retrieve id of the blockchain transaction when signing application signs the transaction and broadcasts it to the blockchain\nformat uuid\ntype string\nrequired\ntxdata\ncurrency\ntype object\nrequired true\nresponses\n200\nbroadcastresponse\nproperties\ncompleted\ndescription flag if withdrawal is successfully completed within tatum systems\ntype boolean\ntxid\ndescription transaction id of broadcast transaction and status\ntype string\ntype object\ndescription ok",
+    "tag_summary": "",
+    "tag_number": 47,
+    "doc_number": 428,
+    "title": "47_Withdrawal_broadcastBlockchainTransaction_428.json"
+}

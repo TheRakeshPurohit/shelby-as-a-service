@@ -1,0 +1,11 @@
+{
+    "tag": "KuCoin",
+    "operation_id": "KcsGetBalance",
+    "doc_url": "https://apidoc.tatum.io/tag/KuCoin#operation/KcsGetBalance",
+    "server_url": "https://api.tatum.io/v3/kcs/account/balance/{address}",
+    "content": "path /v3/kcs/account/balance/address\noperationid kcsgetbalance\nparameters\ndescription account address you want to get balance of\nin path\nname address\nrequired true\nschema\ntype string\nsummary get kcs account balance\ndescription 1 credit per api call\nget kcs account balance in kcs this method does not prints any balance of the erc20 or erc721 tokens on the account\nresponses\n200\nschema\ntype object\nbalance\ntype string\ndescription balance in kcs\ndescription ok",
+    "tag_summary": "kcs kcs is an ethereum evm 100 compatible blockchain and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\nmumbai testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucettestnetkccnetwork/",
+    "tag_number": 29,
+    "doc_number": 278,
+    "title": "29_KuCoin_KcsGetBalance_278.json"
+}

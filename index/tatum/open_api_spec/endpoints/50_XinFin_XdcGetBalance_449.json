@@ -1,0 +1,11 @@
+{
+    "tag": "XinFin",
+    "operation_id": "XdcGetBalance",
+    "doc_url": "https://apidoc.tatum.io/tag/XinFin#operation/XdcGetBalance",
+    "server_url": "https://api.tatum.io/v3/xdc/account/balance/{address}",
+    "content": "path /v3/xdc/account/balance/address\noperationid xdcgetbalance\nparameters\ndescription account address you want to get balance of\nin path\nname address\nrequired true\nschema\ntype string\nsummary get xdc account balance\ndescription 1 credit per api call\nget account balance in xdc this method does not prints any balance of the erc20 or erc721 tokens on the account\nresponses\n200\nschema\ntype object\nbalance\ntype string\ndescription balance in xdc\ndescription ok",
+    "tag_summary": "xdc network xinfin is enterprise ready hybrid blockchain for global trade and finance combining the power of public  private blockchains with interoperable smart contracts\n\ntatum supports 2 chains\nmainnet  a regular live chain\ntestnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//apothemnetwork/#gettestxdc",
+    "tag_number": 50,
+    "doc_number": 449,
+    "title": "50_XinFin_XdcGetBalance_449.json"
+}

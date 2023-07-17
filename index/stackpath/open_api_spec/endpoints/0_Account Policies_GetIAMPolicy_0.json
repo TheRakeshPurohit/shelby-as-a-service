@@ -1,0 +1,11 @@
+{
+    "tag": "Account Policies",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetIAMPolicy path: https://gateway.stackpath.com/identity/v1/accounts/{account_id}/iam/policy content: params\nname accountid\ndesc an account id\nin path\nrequired true\nschema\ntype str\nsum get all account policies\nresponses\n200\nidentitygetiampolicyresponse\ntype obj\nprops\naccountid\ntype str\ndesc the id of the stackpath account the policy is on\niampolicy\ntype obj\nprops\nbindings\ntype arr\npolicybinding\ntype obj\nprops\nrole\ntype str\ndesc the name of the role for this binding formatted as either roles/ltnamegt or accounts/ltidgt/roles/ltnamegt\nmembers\ntype str\ndesc the members assigned to the roles in this binding formatted as userltnamegt\ndesc an assignment of members to roles\ndesc bindings to assign members to roles\nversion\ntype integer\nformat int64\ndesc the current update number used to ensure updates happen to the expected version\n\non first update this must be 0 and on each successive update this must be the last known version when getting or as the result of a set this will be the current version\ncreatedat\ntype str\nformat datetime\ndesc when this policy was created\n\nalways present on get ignored on set\nreadonly true\nupdatedat\ntype str\nformat datetime\ndesc when this policy was last updated\n\ncould be absent on get if not updated since initial creation ignored on set\nreadonly true\ndesc a policy on a stackpath resource\ndesc a response from a request to retrieve a stackpath accounts policy",
+    "operation_id": "GetIAMPolicy",
+    "doc_url": "https://stackpath.dev/reference/GetIAMPolicy",
+    "server_url": "https://gateway.stackpath.com/identity/v1/accounts/{account_id}/iam/policy",
+    "tag_summary": "",
+    "tag_number": 0,
+    "doc_number": 0,
+    "title": "0_Account Policies_GetIAMPolicy_0.json"
+}

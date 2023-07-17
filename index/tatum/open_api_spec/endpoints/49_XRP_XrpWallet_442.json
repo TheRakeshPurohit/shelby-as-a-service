@@ -1,0 +1,11 @@
+{
+    "tag": "XRP",
+    "operation_id": "XrpWallet",
+    "doc_url": "https://apidoc.tatum.io/tag/XRP#operation/XrpWallet",
+    "server_url": "https://api.tatum.io/v3/xrp/account",
+    "content": "path /v3/xrp/account\noperationid xrpwallet\nsummary generate xrp account\ndescription 5 credits per api call\ngenerate xrp account tatum does not support hd wallet for xrp only specific address and private key can be generated\nresponses\n200\nxrpwallet\ntype object\nrequired\naddress\nsecret\nproperties\naddress\ndescription generated account address\ntype string\nsecret\ndescription generated secret for account\ntype string\ndescription ok",
+    "tag_summary": "xrpl is a decentralized public blockchain with tatum you can access the most commonly used xrpl methods these methods bring a certain level of abstraction and are used for applications that communicate with the blockchain directly some of the methods are used alongside virtual accounts to connect the blockchain and a virtual account like generating a wallet or getting information about transactions\ntatum supports the following xrpl networks\n\nmainnet the primary public production blockchain\ntestnet a mainnetlike network for testing applications on xrpl the testnet cryptocurrency has no value and you can obtain it from a faucet for example xrp faucets\n\nto start using the xrpl blockchain create an xrpl account on xrpl the same account is used for the mainnet and the testnet to activate the account credit it with 20 xrp\nbecause of the activation requirement it is common to use one account for all customers and differentiate them via destination tags a destination tag is a number included in every transaction as an account distinguisher\nwhen an offchain deposit address is created for a virtual account a destination tag is generated for that account for example 12345 when you make a transaction to the blockchain be sure to include the address of the recipient and the destination tag as an account distinguisher examples of working with the xrp blockchain can be found in tatum xrp sdk",
+    "tag_number": 49,
+    "doc_number": 442,
+    "title": "49_XRP_XrpWallet_442.json"
+}

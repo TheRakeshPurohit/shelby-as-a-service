@@ -1,0 +1,11 @@
+{
+    "tag": "Configuration",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DeleteScopeHostname path: https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/sites/{site_id}/scopes/{scope_id}/hostnames/{domain} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nname scopeid\ndesc a scope id\nin path\nrequired true\nschema\ntype str\nname domain\ndesc the hostname to remove from a scope\nin path\nrequired true\nschema\ntype str\nname disabletransparentmode\ndesc whether or not to remove the hostname from a cdn sites cdn scope or its waf scope when true this call removes the hostname from a cdn sites scope instead of loading from a cdn sites waf scope if the site has waf service\nin query\nrequired false\nschema\ntype bool\nformat bool\nsum delete a scope hostname\nresponses",
+    "operation_id": "DeleteScopeHostname",
+    "doc_url": "https://stackpath.dev/reference/DeleteScopeHostname",
+    "server_url": "https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/sites/{site_id}/scopes/{scope_id}/hostnames/{domain}",
+    "tag_summary": "",
+    "tag_number": 7,
+    "doc_number": 38,
+    "title": "7_Configuration_DeleteScopeHostname_38.json"
+}

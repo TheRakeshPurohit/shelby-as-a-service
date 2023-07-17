@@ -1,0 +1,11 @@
+{
+    "tag": "Buckets",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetBucket path: https://gateway.stackpath.com/storage/v1/stacks/{stack_id}/buckets/{bucket_id} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname bucketid\ndesc a storage bucket id\nin path\nrequired true\nschema\ntype str\nsum get a bucket\nresponses\n200\nstoragegetbucketresponse\ntype obj\nstoragebucket\ntype obj\nprops\nid\ntype str\ndesc the id for the bucket\nlabel\ntype str\ndesc the name of the bucket\nendpointurl\ntype str\ndesc the url used to access the bucket\nstoragebucketvisibility\ntype str\ndefault private\ndesc private the bucket is private and only accessibly with credentials\n  public the bucket is public and accessible over the internet\ncreatedat\ntype str\nformat datetime\ndesc the date when the bucket was created\nupdatedat\ntype str\nformat datetime\ndesc the date when the bucket was last updated\nregion\ntype str\ndesc the region in which the bucket is created available regions are useast1 uswest1 eucentral1\ndesc the bucket for the given stack",
+    "operation_id": "GetBucket",
+    "doc_url": "https://stackpath.dev/reference/GetBucket",
+    "server_url": "https://gateway.stackpath.com/storage/v1/stacks/{stack_id}/buckets/{bucket_id}",
+    "tag_summary": "",
+    "tag_number": 5,
+    "doc_number": 25,
+    "title": "5_Buckets_GetBucket_25.json"
+}

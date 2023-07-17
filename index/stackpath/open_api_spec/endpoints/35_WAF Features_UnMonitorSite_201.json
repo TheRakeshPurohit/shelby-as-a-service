@@ -1,0 +1,11 @@
+{
+    "tag": "WAF Features",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: UnMonitorSite path: https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/monitoring content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum disable monitoring mode\ndesc restore the waf features original enabled or disabled state\nresponses",
+    "operation_id": "UnMonitorSite",
+    "doc_url": "https://stackpath.dev/reference/UnMonitorSite",
+    "server_url": "https://gateway.stackpath.com/waf/v1/stacks/{stack_id}/sites/{site_id}/monitoring",
+    "tag_summary": "",
+    "tag_number": 35,
+    "doc_number": 201,
+    "title": "35_WAF Features_UnMonitorSite_201.json"
+}

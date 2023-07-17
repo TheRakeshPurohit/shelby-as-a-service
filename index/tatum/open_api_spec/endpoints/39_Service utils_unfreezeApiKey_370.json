@@ -1,0 +1,11 @@
+{
+    "tag": "Service utils",
+    "operation_id": "unfreezeApiKey",
+    "doc_url": "https://apidoc.tatum.io/tag/Service utils#operation/unfreezeApiKey",
+    "server_url": "https://api.tatum.io/v3/tatum/freeze",
+    "content": "path /v3/tatum/freeze\noperationid unfreezeapikey\nsummary unfreeze api key\ndescription 2 credits per api callunfreeze the api key\nits possible to perform sensitive operations like send ledger transaction send offchain transaction send blockchain transaction\nbroadcast blockchain transaction perform order book trade or create blockage again\nresponses",
+    "tag_summary": "",
+    "tag_number": 39,
+    "doc_number": 370,
+    "title": "39_Service utils_unfreezeApiKey_370.json"
+}

@@ -1,0 +1,11 @@
+{
+    "tag": "Klaytn",
+    "operation_id": "KlaytnGetCurrentBlock",
+    "doc_url": "https://apidoc.tatum.io/tag/Klaytn#operation/KlaytnGetCurrentBlock",
+    "server_url": "https://api.tatum.io/v3/klaytn/block/current",
+    "content": "path /v3/klaytn/block/current\noperationid klaytngetcurrentblock\nsummary get current block number\ndescription 1 credit per api call\nget klaytn current block number this is the number of the latest block in the blockchain\nresponses\n200\nschema\ntype number\ndescription current block number\ndescription ok",
+    "tag_summary": "klaytn is an ethereum evm 100 compatible blockchain and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\nbaobab testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//baobabwalletklaytncom/accessnextfaucet",
+    "tag_number": 28,
+    "doc_number": 269,
+    "title": "28_Klaytn_KlaytnGetCurrentBlock_269.json"
+}

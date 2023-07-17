@@ -1,0 +1,11 @@
+{
+    "tag": "Configuration",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: CreateScope path: https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/sites/{site_id}/scopes content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum create a scope\nreqbody\ncdncreatescoperequest\ntype obj\nprops\npath\ntype str\ndesc the http request path the scope should respond to\nplatform\ntype str\ndesc the stackpath billing platform to create the scope on\nrequired true\nresponses\n200\ncdncreatescoperesponse\ntype obj\nschemacdnscope\ntype obj\nprops\nid\ntype str\ndesc a cdn site scopes unique identifier\nplatform\ntype str\ndesc a cdn site scopes platform\n\nscope platforms are used internally by stackpath for metrics collection and billing purposes typically most site scope platforms have the value cds\npath\ntype str\ndesc the http request path that is handled by a scope\ndesc a cdn site scope\n\nscopes hold a cdn sites configuration every site has at least one root scope that handles primary configuration\ndesc the response from a request to create a cdn site scope",
+    "operation_id": "CreateScope",
+    "doc_url": "https://stackpath.dev/reference/CreateScope",
+    "server_url": "https://gateway.stackpath.com/cdn/v1/stacks/{stack_id}/sites/{site_id}/scopes",
+    "tag_summary": "",
+    "tag_number": 7,
+    "doc_number": 35,
+    "title": "7_Configuration_CreateScope_35.json"
+}

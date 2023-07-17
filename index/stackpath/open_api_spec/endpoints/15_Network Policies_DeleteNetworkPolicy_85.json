@@ -1,0 +1,11 @@
+{
+    "tag": "Network Policies",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DeleteNetworkPolicy path: https://gateway.stackpath.com/ipam/v1/stacks/{stack_id}/network_policies/{network_policy_id} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname networkpolicyid\ndesc an edgecompute network policy id\nin path\nrequired true\nschema\ntype str\nsum delete a policy\nresponses",
+    "operation_id": "DeleteNetworkPolicy",
+    "doc_url": "https://stackpath.dev/reference/DeleteNetworkPolicy",
+    "server_url": "https://gateway.stackpath.com/ipam/v1/stacks/{stack_id}/network_policies/{network_policy_id}",
+    "tag_summary": "",
+    "tag_number": 15,
+    "doc_number": 85,
+    "title": "15_Network Policies_DeleteNetworkPolicy_85.json"
+}

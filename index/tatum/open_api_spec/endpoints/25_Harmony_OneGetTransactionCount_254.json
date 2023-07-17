@@ -1,0 +1,11 @@
+{
+    "tag": "Harmony",
+    "operation_id": "OneGetTransactionCount",
+    "doc_url": "https://apidoc.tatum.io/tag/Harmony#operation/OneGetTransactionCount",
+    "server_url": "https://api.tatum.io/v3/one/transaction/count/{address}",
+    "content": "path /v3/one/transaction/count/address\noperationid onegettransactioncount\nparameters\ndescription address\nin path\nname address\nrequired true\nschema\ntype string\nmaxlength 42\nminlength 42\ndescription shard to read data from\nin query\nname shardid\nrequired false\nschema\ndefault 0\ntype number\nsummary get count of outgoing one transactions\ndescription 1 credit per api call\nget a number of outgoing one transactions for the address when a transaction is sent there can be multiple outgoing transactions\nwhich are not yet processed by the blockchain to distinguish between them there is a counter called a nonce which represents\nthe order of the transaction in the list of outgoing transactions\nresponses\n200\nschema\ntype number\ndescription number of transactions that were made from this address can be used as a nonce parameter in send transaction calls\ndescription ok",
+    "tag_summary": "harmonyone is an oneeum l2 scaling solution 100 evm compatible and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\ntestnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucetpopsone/",
+    "tag_number": 25,
+    "doc_number": 254,
+    "title": "25_Harmony_OneGetTransactionCount_254.json"
+}

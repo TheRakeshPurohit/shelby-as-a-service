@@ -1,0 +1,11 @@
+{
+    "tag": "VeChain",
+    "operation_id": "VetGenerateAddressPrivateKey",
+    "doc_url": "https://apidoc.tatum.io/tag/VeChain#operation/VetGenerateAddressPrivateKey",
+    "server_url": "https://api.tatum.io/v3/vet/wallet/priv",
+    "content": "path /v3/vet/wallet/priv\noperationid vetgenerateaddressprivatekey\nsummary generate vechain private key\ndescription 5 credits per api call\ngenerate private key of address from mnemonic for given derivation path index private key is generated for the specific index  each mnemonic\ncan generate up to 232 private keys starting from index 0 until 231  1\nrequestbody\nprivkeyrequest\ntype object\nproperties\nindex\ndescription derivation index of private key to generate\nmaximum 2147483647\ntype integer\nmnemonic\nmaxlength 500\nminlength 1\ndescription mnemonic to generate private key from\ntype string\nrequired\nmnemonic\nindex\nrequired true\nresponses\n200\nprivkey\ntype object\nkey\ndescription generated private key\ntype string\ndescription ok",
+    "tag_summary": "vechain blockchain enables access to the most commonly used vechain methods tatum does not support offchain capabilities for the vet blockchain\ntatum kms is not supported for vet transactions vet supports 2 native assets  vet and vtho vtho is used for paying transaction fees\n\ntatum supports 2 chains\nmainnet  a regular live chain\ntestnet  a test chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucetvechain/\ntatum supports bip44 hd wallets because they can generate 231 addresses from 1 mnemonic phrase they are very convenient and secure it is possible to generate this type of wallet with 1 simple api call",
+    "tag_number": 44,
+    "doc_number": 416,
+    "title": "44_VeChain_VetGenerateAddressPrivateKey_416.json"
+}

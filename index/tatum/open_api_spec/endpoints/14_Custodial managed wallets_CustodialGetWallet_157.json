@@ -1,0 +1,11 @@
+{
+    "tag": "Custodial managed wallets",
+    "operation_id": "CustodialGetWallet",
+    "doc_url": "https://apidoc.tatum.io/tag/Custodial managed wallets#operation/CustodialGetWallet",
+    "server_url": "https://api.tatum.io/v3/custodial/wallet/{id}",
+    "content": "path /v3/custodial/wallet/id\noperationid custodialgetwallet\nparameters\nin path\nrequired true\ndescription walletid of the managed address\nname id\nschema\ntype string\nformat uuid\nin query\nname export\nrequired false\ndescription if set to true returns the private key in the response if not set defaults to false the private key is not included in the response\nschema\ntype boolean\ndefault false\nsummary get managed address\ndescription 1 credit per api call\nget managed address for an api key its possible to export the private key if query parameter export is set to true\nresponses\n200\nschema\ntype array\ncustodialmanagedaddress\ntype object\nrequired\naddress\nwalletid\nchain\nproperties\naddress\ntype string\ndescription blockchain address\nwalletid\ntype string\nformat uuid\ndescription unique identifier of the managed address\nchain\ntype string\ndescription blockchain of the address\nprivatekey\ntype string\ndescription private key of the address not present by default\ndescription ok",
+    "tag_summary": "custodial api is a set of operations which allows you to work with managed blockchain addresses without having its private key\nyou can easily create new managed address and export its details  with private key as well  once required\nthis features are currently in alpha version",
+    "tag_number": 14,
+    "doc_number": 157,
+    "title": "14_Custodial managed wallets_CustodialGetWallet_157.json"
+}

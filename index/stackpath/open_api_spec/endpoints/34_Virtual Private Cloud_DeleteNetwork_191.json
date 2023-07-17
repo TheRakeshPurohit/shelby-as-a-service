@@ -1,0 +1,11 @@
+{
+    "tag": "Virtual Private Cloud",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DeleteNetwork path: https://gateway.stackpath.com/ipam/v1/stacks/{stack_id}/networks/{network_id} content: params\nname stackid\nin path\nrequired true\ndesc a stack id or slug\nschema\ntype str\nname networkid\nin path\nrequired true\ndesc a vpc network id or slug\nschema\ntype str\nsum delete a vpc network\nresponses",
+    "operation_id": "DeleteNetwork",
+    "doc_url": "https://stackpath.dev/reference/DeleteNetwork",
+    "server_url": "https://gateway.stackpath.com/ipam/v1/stacks/{stack_id}/networks/{network_id}",
+    "tag_summary": "",
+    "tag_number": 34,
+    "doc_number": 191,
+    "title": "34_Virtual Private Cloud_DeleteNetwork_191.json"
+}

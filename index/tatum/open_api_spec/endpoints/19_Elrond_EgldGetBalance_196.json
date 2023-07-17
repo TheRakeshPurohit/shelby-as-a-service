@@ -1,0 +1,11 @@
+{
+    "tag": "Elrond",
+    "operation_id": "EgldGetBalance",
+    "doc_url": "https://apidoc.tatum.io/tag/Elrond#operation/EgldGetBalance",
+    "server_url": "https://api.tatum.io/v3/egld/account/balance/{address}",
+    "content": "path /v3/egld/account/balance/address\noperationid egldgetbalance\nparameters\ndescription account address you want to get balance of\nin path\nname address\nrequired true\nschema\ntype string\nsummary get egld account balance\ndescription 1 credit per api call get account balance in egld\nresponses\n200\nschema\ntype object\nbalance\ntype string\ndescription balance in egld\ndescription ok",
+    "tag_summary": "elrond egld is a distributed transactional computation protocol which relies on a sharded state architecture and a secure proof of stake consensus mechanism\n\ntatum supports 2 chains\nmainnet  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//r3d4fr/elrond/devnet/",
+    "tag_number": 19,
+    "doc_number": 196,
+    "title": "19_Elrond_EgldGetBalance_196.json"
+}

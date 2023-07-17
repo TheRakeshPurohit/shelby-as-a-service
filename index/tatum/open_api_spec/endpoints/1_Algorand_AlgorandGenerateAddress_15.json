@@ -1,0 +1,11 @@
+{
+    "tag": "Algorand",
+    "operation_id": "AlgorandGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Algorand#operation/AlgorandGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/algorand/address/{priv}",
+    "content": "path /v3/algorand/address/priv\noperationid algorandgenerateaddress\nparameters\ndescription private key of wallet\nin path\nname priv\nrequired true\nschema\ntype string\nsummary generate algorand account address from private key\ndescription 1 credit per api call\ngenerate algorand account deposit address from private key\nresponses\n200\nschema\ntype object\naddress\ntype string\ndescription algorand address\ndescription ok",
+    "tag_summary": "algorand is a decentralized blockchain technology network algorand is enabling the simple creation of next generation financial products protocols and exchange of value across defi financial institutions and governments\ntatum supports 2 chains\nmainnet  a regular live chain\ntestnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//banktestnetalgorandnetwork/\nexamples of working with the algorand blockchain can be found in tatum algo sdk",
+    "tag_number": 1,
+    "doc_number": 15,
+    "title": "1_Algorand_AlgorandGenerateAddress_15.json"
+}

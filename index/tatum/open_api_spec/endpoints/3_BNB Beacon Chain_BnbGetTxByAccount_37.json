@@ -1,0 +1,11 @@
+{
+    "tag": "BNB Beacon Chain",
+    "operation_id": "BnbGetTxByAccount",
+    "doc_url": "https://apidoc.tatum.io/tag/BNB Beacon Chain#operation/BnbGetTxByAccount",
+    "server_url": "https://api.tatum.io/v3/bnb/account/transaction/{address}",
+    "content": "path /v3/bnb/account/transaction/address\noperationid bnbgettxbyaccount\nparameters\ndescription account address\nin path\nname address\nrequired true\nschema\ntype string\ndescription start time in milliseconds\nin query\nname starttime\nrequired true\nschema\ntype number\nminimum 0\ndescription end time in milliseconds\nin query\nname endtime\nrequired true\nschema\ntype number\nminimum 0\ndescription items per page\nin query\nname limit\nschema\ntype number\nmaximum 50\nminimum 1\ndescription pagination offset\nin query\nname offset\nschema\ntype number\nminimum 0\ndescription asset name\nin query\nname asset\nschema\ntype string\ndescription address type\nin query\nname addresstype\nschema\ntype string\nsummary get binance transactions by address\ndescription 5 credits per api callget binance transactions by address\nresponses\n200\nbnbtxinaccount\ntype object\nproperties\ntype number\ntx\ntype array\nbnbtransaction\ntype object\nproperties\ntype number\ndescription ok",
+    "tag_summary": "bnb beacon chain is a blockchain developed by binance with tatum you can access the most commonly used bnb beacon chain methods these methods bring a certain level of abstraction and are used for applications that communicate with the blockchain directly\nbnb beacon chain does not provide the smart contract functionality\ntatum supports the following bnb beacon chain networks\n\nmainnet the primary public production blockchain\ntestnet a chain used for testing purposes the testnet cryptocurrency has no value and you can obtain it from a faucet for example get it from the bnb smart chain faucet and transfer it to your bnb beacon chain address using the binance wallet",
+    "tag_number": 3,
+    "doc_number": 37,
+    "title": "3_BNB Beacon Chain_BnbGetTxByAccount_37.json"
+}

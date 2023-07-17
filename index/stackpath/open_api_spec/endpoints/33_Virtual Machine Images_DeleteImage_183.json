@@ -1,0 +1,11 @@
+{
+    "tag": "Virtual Machine Images",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DeleteImage path: https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/images/{image_family}/{image_tag} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname imagefamily\ndesc an images family\nin path\nrequired true\nschema\ntype str\nname imagetag\ndesc an images tag\nin path\nrequired true\nschema\ntype str\nsum delete an image\nresponses",
+    "operation_id": "DeleteImage",
+    "doc_url": "https://stackpath.dev/reference/DeleteImage",
+    "server_url": "https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/images/{image_family}/{image_tag}",
+    "tag_summary": "",
+    "tag_number": 33,
+    "doc_number": 183,
+    "title": "33_Virtual Machine Images_DeleteImage_183.json"
+}

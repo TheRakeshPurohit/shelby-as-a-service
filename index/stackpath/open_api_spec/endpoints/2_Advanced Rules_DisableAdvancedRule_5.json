@@ -1,0 +1,11 @@
+{
+    "tag": "Advanced Rules",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DisableAdvancedRule path: https://gateway.stackpath.com/waf/v1alpha/stacks/{stack_id}/sites/{site_id}/advanced_rules/{rule_id}/disable content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nname ruleid\ndesc a waf rule id\nin path\nrequired true\nschema\ntype str\nsum disable an advanced rule\ndesc blockcallout\n\n  type danger\n  body this is an alpha api call and should be considered very unstable please do not execute this in a production environment see our versioning guidelinesdocversioning for more information\n\n/block\nresponses",
+    "operation_id": "DisableAdvancedRule",
+    "doc_url": "https://stackpath.dev/reference/DisableAdvancedRule",
+    "server_url": "https://gateway.stackpath.com/waf/v1alpha/stacks/{stack_id}/sites/{site_id}/advanced_rules/{rule_id}/disable",
+    "tag_summary": "",
+    "tag_number": 2,
+    "doc_number": 5,
+    "title": "2_Advanced Rules_DisableAdvancedRule_5.json"
+}

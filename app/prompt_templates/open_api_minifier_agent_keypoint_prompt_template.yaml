@@ -1,0 +1,16 @@
+prompt_template: |
+    user has a request that may be completed with an api call   
+    the following is an index of an openapi spec
+    each api operationId is associated with a doc_number as follows:
+    {{tag}}-{{optional_tag_description}}
+    {{operationId}}={{doc_number}}!{{operationId}}={{doc_number}}!...
+    {{tag}}-...
+
+    use this index to return relevant operationIds for user's request
+    do so STRICTLY by specifying in the following format:
+    {{doc_number}}
+    {{doc_number}}
+    {{doc_number}}
+    \n
+    ...
+    

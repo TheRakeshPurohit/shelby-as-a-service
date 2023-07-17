@@ -1,0 +1,11 @@
+{
+    "tag": "Solana",
+    "operation_id": "SolanaGetCurrentBlock",
+    "doc_url": "https://apidoc.tatum.io/tag/Solana#operation/SolanaGetCurrentBlock",
+    "server_url": "https://api.tatum.io/v3/solana/block/current",
+    "content": "path /v3/solana/block/current\noperationid solanagetcurrentblock\nsummary get current block number\ndescription 1 credit per api callget solana current block number this is the number of the latest block in the blockchain\nresponses\n200\nschema\ntype number\ndescription current block number\ndescription ok",
+    "tag_summary": "solana is a blockchain network focused on fast transactions and high throughput it uses a unique method of ordering transactions to improve its speed users can pay their transaction fees and interact with smart contracts with sol the networks native cryptocurrency\nfor now solana is in beta and there is a rate limitation applied for all projects for solana to 40 req/s on the platform\ntatum supports 2 chains\nmainnet beta  a regular live chain\ndevnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//solfaucetcom/",
+    "tag_number": 40,
+    "doc_number": 376,
+    "title": "40_Solana_SolanaGetCurrentBlock_376.json"
+}

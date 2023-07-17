@@ -1,0 +1,11 @@
+{
+    "tag": "Blockchain fees",
+    "operation_id": "getBlockchainFee",
+    "doc_url": "https://apidoc.tatum.io/tag/Blockchain fees#operation/getBlockchainFee",
+    "server_url": "https://api.tatum.io/v3/blockchain/fee/{chain}",
+    "content": "path /v3/blockchain/fee/chain\noperationid getblockchainfee\nparameters\ndescription chain\nin path\nname chain\nrequired true\nschema\ntype string\nsummary get the recommended fee/gas price for a blockchain\ndescription 1 credit per api call\nget the recommended fee/gas price for a blockchain\nfee is in satoshismeaning currencybtc doge / 100 000 000 per byte\nthis api is supported for the following blockchains\n\nbitcoin\ndogecoin\nethereum\nlitecoin\nresponses\n200\nblockchainfee\ndescription recommended fees to perform blockchain transaction\nproperties\nfast\ndescription fast transaction acceptance time into block for btcbased chains  fee per byte for evmbased chains  gas price in wei\ntype number\nmedium\ndescription medium transaction acceptance time into block for btcbased chains  fee per byte for evmbased chains  gas price in wei\ntype number\nslow\ndescription slow transaction acceptance time into block for btcbased chains  fee per byte for evmbased chains  gas price in wei\ntype number\nbasefee\ndescription evmbased only this is the minimum fee needs to paid in order for the tx to be accepted into block\ntype number\ntime\ndescription last time fees were recalculated\ntype string\nblock\ndescription last used to calculate fee from\ntype number\ntype object\nrequired\nfast\nmedium\nslow\ntime\nblock\ndescription ok",
+    "tag_summary": "",
+    "tag_number": 8,
+    "doc_number": 90,
+    "title": "8_Blockchain fees_getBlockchainFee_90.json"
+}

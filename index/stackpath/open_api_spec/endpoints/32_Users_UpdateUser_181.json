@@ -1,0 +1,11 @@
+{
+    "tag": "Users",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: UpdateUser path: https://gateway.stackpath.com/identity/v1/users/{user_id} content: params\nname userid\ndesc a user id\nin path\nrequired true\nschema\ntype str\nsum update a user\ndesc update a users nonessential properties such as their phone number\nreqbody\nidentityupdateuserrequest\ntype obj\nprops\nname\ntype str\ndesc the users new name\nphonenumber\ntype str\ndesc the users new phone number\nrequired true\nresponses\n200\nidentityupdateuserresponse\ntype obj\nsuccess\ntype bool\nformat bool\ndesc whether or not the request was successful\ndesc a response from a request to update a users nonessential properties phone number etc",
+    "operation_id": "UpdateUser",
+    "doc_url": "https://stackpath.dev/reference/UpdateUser",
+    "server_url": "https://gateway.stackpath.com/identity/v1/users/{user_id}",
+    "tag_summary": "",
+    "tag_number": 32,
+    "doc_number": 181,
+    "title": "32_Users_UpdateUser_181.json"
+}

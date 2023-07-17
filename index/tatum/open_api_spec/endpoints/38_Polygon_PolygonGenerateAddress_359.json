@@ -1,0 +1,11 @@
+{
+    "tag": "Polygon",
+    "operation_id": "PolygonGenerateAddress",
+    "doc_url": "https://apidoc.tatum.io/tag/Polygon#operation/PolygonGenerateAddress",
+    "server_url": "https://api.tatum.io/v3/polygon/address/{xpub}/{index}",
+    "content": "path /v3/polygon/address/xpub/index\noperationid polygongenerateaddress\nparameters\ndescription extended public key of wallet\nin path\nname xpub\nrequired true\nschema\ntype string\ndescription derivation index of desired address to be generated\nin path\nname index\nrequired true\nschema\ntype number\nsummary generate polygon account address from extended public key\ndescription 1 credit per api call\ngenerate polygon account deposit address from extended public key deposit address is generated for the specific index  each extended public key can generate\nup to 231 addresses starting from index 0 until 231\nresponses\n200\ngeneratedaddressmatic\ntype object\naddress\ntype string\ndescription polygon address\ndescription ok",
+    "tag_summary": "polygon matic is an ethereum evm 100 compatible blockchain and is very good for decentralized application dapp development within many possible verticals including defi nft gaming and many others\ntatum supports 2 chains\nmainnet  a regular live chain\nmumbai testnet  a chain used for testing purposes coins on the test chain have no value and can be obtained from\na faucet eg https//faucetmaticnetwork/",
+    "tag_number": 38,
+    "doc_number": 359,
+    "title": "38_Polygon_PolygonGenerateAddress_359.json"
+}

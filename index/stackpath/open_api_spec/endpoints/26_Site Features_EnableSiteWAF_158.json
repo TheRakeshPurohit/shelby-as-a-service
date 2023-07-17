@@ -1,0 +1,11 @@
+{
+    "tag": "Site Features",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: EnableSiteWAF path: https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/waf content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname siteid\ndesc a site id\nin path\nrequired true\nschema\ntype str\nsum enable waf\nreqbody\ndeliveryenablesitewafrequest\ntype obj\napiurls\ntype str\ndesc a list of api urls which receive different processing through the waf than website requests\nrequired true\nresponses",
+    "operation_id": "EnableSiteWAF",
+    "doc_url": "https://stackpath.dev/reference/EnableSiteWAF",
+    "server_url": "https://gateway.stackpath.com/delivery/v1/stacks/{stack_id}/sites/{site_id}/waf",
+    "tag_summary": "",
+    "tag_number": 26,
+    "doc_number": 158,
+    "title": "26_Site Features_EnableSiteWAF_158.json"
+}

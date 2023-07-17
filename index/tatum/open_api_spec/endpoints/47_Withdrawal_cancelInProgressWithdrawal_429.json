@@ -1,0 +1,11 @@
+{
+    "tag": "Withdrawal",
+    "operation_id": "cancelInProgressWithdrawal",
+    "doc_url": "https://apidoc.tatum.io/tag/Withdrawal#operation/cancelInProgressWithdrawal",
+    "server_url": "https://api.tatum.io/v3/offchain/withdrawal/{id}",
+    "content": "path /v3/offchain/withdrawal/id\noperationid cancelinprogresswithdrawal\nparameters\ndescription id of created withdrawal\nin path\nname id\nrequired true\nschema\ntype string\nmaxlength 24\nminlength 24\ndescription defines whether fee should be reverted to account balance as well as amount defaults to true revert true would be typically used when withdrawal was not broadcast to blockchain false is used usually for ethereum based currencies when gas was consumed but transaction was reverted\nin query\nname revert\nrequired false\nschema\ndefault true\ntype boolean\nsummary cancel withdrawal\ndescription 1 credit per api call\nthis method is helpful if you need to cancel the withdrawal if the blockchain transaction fails or is not yet processed\nthis does not cancel already broadcast blockchain transaction only tatum internal withdrawal and the ledger transaction that was linked to this withdrawal\nby default the transaction fee is included in the reverted transaction there are situations like sending erc20 on eth trc token on tron xlm or xrp based assets when the fee should not be reverted because eg the fee is in calculated\nin ethereum and transaction was in erc20 currency in this situation only the transaction amount should be reverted not the fee\nresponses",
+    "tag_summary": "",
+    "tag_number": 47,
+    "doc_number": 429,
+    "title": "47_Withdrawal_cancelInProgressWithdrawal_429.json"
+}

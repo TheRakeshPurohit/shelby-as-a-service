@@ -1,0 +1,11 @@
+{
+    "tag": "Buckets",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: DeleteBucket path: https://gateway.stackpath.com/storage/v1/stacks/{stack_id}/buckets/{bucket_id} content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nname bucketid\ndesc a storage bucket id\nin path\nrequired true\nschema\ntype str\nname forcedelete\ndesc force bucket deletion even if there are contents inside it\nin query\nrequired false\nschema\ntype bool\nformat bool\nsum delete a bucket\nresponses",
+    "operation_id": "DeleteBucket",
+    "doc_url": "https://stackpath.dev/reference/DeleteBucket",
+    "server_url": "https://gateway.stackpath.com/storage/v1/stacks/{stack_id}/buckets/{bucket_id}",
+    "tag_summary": "",
+    "tag_number": 5,
+    "doc_number": 24,
+    "title": "5_Buckets_DeleteBucket_24.json"
+}

@@ -1,0 +1,11 @@
+{
+    "tag": "Infrastructure",
+    "content": "this is a single endpoint from an open api spec document\nit has been minified by removing unnecessary kvps\nadditionally common terms have been abbreviated  operationId: GetLocations path: https://gateway.stackpath.com/monitoring/v2/stacks/{stack_id}/locations content: params\nname stackid\ndesc a stack id or slug\nin path\nrequired true\nschema\ntype str\nsum get monitoring locations\nresponses\n200\nv2getlocationsresponse\ntype obj\nresults\ntype arr\nmonitoringv2location\ntype obj\nprops\nid\ntype str\ndesc a locations unique identifier\nname\ntype str\ndesc a locations name\ncity\ntype str\ndesc a locations city\ncitycode\ntype str\ndesc a locations city expressed as an iata airport code\ncountry\ntype str\ndesc a locations country\ncountrycode\ntype str\ndesc a locations iso31661 alpha2 country code\nprovider\ntype str\ndesc a locations network provider\nipaddresses\ntype str\ndesc the ip addresses of a location\n\nthe ip addresses where monitoring checks originate from\nhasipv4\ntype bool\nformat bool\ndesc whether or not a location supports ipv4 monitoring checks\nhasipv6\ntype bool\nformat bool\ndesc whether or not a location supports ipv6 monitoring checks\ndesc a location which performs monitoring checks\ndesc the list of monitoring locations for a stack\ndesc a response from a request to retrieve locations",
+    "operation_id": "GetLocations",
+    "doc_url": "https://stackpath.dev/reference/GetLocations",
+    "server_url": "https://gateway.stackpath.com/monitoring/v2/stacks/{stack_id}/locations",
+    "tag_summary": "",
+    "tag_number": 10,
+    "doc_number": 59,
+    "title": "10_Infrastructure_GetLocations_59.json"
+}
