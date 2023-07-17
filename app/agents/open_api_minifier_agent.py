@@ -87,7 +87,6 @@ class OpenAPIMinifierAgent:
         # server_url = urlparse(server_url)
         
         minified_endpoints = []
-        
         with open(os.path.join(self.agent_config.prompt_template_path, 'open_api_minifier_agent_endpoint_prompt_template.yaml'), 'r') as yaml_file:
             # Load the YAML data and print the result
             yaml_content = yaml.safe_load(yaml_file)
@@ -416,7 +415,7 @@ class OpenAPIMinifierAgent:
             yaml_content = yaml.safe_load(yaml_file)
         prompt_template = yaml_content.get('prompt_template')
         
-        folder_path = f'index/{self.data_source_config.namespace}/open_api_spec/keypoint'
+        folder_path = f'index/outputs/{self.data_source_config.namespace}/open_api_spec/keypoint'
         # Ensure output directory exists
         os.makedirs(folder_path, exist_ok=True)
         # Define output file path
@@ -453,7 +452,7 @@ class OpenAPIMinifierAgent:
                 output_file.write(output_string)
     
     def copy_full_spec(self, open_api_spec):
-        folder_path = f'index/{self.data_source_config.namespace}/open_api_spec/full_spec'
+        folder_path = f'index/outputs/{self.data_source_config.namespace}/open_api_spec/full_spec'
         # Ensure output directory exists
         os.makedirs(folder_path, exist_ok=True)
         # Define output file path

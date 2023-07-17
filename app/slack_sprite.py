@@ -160,7 +160,7 @@ def parse_slack_markdown(answer_obj):
 
 async def get_random_animal():
     
-    animals_txt_path = os.path.join('data', 'animals.txt')
+    animals_txt_path = os.path.join('app/prompt_templates/', 'animals.txt')
     with open(animals_txt_path, 'r') as file:
         animals = file.readlines()
     

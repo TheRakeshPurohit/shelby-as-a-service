@@ -104,7 +104,7 @@ def parse_discord_markdown(request_response):
 def get_random_animal():
     
     # Very important
-    animals_txt_path = os.path.join('data', 'animals.txt')
+    animals_txt_path = os.path.join('app/prompt_templates/', 'animals.txt')
     with open(animals_txt_path, 'r') as file:
         animals = file.readlines()
     
