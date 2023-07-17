@@ -5,5 +5,4 @@ logs/
 .vscode/
 **/__pycache__/
 outputs/
-LLM-OpenAPI-minifier/
 langchain/

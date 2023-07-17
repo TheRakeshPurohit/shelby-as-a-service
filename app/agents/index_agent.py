@@ -313,9 +313,9 @@ class IndexAgent:
     
     def clear_resource_name(self, data_resource):
         data_resource.vectorstore.delete(
-        namespace=data_resource.namespace,
-        delete_all=False, 
-        filter={'resource_name': data_resource.resource_name}
+            namespace=data_resource.namespace,
+            delete_all=False, 
+            filter={'resource_name': data_resource.resource_name}
         )
         self.log_agent.print_and_log(f"Removed pre-existing vectors in index with metadata fields 'resource_name': {data_resource.resource_name}")
         index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})

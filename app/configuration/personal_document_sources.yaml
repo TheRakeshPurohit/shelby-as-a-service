@@ -2,13 +2,13 @@ deepgram:
   description: "Advanced AI services including, speech-to-text, translation, and sentiment analysis."
   resources:
     "developers.deepgram.com/reference":
-      enabled: False
+      enabled: True
       target_url: "https://developers.deepgram.com/sitemap.xml"
       filter_url: "https://developers.deepgram.com/reference/"
       target_type: "sitemap"
       doc_type: "hard"
     "developers.deepgram.com/docs":
-      enabled: False
+      enabled: True
       target_url: "https://developers.deepgram.com/sitemap.xml"
       filter_url: "https://developers.deepgram.com/docs/"
       target_type: "sitemap"
@@ -38,12 +38,12 @@ stackpath:
   description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
   resources:
     "stackpath.dev/docs":
-      enabled: False
+      enabled: True
       target_url: "https://stackpath.dev/docs"
       target_type: "generic"
       doc_type: "soft"
     "stackpath.dev/reference":
-      enabled: False
+      enabled: True
       target_url: "index/inputs/input_open_api_specs/stackpath"
       target_type: "open_api_spec"
       doc_type: "hard"

@@ -325,8 +325,8 @@ class OpenAPIMinifierAgent:
             endpoint['tag_summary'] = tag_summary
             endpoint['tag_number'] = tag_number
             
-            endpoint['resource_name'] = self.data_source_config.resource_name,
-            endpoint['target_type'] = self.data_source_config.target_type,
+            endpoint['resource_name'] = self.data_source_config.resource_name
+            endpoint['target_type'] = self.data_source_config.target_type
             endpoint['doc_type'] = self.data_source_config.doc_type
             
             endpoint['doc_number'] = self.operationID_counter
