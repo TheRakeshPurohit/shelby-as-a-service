@@ -231,8 +231,8 @@ class QueryAgent:
     def get_query_embeddings(self, query):
             
         embedding_retriever = OpenAIEmbeddings(
-            model=self.agent_config.query_llm_model,
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            model=self.agent_config.embedding_model,
+            openai_api_key=self.agent_config.openai_api_key,
             request_timeout=self.agent_config.openai_timeout_seconds
         )
         dense_embedding = embedding_retriever.embed_query(query)
