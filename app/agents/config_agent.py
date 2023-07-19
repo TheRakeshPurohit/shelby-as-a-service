@@ -148,10 +148,10 @@ class DeploymentConfig():
                     if self.discord_specific_channels_enabled:
                         self.discord_specific_channel_ids: Optional[List[int]] = your_config.discord_specific_channel_ids 
                     # "" are required for formating in github actions workflow, but they need to be removed for use by discord sprite
-                    self.discord_welcome_message: str = your_config.discord_welcome_message.strip('"')
-                    self.discord_short_message: str = your_config.discord_short_message.strip('"')
-                    self.discord_message_start: str = your_config.discord_message_start.strip('"')
-                    self.discord_message_end: str = your_config.discord_message_end.strip('"')
+                    self.discord_welcome_message: str = your_config.discord_welcome_message
+                    self.discord_short_message: str = your_config.discord_short_message
+                    self.discord_message_start: str = your_config.discord_message_start
+                    self.discord_message_end: str = your_config.discord_message_end
                 case 'slack':
                     pass
             
@@ -196,8 +196,7 @@ class AppConfig():
     def __init__(self, deployment_target: str, log_agent: LoggerAgent):
         
         self.your_config = YourConfig()
-        self.deployment_target: str = os.getenv('DEPLOYMENT_TARGET', deployment_target) 
-                
+        self.deployment_target: str = os.getenv('DEPLOYMENT_TARGET', deployment_target)         
         ### secrets ###
         # For local development set private vars in .env
         # For deployment use github secrets which will be loaded into the container at deployment

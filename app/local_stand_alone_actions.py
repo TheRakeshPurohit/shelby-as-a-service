@@ -32,10 +32,10 @@ request = "tell me about nfts and minting them on solana using tatum"
 # request = "can you tell me how to create a curl and javascript fetch request using the tatum api to fetch the latest block on solana using native rpc client on an rpc node?"
 
 # Remove comment to run shelby_agent
-asyncio.run(run_shelby_agent(request))
+# asyncio.run(run_shelby_agent(request))
 
 def create_deployments():
     deployment_agent = DeploymentAgent()
     deployment_agent.generate_deployments()
     
-# create_deployments()
+create_deployments()

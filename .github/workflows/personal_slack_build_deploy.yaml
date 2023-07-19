@@ -15,7 +15,7 @@ jobs:
             PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
             DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
             SLACK_BOT_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_BOT_TOKEN }}
-                            SLACK_APP_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_APP_TOKEN }}
+            SLACK_APP_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_APP_TOKEN }}
 
             ### Container Environment Variables ###
             VECTORSTORE_INDEX: shelby-as-a-service

@@ -27,6 +27,7 @@ class DeploymentAgent():
     def _generate_deployment(self, deployment_config: DeploymentConfig, deployment_target: str):
         
         def _generate_github_action():
+            # Positioning is required to create correct formatting. Hack work.
             secrets_kvps = ""
             for secret in deployment_config.your_config.secret_names:
                 secrets_kvps += f"""{secret}: ${{{{ secrets.{secret} }}}}
@@ -36,7 +37,7 @@ class DeploymentAgent():
                     secrets_kvps += f"""DISCORD_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_DISCORD_TOKEN }}}}"""
                 case 'slack':
                     secrets_kvps += f"""SLACK_BOT_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_BOT_TOKEN }}}}
-                                        SLACK_APP_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_APP_TOKEN }}}}"""
+                        SLACK_APP_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_APP_TOKEN }}}}"""
             env_kvps = ""
             for field_name in vars(deployment_config.deployment_envs):
                 value = getattr(deployment_config.deployment_envs, field_name)
