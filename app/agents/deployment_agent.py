@@ -27,23 +27,32 @@ class DeploymentAgent():
     def _generate_deployment(self, deployment_config: DeploymentConfig, deployment_target: str):
         
         def _generate_github_action():
+            
             # Positioning is required to create correct formatting. Hack work.
-            secrets_kvps = ""
+            
+            secrets_list = []
             for secret in deployment_config.your_config.secret_names:
-                secrets_kvps += f"""{secret}: ${{{{ secrets.{secret} }}}}
-                        """
+                secrets_list.append(f"""{secret}: ${{{{ secrets.{secret} }}}}""")
             match deployment_target:
                 case 'discord':
-                    secrets_kvps += f"""DISCORD_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_DISCORD_TOKEN }}}}"""
+                    secrets_list.append(f"""DISCORD_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_DISCORD_TOKEN }}}}""")
                 case 'slack':
-                    secrets_kvps += f"""SLACK_BOT_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_BOT_TOKEN }}}}
-                        SLACK_APP_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_APP_TOKEN }}}}"""
-            env_kvps = ""
+                    secrets_list.append(f"""SLACK_BOT_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_BOT_TOKEN }}}}""")
+                    secrets_list.append(f"""SLACK_APP_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_APP_TOKEN }}}}""")
+            
+            kvps_string = '\n'.join(secrets_list)
+            kvps_string = textwrap.indent(kvps_string, '\t' * 7)
+            # secrets_list = [textwrap.indent(s, '\t' * 7) for s in secrets_list]
+
+            env_list = []
             for field_name in vars(deployment_config.deployment_envs):
                 value = getattr(deployment_config.deployment_envs, field_name)
                 if value is not None:
-                    env_kvps += f"""{field_name.upper()}: {value}
-                        """
+                    env_list.append(f"""{field_name.upper()}: {value}""")
+                    
+            env_string = '\n'.join(env_list)
+            env_string = textwrap.indent(env_string, '\t' * 7)
+                    
             github_actions_script = textwrap.dedent(f"""\
             name: {deployment_config.github_action_workflow_name}
 
@@ -53,22 +62,23 @@ class DeploymentAgent():
                 docker:
                     runs-on: ubuntu-latest
                     env:
-                        ### Secrets ###
-                        # Secrets in the format of '${{{{ secrets.NAME }}}}'
-                        # Should be added be added to github secrets as 'NAME' 
-                        {secrets_kvps}
-                        
-                        ### Container Environment Variables ###
-                        {env_kvps}
-                        ### Github Actions Environment Variables ###
-                        DOCKER_USERNAME: {deployment_config.docker_username}
-                        DOCKER_REGISTRY: {deployment_config.docker_registry}
-                        DOCKER_SERVER: {deployment_config.docker_server}
-                        DOCKER_IMAGE_PATH: {deployment_config.docker_image_path}
-                        STACKPATH_STACK_ID: {deployment_config.stackpath_stack_id}
-                        DEPLOYMENT_TARGET: {deployment_config.deployment_target}
-                        WORKLOAD_NAME: {deployment_config.workload_name}
-                        WORKLOAD_SLUG: {deployment_config.workload_slug}         
+                            ### Secrets ###
+                            # Secrets in the format of '${{{{ secrets.NAME }}}}'
+                            # Should be added be added to github secrets as 'NAME'
+                            \n{kvps_string}
+                            
+                            ### Container Environment Variables ###
+                            \n{env_string}
+                            
+                            ### Github Actions Environment Variables ###
+                            DOCKER_USERNAME: {deployment_config.docker_username}
+                            DOCKER_REGISTRY: {deployment_config.docker_registry}
+                            DOCKER_SERVER: {deployment_config.docker_server}
+                            DOCKER_IMAGE_PATH: {deployment_config.docker_image_path}
+                            STACKPATH_STACK_ID: {deployment_config.stackpath_stack_id}
+                            DEPLOYMENT_TARGET: {deployment_config.deployment_target}
+                            WORKLOAD_NAME: {deployment_config.workload_name}
+                            WORKLOAD_SLUG: {deployment_config.workload_slug}         
                         
                     steps:
                         - name: Checkout code
