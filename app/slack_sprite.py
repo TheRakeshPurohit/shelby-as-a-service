@@ -7,9 +7,9 @@ from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from dotenv import load_dotenv
 load_dotenv()
 
-from agents.logger_agent import LoggerAgent
+from app.agents.log_agent import LoggerAgent
 from agents.async_shelby_agent import ShelbyAgent
-from configuration.shelby_agent_config import AppConfig
+from app.agents.config_agent import AppConfig
  
 agent_config = AppConfig('slack') 
 log_agent = LoggerAgent('slack_sprite', 'SlackSprite.log', level='INFO')

@@ -7,12 +7,12 @@ from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
 
-from agents.logger_agent import LoggerAgent
+from agents.log_agent import LoggerAgent
 from agents.async_shelby_agent import ShelbyAgent
-from configuration.shelby_agent_config import AppConfig
+from agents.config_agent import AppConfig
 
 log_agent = LoggerAgent('discord_sprite', 'DiscordSprite.log', level='INFO')
-agent_config = AppConfig('discord') 
+agent_config = AppConfig('discord', log_agent) 
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -126,8 +126,8 @@ async def check_server_for_channel_id(guild):
     # Initialize a variable to store the matching channel ID
     matching_channel_id = None
 
-    # Check each channel ID in the agent_config.discord_channel_ids list
-    for config_channel_id in agent_config.discord_channel_ids:
+    # Check each channel ID in the agent_config.discord_specific_channel_ids list
+    for config_channel_id in agent_config.discord_specific_channel_ids:
         # Convert the config_channel_id to an integer
         config_channel_id = int(config_channel_id)
         
@@ -153,8 +153,8 @@ async def check_message_for_channel_id(message):
     # Initialize a variable to store the matching channel ID
     matching_channel_id = None
 
-    # Check each channel ID in the agent_config.discord_channel_ids list
-    for config_channel_id in agent_config.discord_channel_ids:
+    # Check each channel ID in the agent_config.discord_specific_channel_ids list
+    for config_channel_id in agent_config.discord_specific_channel_ids:
         # Convert the config_channel_id to an integer
         config_channel_id = int(config_channel_id)
         

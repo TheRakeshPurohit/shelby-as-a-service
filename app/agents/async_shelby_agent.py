@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 from langchain.embeddings import OpenAIEmbeddings
 from pinecone_text.sparse import BM25Encoder
 
-from agents.logger_agent import LoggerAgent
-from configuration.shelby_agent_config import AppConfig
+from agents.log_agent import LoggerAgent
+from agents.config_agent import AppConfig
 #endregion
 
 class ShelbyAgent:
@@ -19,8 +19,8 @@ class ShelbyAgent:
     def __init__(self, deployment_target):
         
         load_dotenv()
-        self.agent_config = AppConfig(deployment_target) 
         self.log_agent = LoggerAgent('ShelbyAgent', 'ShelbyAgent.log', level='INFO')
+        self.agent_config = AppConfig(self.log_agent, deployment_target) 
         self.action_agent = ActionAgent(self, self.log_agent, self.agent_config)
         self.query_agent = QueryAgent(self, self.log_agent, self.agent_config)
         self.API_agent = APIAgent(self, self.log_agent, self.agent_config)

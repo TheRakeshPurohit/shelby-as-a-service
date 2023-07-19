@@ -14,8 +14,8 @@ from langchain.text_splitter import BalancedRecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from pinecone_text.sparse import BM25Encoder
 
-from agents.logger_agent import LoggerAgent
-from configuration.shelby_agent_config import AppConfig
+from agents.log_agent import LoggerAgent
+from agents.config_agent import AppConfig
 from agents.open_api_minifier_agent import OpenAPIMinifierAgent
 # endregion
 
@@ -28,7 +28,7 @@ class IndexAgent:
         try:
             load_dotenv()
             self.log_agent = LoggerAgent('IndexAgent', 'IndexAgent.log', level='INFO')
-            self.agent_config = AppConfig() 
+            self.agent_config = AppConfig(self.log_agent) 
             self.tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
             
             # Loads data sources from file
@@ -378,7 +378,8 @@ class CustomPreProcessor:
         self.text_splitter = BalancedRecursiveCharacterTextSplitter.from_tiktoken_encoder(
             model_name=self.tiktoken_encoding_model,
             goal_length=self.agent_config.text_splitter_goal_length,
-            max_length=self.agent_config.text_splitter_max_length
+            max_length=self.agent_config.text_splitter_max_length,
+            chunk_overlap=self.agent_config.text_splitter_chunk_overlap
         )
 
     def run(self, documents: Union[Document, List[Document]]) -> List[Document]:

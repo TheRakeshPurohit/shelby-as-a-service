@@ -30,3 +30,10 @@ class LoggerAgent:
         self.logger.info(message)
         for handler in self.logger.handlers:
             handler.flush()
+            
+    def print_log_error(self, message):
+        print(message)
+        self.logger.info(message)
+        for handler in self.logger.handlers:
+            handler.flush()
+        raise ValueError(message)

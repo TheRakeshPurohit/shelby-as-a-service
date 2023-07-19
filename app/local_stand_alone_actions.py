@@ -2,6 +2,7 @@ import asyncio
 
 from agents.async_shelby_agent import ShelbyAgent
 from agents.index_agent import IndexAgent
+from agents.deployment_agent import DeploymentAgent
 
 ### Index Managment ###
 
@@ -32,3 +33,9 @@ request = "tell me about nfts and minting them on solana using tatum"
 
 # Remove comment to run shelby_agent
 asyncio.run(run_shelby_agent(request))
+
+def create_deployments():
+    deployment_agent = DeploymentAgent()
+    deployment_agent.generate_deployments()
+    
+# create_deployments()

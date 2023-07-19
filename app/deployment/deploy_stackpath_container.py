@@ -6,7 +6,7 @@ import json
 import sys
 from dotenv import load_dotenv
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from app.agents.logger_agent import LoggerAgent
+from app.agents.log_agent import LoggerAgent
 
 load_dotenv() 
 
@@ -76,8 +76,29 @@ match DEPLOYMENT_TARGET:
                     'DISCORD_TOKEN': {
                         'value': os.environ.get('DISCORD_TOKEN')
                     },
-                    'DISCORD_CHANNEL_IDS': {
-                        'value': os.environ.get('DISCORD_CHANNEL_IDS')
+                    'DISCORD_MANUAL_REQUESTS_ENABLED': {
+                        'value': os.environ.get('DISCORD_MANUAL_REQUESTS_ENABLED')
+                    },
+                    'DISCORD_AUTO_RESPONSE_ENABLED': {
+                        'value': os.environ.get('DISCORD_AUTO_RESPONSE_ENABLED')
+                    },
+                    'DISCORD_AUTO_RESPONSE_COOLDOWN': {
+                        'value': os.environ.get('DISCORD_AUTO_RESPONSE_COOLDOWN')
+                    },
+                    'DISCORD_AUTO_RESPOND_IN_THREADS': {
+                        'value': os.environ.get('DISCORD_AUTO_RESPOND_IN_THREADS')
+                    },
+                    'DISCORD_ALL_CHANNELS_ENABLED': {
+                        'value': os.environ.get('DISCORD_ALL_CHANNELS_ENABLED')
+                    },
+                    'DISCORD_ALL_CHANNELS_EXCLUDED_CHANNELS': {
+                        'value': os.environ.get('DISCORD_ALL_CHANNELS_EXCLUDED_CHANNELS')
+                    },
+                    'DISCORD_SPECIFIC_CHANNELS_ENABLED': {
+                        'value': os.environ.get('DISCORD_SPECIFIC_CHANNELS_ENABLED')
+                    },
+                    'DISCORD_SPECIFIC_CHANNEL_IDS': {
+                        'value': os.environ.get('DISCORD_SPECIFIC_CHANNEL_IDS')
                     },
                     'DISCORD_WELCOME_MESSAGE': {
                         'value': os.environ.get('DISCORD_WELCOME_MESSAGE')
