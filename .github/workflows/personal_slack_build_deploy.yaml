@@ -6,34 +6,34 @@
                 docker:
                     runs-on: ubuntu-latest
                     env:
-                            ### Secrets ###
-                            # Secrets in the format of '${{ secrets.NAME }}'
-                            # Should be added be added to github secrets as 'NAME'
+                        ### Secrets ###
+                        # Secrets in the format of '${{ secrets.NAME }}'
+                        # Should be added be added to github secrets as 'NAME'
 
-							STACKPATH_CLIENT_ID: ${{ secrets.STACKPATH_CLIENT_ID }}
-							STACKPATH_API_CLIENT_SECRET: ${{ secrets.STACKPATH_API_CLIENT_SECRET }}
-							OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-							PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-							DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-							SLACK_BOT_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_BOT_TOKEN }}
-							SLACK_APP_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_APP_TOKEN }}
+						STACKPATH_CLIENT_ID: ${{ secrets.STACKPATH_CLIENT_ID }}
+						STACKPATH_API_CLIENT_SECRET: ${{ secrets.STACKPATH_API_CLIENT_SECRET }}
+						OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+						PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+						DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+						SLACK_BOT_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_BOT_TOKEN }}
+						SLACK_APP_TOKEN: ${{ secrets.PERSONAL_SPRITE_SLACK_APP_TOKEN }}
 
-                            ### Container Environment Variables ###
+                        ### Container Environment Variables ###
 
-							VECTORSTORE_INDEX: shelby-as-a-service
-							VECTORSTORE_ENVIRONMENT: us-central1-gcp
-							DOCUMENT_SOURCES_FILEPATH: index/personal_document_sources.yaml
-							VECTORSTORE_NAMESPACES: {'deepgram': 'Advanced AI services including, speech-to-text, translation, and sentiment analysis.', 'tatum': 'Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API.', 'stackpath': 'cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers'}
+						VECTORSTORE_INDEX: shelby-as-a-service
+						VECTORSTORE_ENVIRONMENT: us-central1-gcp
+						DOCUMENT_SOURCES_FILEPATH: index/personal_document_sources.yaml
+						VECTORSTORE_NAMESPACES: {'deepgram': 'Advanced AI services including, speech-to-text, translation, and sentiment analysis.', 'tatum': 'Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API.', 'stackpath': 'cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers'}
 
-                            ### Github Actions Environment Variables ###
-                            DOCKER_USERNAME: shelbyjenkins
-                            DOCKER_REGISTRY: docker.io
-                            DOCKER_SERVER: docker.io/shelbyjenkins/shelby-as-a-service
-                            DOCKER_IMAGE_PATH: shelbyjenkins/shelby-as-a-service:slack-latest
-                            STACKPATH_STACK_ID: shelby-stack-327b67
-                            DEPLOYMENT_TARGET: slack
-                            WORKLOAD_NAME: shelby-as-a-service-personal-slack-sprite
-                            WORKLOAD_SLUG: personal-slack-sprite         
+                        ### Github Actions Environment Variables ###
+                        DOCKER_USERNAME: shelbyjenkins
+                        DOCKER_REGISTRY: docker.io
+                        DOCKER_SERVER: docker.io/shelbyjenkins/shelby-as-a-service
+                        DOCKER_IMAGE_PATH: shelbyjenkins/shelby-as-a-service:slack-latest
+                        STACKPATH_STACK_ID: shelby-stack-327b67
+                        DEPLOYMENT_TARGET: slack
+                        WORKLOAD_NAME: shelby-as-a-service-personal-slack-sprite
+                        WORKLOAD_SLUG: personal-slack-sprite         
 
                     steps:
                         - name: Checkout code
