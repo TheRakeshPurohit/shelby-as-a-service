@@ -185,7 +185,7 @@ class DeploymentConfig():
         self.docker_image_path: str = f'{self.docker_username}/{self.docker_repo}:{deployment_target}-latest'
         self.github_action_workflow_name: str = f'{self.sprite_name.lower()}_{deployment_target.lower()}_build_deploy'
         self.workload_name: str = f'shelby-as-a-service-{self.sprite_name.lower()}-{deployment_target.lower()}-sprite'
-        self. workload_slug: str = f'{self.sprite_name.lower()}-{self.deployment_target.lower()}-sprite'
+        self.workload_slug: str = f'{self.sprite_name.lower()}-{self.deployment_target.lower()}-sprite'
             
         self.your_config.config_check(self, self.deployment_target, log_agent)
      
@@ -203,8 +203,7 @@ class AppConfig():
         # For deployment use github secrets which will be loaded into the container at deployment
         self.openai_api_key: str = os.getenv('OPENAI_API_KEY') 
         self.pinecone_api_key: str = os.getenv('PINECONE_API_KEY') 
-        self.docker_token: str = os.getenv('DOCKER_TOKEN')
-        
+
         ### config ###
         self.vectorstore_index: str = os.getenv('VECTORSTORE_INDEX', self.your_config.vectorstore_index)
         self.vectorstore_environment: str = os.getenv('VECTORSTORE_ENVIRONMENT', self.your_config.vectorstore_environment)
