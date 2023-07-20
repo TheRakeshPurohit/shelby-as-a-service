@@ -219,15 +219,17 @@ class AppConfig():
                 
                 # All channels
                 self.discord_all_channels_enabled: bool = os.getenv('DISCORD_ALL_CHANNELS_ENABLED', self.your_config.discord_all_channels_enabled)
-                self.discord_all_channels_excluded_channels: Optional[List[int]] = [int(id) for id in os.getenv('DISCORD_ALL_CHANNELS_EXCLUDED_CHANNELS', '').split(',') if id]
-                if not self.discord_all_channels_excluded_channels:
-                    self.discord_all_channels_excluded_channels: Optional[List[int]] = self.your_config.discord_all_channels_excluded_channels
+                if self.discord_all_channels_enabled:
+                    self.discord_all_channels_excluded_channels: Optional[List[int]] = [int(id) for id in os.getenv('DISCORD_ALL_CHANNELS_EXCLUDED_CHANNELS', '').split(',') if id]
+                    if not self.discord_all_channels_excluded_channels:
+                        self.discord_all_channels_excluded_channels: Optional[List[int]] = self.your_config.discord_all_channels_excluded_channels
 
                 # Specific channels
                 self.discord_specific_channels_enabled: bool = os.getenv('DISCORD_SPECIFIC_CHANNELS_ENABLED', self.your_config.discord_specific_channels_enabled)
-                self.discord_specific_channel_ids: Optional[List[int]] = [int(id) for id in os.getenv('DISCORD_SPECIFIC_CHANNEL_IDS', '').split(',') if id]
-                if not self.discord_specific_channel_ids:
-                    self.discord_specific_channel_ids: Optional[List[int]] = self.your_config.discord_specific_channel_ids
+                if self.discord_specific_channels_enabled:
+                    self.discord_specific_channel_ids: Optional[List[int]] = [int(id) for id in os.getenv('DISCORD_SPECIFIC_CHANNEL_IDS', '').split(',') if id]
+                    if not self.discord_specific_channel_ids:
+                        self.discord_specific_channel_ids: Optional[List[int]] = self.your_config.discord_specific_channel_ids
                         
                 # "" are required for formating in github actions workflow, but they need to be removed for use by discord sprite
                 self.discord_welcome_message: str = os.getenv('DISCORD_WELCOME_MESSAGE', self.your_config.discord_welcome_message).strip('"')
