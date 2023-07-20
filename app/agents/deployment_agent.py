@@ -1,6 +1,4 @@
-import json
 import os
-import json
 import textwrap
 from pydantic import BaseModel, Field
 from agents.config_agent import YourConfig, DeploymentConfig
@@ -41,7 +39,7 @@ class DeploymentAgent():
                     secrets_list.append(f"""SLACK_APP_TOKEN: ${{{{ secrets.{deployment_config.sprite_name.upper()}_SPRITE_SLACK_APP_TOKEN }}}}""")
             
             kvps_string = '\n'.join(secrets_list)
-            kvps_string = textwrap.indent(kvps_string, '\t' * 6)
+            kvps_string = textwrap.indent(kvps_string, ' ' * 24)
             # secrets_list = [textwrap.indent(s, '\t' * 7) for s in secrets_list]
 
             env_list = []
@@ -51,7 +49,7 @@ class DeploymentAgent():
                     env_list.append(f"""{field_name.upper()}: {value}""")
                     
             env_string = '\n'.join(env_list)
-            env_string = textwrap.indent(env_string, '\t' * 6)
+            env_string = textwrap.indent(env_string, ' ' * 24)
                     
             github_actions_script = textwrap.dedent(f"""\
             name: {deployment_config.github_action_workflow_name}
@@ -63,7 +61,7 @@ class DeploymentAgent():
                     runs-on: ubuntu-latest
                     env:
                         ### Secrets ###
-                        # Secrets in the format of '${{{{ secrets.NAME }}}}'
+                        # Secrets in the format of 'secrets.NAME'
                         # Should be added be added to github secrets as 'NAME'
                         \n{kvps_string}
                         
@@ -82,53 +80,54 @@ class DeploymentAgent():
                         
                     steps:
                         - name: Checkout code
-                        uses: actions/checkout@v3
+                            uses: actions/checkout@v3
                                             
                         - name: Set up Python
-                        uses: actions/setup-python@v2
-                        with:
-                            python-version: '3.10.11'
-
+                            uses: actions/setup-python@v2
+                            with:
+                                python-version: '3.10.11'
+ 
                         - name: Cache pip dependencies
-                        uses: actions/cache@v2
-                        id: cache
-                        with:
-                            path: ~/.cache/pip
-                            key: ${{{{  runner.os }}}}-pip-${{{{  hashFiles('**/app/deployment/{deployment_config.deployment_target}/{deployment_config.deployment_target}_requirements.txt') }}}}
-                            restore-keys: |
-                                ${{{{  runner.os }}}}-pip-
+                            uses: actions/cache@v2
+                            id: cache
+                            with:
+                                path: ~/.cache/pip
+                                key: ${{{{  runner.os }}}}-pip-${{{{  hashFiles('**/app/deployment/{deployment_config.deployment_target}/{deployment_config.deployment_target}_requirements.txt') }}}}
+                                restore-keys: |
+                                    ${{{{  runner.os }}}}-pip-
 
                         - name: Install dependencies
-                        run: |
-                            python -m pip install --upgrade pip
-                            if [ -f app/deployment/{deployment_config.deployment_target}/{deployment_config.deployment_target}_requirements.txt ]; then pip install -r app/deployment/{deployment_config.deployment_target}/{deployment_config.deployment_target}_requirements.txt; fi
+                            run: |
+                                python -m pip install --upgrade pip
+                                if [ -f app/deployment/{deployment_config.deployment_target}/{deployment_config.deployment_target}_requirements.txt ]; then pip install -r app/deployment/{deployment_config.deployment_target}/{deployment_config.deployment_target}_requirements.txt; fi
 
                         - name: Login to Docker registry
-                        uses: docker/login-action@v2 
-                        with:
-                            registry: {deployment_config.docker_registry}
-                            username: {deployment_config.docker_username}
-                            password: ${{{{  secrets.DOCKER_TOKEN }}}}
+                            uses: docker/login-action@v2 
+                            with:
+                                registry: {deployment_config.docker_registry}
+                                username: {deployment_config.docker_username}
+                                password: ${{{{  secrets.DOCKER_TOKEN }}}}
 
                         - name: Build and push Docker image
-                        uses: docker/build-push-action@v4
-                        with:
-                            context: .
-                            file: app/deployment/{deployment_config.deployment_target}/Dockerfile
-                            push: true
-                            tags: {deployment_config.docker_image_path}
+                            uses: docker/build-push-action@v4
+                            with:
+                                context: .
+                                file: app/deployment/{deployment_config.deployment_target}/Dockerfile
+                                push: true
+                                tags: {deployment_config.docker_image_path}
 
                         - name: Add execute permissions to the script
-                        run: chmod +x app/deployment/deploy_stackpath_container.py
+                            run: chmod +x app/deployment/deploy_stackpath_container.py
 
                         - name: Run deployment script
-                        run: app/deployment/deploy_stackpath_container.py
+                            run: app/deployment/deploy_stackpath_container.py
             """)
-        
+            
+            github_actions_script = github_actions_script.replace('    ', '  ')
             os.makedirs('.github/workflows', exist_ok=True)
             with open(f'.github/workflows/{deployment_config.github_action_workflow_name}.yaml', 'w') as f:
                 f.write(github_actions_script)
-        
+                
         def _generate_dockerfile():
             # Generates Dockerfile
             dockerfile = textwrap.dedent(f"""\
