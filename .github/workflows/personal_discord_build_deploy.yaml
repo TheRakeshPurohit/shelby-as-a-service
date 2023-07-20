@@ -27,7 +27,7 @@ jobs:
       DISCORD_AUTO_RESPOND_IN_THREADS: False
       DISCORD_ALL_CHANNELS_ENABLED: False
       DISCORD_SPECIFIC_CHANNELS_ENABLED: True
-      DISCORD_SPECIFIC_CHANNEL_IDS: "[1110379342745321472, 1128776389227720795]"
+      DISCORD_SPECIFIC_CHANNEL_IDS: "1110379342745321472,1128776389227720795"
       DISCORD_WELCOME_MESSAGE: "ima tell you about the {}."
       DISCORD_SHORT_MESSAGE: "<@{}>, brevity is the soul of wit, but not of good queries. Please provide more details in your request."
       DISCORD_MESSAGE_START: "Running request... relax, chill, and vibe a minute."

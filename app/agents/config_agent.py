@@ -46,7 +46,7 @@ class YourConfig():
         self.discord_all_channels_excluded_channels: Optional[List[int]] = [] # Exclude channels to reply in
         # Respond in specific channels
         self.discord_specific_channels_enabled: bool = True
-        self.discord_specific_channel_ids: Optional[List[int]] = [1110379342745321472,1128776389227720795] # Requires at least one channel if enabled
+        self.discord_specific_channel_ids: str = '1110379342745321472,1128776389227720795' # Requires at least one channel if enabled
         
         # Content
         self.discord_welcome_message = '"ima tell you about the {}."'
@@ -142,11 +142,11 @@ class DeploymentConfig():
                     # All channels
                     self.discord_all_channels_enabled: bool = your_config.discord_all_channels_enabled
                     if your_config.discord_all_channels_excluded_channels:
-                        self.discord_all_channels_excluded_channels: Optional[List[int]] = f'"{your_config.discord_all_channels_excluded_channels}"'
+                        self.discord_all_channels_excluded_channels: str = f'"{your_config.discord_all_channels_excluded_channels}"'
                     # Specific channels
                     self.discord_specific_channels_enabled: bool = your_config.discord_specific_channels_enabled
                     if self.discord_specific_channels_enabled:
-                        self.discord_specific_channel_ids: Optional[List[int]] = f'"{your_config.discord_specific_channel_ids}"'
+                        self.discord_specific_channel_ids: str = f'"{your_config.discord_specific_channel_ids}"'
                     # "" are required for formating in github actions workflow, but they need to be removed for use by discord sprite
                     self.discord_welcome_message: str = your_config.discord_welcome_message
                     self.discord_short_message: str = your_config.discord_short_message
