@@ -23,7 +23,7 @@ jobs:
       VECTORSTORE_INDEX: shelby-as-a-service
       VECTORSTORE_ENVIRONMENT: us-central1-gcp
       DOCUMENT_SOURCES_FILEPATH: index/personal_document_sources.yaml
-      VECTORSTORE_NAMESPACES: "{'deepgram': 'Advanced AI services including, speech-to-text, translation, and sentiment analysis.', 'tatum': 'Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API.', 'stackpath': 'cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers'}"
+      VECTORSTORE_NAMESPACES: '{"deepgram": "Advanced AI services including, speech-to-text, translation, and sentiment analysis.", "tatum": "Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API.", "stackpath": "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"}'
 
       ### Github Actions Environment Variables ###
       DOCKER_USERNAME: shelbyjenkins

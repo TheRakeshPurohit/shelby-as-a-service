@@ -161,7 +161,8 @@ class DeploymentConfig():
                 data_sources = yaml.safe_load(stream)
                 
             namespaces_from_file = {key: value['description'] for key, value in data_sources.items()}
-            self.vectorstore_namespaces = f'"{namespaces_from_file}"'
+            # self.vectorstore_namespaces = f'"{namespaces_from_file}"'
+            self.vectorstore_namespaces = f"'{json.dumps(namespaces_from_file)}'"
             
             your_config.config_check(self, deployment_target, log_agent)
             
