@@ -201,7 +201,6 @@ class AppConfig():
         ### secrets ###
         # For local development set private vars in .env
         # For deployment use github secrets which will be loaded into the container at deployment
-        self.stackpath_api_client_secret: str = os.getenv('STACKPATH_API_CLIENT_SECRET')
         self.openai_api_key: str = os.getenv('OPENAI_API_KEY') 
         self.pinecone_api_key: str = os.getenv('PINECONE_API_KEY') 
         self.docker_token: str = os.getenv('DOCKER_TOKEN')
