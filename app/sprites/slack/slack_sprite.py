@@ -1,18 +1,17 @@
 #region
+from app.services.log_service import LogService
+from app.services.shelby_agent import ShelbyAgent
+from app.services.config_service import ConfigService
+
 import os, asyncio, random
 
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 
-from dotenv import load_dotenv
-load_dotenv()
 
-from app.agents.log_agent import LoggerAgent
-from agents.async_shelby_agent import ShelbyAgent
-from app.agents.config_agent import AppConfig
- 
-agent_config = AppConfig('slack') 
-log_agent = LoggerAgent('slack_sprite', 'SlackSprite.log', level='INFO')
+
+agent_config = ConfigService('slack') 
+log_agent = LogService('slack_sprite', 'SlackSprite.log', level='INFO')
 
 bot_user_id = None
 app = AsyncApp(token=agent_config.slack_bot_token)

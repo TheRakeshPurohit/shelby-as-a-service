@@ -2,8 +2,9 @@ import os, shutil
 import json, yaml
 import string, re
 from urllib.parse import urlparse
+from .log_service import LogService
 
-class OpenAPIMinifierAgent:
+class OpenAPIMinifierService:
     
     def __init__(self, data_source_config):
         

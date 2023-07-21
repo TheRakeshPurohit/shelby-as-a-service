@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 
 import pinecone, tiktoken
-from dotenv import load_dotenv
+
 
 from langchain.schema import Document
 from langchain.document_loaders import GitbookLoader, SitemapLoader, RecursiveUrlLoader
@@ -14,20 +14,21 @@ from langchain.text_splitter import BalancedRecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from pinecone_text.sparse import BM25Encoder
 
-from agents.log_agent import LoggerAgent
-from agents.config_agent import AppConfig
-from agents.open_api_minifier_agent import OpenAPIMinifierAgent
+from .log_service import LogService
+
+from .open_api_minifier_service import OpenAPIMinifierService
+
 # endregion
 
-class IndexAgent:
+class IndexService:
     
     ### IndexAgent loads configs and data sources ###
     
     def __init__(self):
         
         try:
-            load_dotenv()
-            self.log_agent = LoggerAgent('IndexAgent', 'IndexAgent.log', level='INFO')
+
+            self.log_agent = LogService('IndexAgent', 'IndexAgent.log', level='INFO')
             self.agent_config = AppConfig(self.log_agent) 
             self.tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
             
@@ -343,7 +344,7 @@ class DataSourceConfig:
             case 'text':
                 self.preprocessor = CustomPreProcessor(self)
             case 'open_api_spec':
-                self.preprocessor = OpenAPIMinifierAgent(self)
+                self.preprocessor = OpenAPIMinifierService(self)
             case _:
                 raise ValueError("Invalid target type: should be text, html, or code.")
             

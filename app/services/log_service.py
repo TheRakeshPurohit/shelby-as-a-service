@@ -1,7 +1,7 @@
 import os
 import logging
 
-class LoggerAgent:
+class LogService:
     def __init__(self, logger_name, log_file, level='INFO'):
         log_dir = 'logs'
         os.makedirs(log_dir, exist_ok=True)

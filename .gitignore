@@ -1,4 +1,5 @@
 .env
+*.env
 shelby-as-a-service.code-workspace
 installed_packages.txt
 logs/

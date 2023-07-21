@@ -4,13 +4,13 @@ import requests
 import os 
 import json
 import sys
-from dotenv import load_dotenv
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from app.agents.log_agent import LoggerAgent
+from services.log_service import LogService
 
-load_dotenv() 
 
-log_agent = LoggerAgent('deploy_agent', 'deploy_agent.log', level='INFO')
+
+log_agent = LogService('deploy_agent', 'deploy_agent.log', level='INFO')
 
 DEPLOYMENT_TARGET = os.environ.get('DEPLOYMENT_TARGET')
 
