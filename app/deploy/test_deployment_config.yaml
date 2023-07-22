@@ -25,7 +25,7 @@ monikers:
             enabled_document_namespaces: ["deepgram", "tatum", "stackpath"]
   tatum:
     sprites:
-      slack:
+      discord:
             ### Set these to your needs ###
             # Requests method - at least one is required
             manual_requests_enabled:  True  # Manual allows for @discord-sprite engagement

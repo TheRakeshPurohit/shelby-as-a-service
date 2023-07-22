@@ -23,8 +23,9 @@ class DeploymentService():
         self.generate_dockerfile()
         self.generate_shell_script()
         self.generate_pip_requirements()
-        env_list, secrets_list = self.populate_variables()
-        self.generate_actions_workflow(env_list, secrets_list)
+        deploy_env_list, local_env_list, deploy_secrets_list, local_secrets_list = self.populate_variables()
+        self.generate_actions_workflow(deploy_env_list , deploy_secrets_list)
+        # self.generate_local_env_file(local_env_list, local_secrets_list)
         
     def generate_dockerfile(self):
         
@@ -88,13 +89,13 @@ wait
         with open(f'app/deploy/automation/{self.deployment_name}/requirements.txt', 'w') as file:
             file.write('\n'.join(combined_requirements))
 
-    def generate_actions_workflow(self, env_list, secrets_list):
+    def generate_actions_workflow(self, deploy_env_list , deploy_secrets_list):
     
         # Positioning is required to create correct formatting. Hack work.
-        secrets_string = '\n'.join(secrets_list)
+        secrets_string = '\n'.join(deploy_secrets_list)
         secrets_string = textwrap.indent(secrets_string, ' ' * 24)
 
-        env_string = '\n'.join(env_list)
+        env_string = '\n'.join(deploy_env_list )
         env_string = textwrap.indent(env_string, ' ' * 24)
                 
         github_actions_script = textwrap.dedent(f"""\
@@ -163,52 +164,79 @@ wait
         with open(f'.github/workflows/{self.deployment_name}_deployment.yaml', 'w') as f:
             f.write(github_actions_script)
                 
+    def generate_local_env_file(self, local_env_list, local_secrets_list):
+         # Positioning is required to create correct formatting. Hack work.
+        secrets_string = '\n'.join(local_secrets_list)
+        secrets_string = textwrap.indent(secrets_string, ' ' * 24)
+
+        env_string = '\n'.join(local_env_list )
+        env_string = textwrap.indent(env_string, ' ' * 24)
+                
+        local_env_file = textwrap.dedent(f"""\
+{secrets_string}
+{env_string}
+        """)
+        
+        os.makedirs(f'app/deploy/automation/{self.deployment_name}', exist_ok=True)
+        with open(f'app/deploy/automation/{self.deployment_name}/.env {self.deployment_name}', 'w') as f:
+            f.write(local_env_file)
+            
     def populate_variables(self):
         
-        secrets_list= []
-        env_list= []
-        secrets_list = self.generate_default_secrets(secrets_list)
+        deploy_env_list = []
+        local_env_list = []
+        deploy_secrets_list, local_secrets_list = self.generate_default_secrets()
         # For Each Moniker
         for moniker_name, moniker_config in self.deployment_settings["monikers"].items():
-            env_list.append(f'\n### {moniker_name}_environment_variables ###\n')
+            deploy_env_list.append(f'\n### {moniker_name}_environment_variables ###\n')
+            local_env_list.append(f'\n### {moniker_name}_environment_variables ###\n')
             # For each Sprite
             for platform, sprite_config in moniker_config["sprites"].items():
-                env_list= []
                 match platform:
                     case 'discord':
-                        secrets_list.append(f"""{moniker_name.upper()}_DISCORD_SPRITE_BOT_TOKEN: ${{{{ secrets.{moniker_name.upper()}_DISCORD_SPRITE_BOT_TOKEN }}}}""")
+                        deploy_secrets_list.append(f"""{moniker_name.upper()}_DISCORD_SPRITE_BOT_TOKEN: ${{{{ secrets.{moniker_name.upper()}_DISCORD_SPRITE_BOT_TOKEN }}}}""")
+                        local_secrets_list.append(f"""{moniker_name.upper()}_DISCORD_SPRITE_BOT_TOKEN=""")
                         discord_config = DiscordSpriteConfig()
                         discord_config.create_discord_deployment(moniker_name, sprite_config, self.log_service)
 
                         for field_name in vars(discord_config):
                             value = getattr(discord_config, field_name)
                             if value is not None:
-                                env_list.append(f"""{moniker_name.upper()}_{platform.upper()}_{field_name.upper()}: {value}""")
+                                deploy_env_list.append(f"""{moniker_name.upper()}_{platform.upper()}_{field_name.upper()}: {value}""")
+                                local_env_list.append(f"""{moniker_name.upper()}_{platform.upper()}_{field_name.upper()}={value}""")
                                 
                     case 'slack':
-                        secrets_list.append(f"""{moniker_name.upper()}_SLACK_BOT_TOKEN: ${{{{ secrets.{moniker_name.upper()}_SLACK_SPRITE_BOT_TOKEN }}}}""")
-                        secrets_list.append(f"""{moniker_name.upper()}_SLACK_APP_TOKEN: ${{{{ secrets.{moniker_name.upper()}_SLACK_SPRITE_APP_TOKEN }}}}""")
+                        deploy_secrets_list.append(f"""{moniker_name.upper()}_SLACK_BOT_TOKEN: ${{{{ secrets.{moniker_name.upper()}_SLACK_SPRITE_BOT_TOKEN }}}}""")
+                        local_secrets_list.append(f"""{moniker_name.upper()}_SLACK_BOT_TOKEN=""")
+                        deploy_secrets_list.append(f"""{moniker_name.upper()}_SLACK_APP_TOKEN: ${{{{ secrets.{moniker_name.upper()}_SLACK_SPRITE_APP_TOKEN }}}}""")
+                        local_secrets_list.append(f"""{moniker_name.upper()}_SLACK_APP_TOKEN=""")
                         
-        env_list.append('### deployment_services_environment_variables ###\n')
+        deploy_env_list.append('\n### deployment_services_environment_variables ###\n')
+        local_env_list.append('\n### deployment_services_environment_variables ###\n')
         for field_name in vars(self.deployment_env):
             value = getattr(self.deployment_env, field_name)
             if value is not None:
-                env_list.append(f"""{field_name.upper()}: {value}""")
+                deploy_env_list.append(f"""{field_name.upper()}: {value}""")
+                local_env_list.append(f"""{field_name.upper()}={value}""")
         
-        env_list.append('\n### config_overrides_variables ###\n')
+        deploy_env_list.append('\n### config_overrides_variables ###\n')
+        local_env_list.append('\n### config_overrides_variables ###\n')
         for override_name, override_value in self.deployment_settings["config_overrides"].items():
-            env_list.append(f"""{override_name.upper()}: {override_value}""")
+            deploy_env_list.append(f"""{override_name.upper()}: {override_value}""")
+            local_env_list.append(f"""{override_name.upper()}={override_value}""")
     
-        return env_list, secrets_list
+        return deploy_env_list, local_env_list, deploy_secrets_list, local_secrets_list
     
-    def generate_default_secrets(self, secrets_list):
-        
+    def generate_default_secrets(self):
+        deploy_secrets_list = []
+        local_secrets_list = []
         secret_names = ['STACKPATH_CLIENT_ID', 'STACKPATH_API_CLIENT_SECRET', 'OPENAI_API_KEY', 'PINECONE_API_KEY', 'DOCKER_TOKEN']
         for secret in secret_names:
-            secrets_list.append(f"""{secret.upper()}: ${{{{ secrets.{secret.upper()} }}}}""")
+            deploy_secrets_list.append(f"""{secret.upper()}: ${{{{ secrets.{secret.upper()} }}}}""")
+            local_secrets_list.append(f"""{secret.upper()}=""")
         
-        return secrets_list
-        
+        return deploy_secrets_list, local_secrets_list
+    
 class DeploymentServicesRequiredEnvs:
     
     def __init__(self, deployment_settings, log_service):

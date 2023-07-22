@@ -1,7 +1,61 @@
 import sys
 import argparse
 import traceback
-from services.log_service import LogService
+from services.base_class import BaseClass
+from sprites.discord_sprite import DiscordSprite
+
+def main(args):
+    # try: 
+
+        if args.deployment:
+            run_deployment()
+        elif args.config:
+            pass
+        elif args.web:
+            # Call your web function here.
+            pass
+        elif args.index:
+            # Call your index function here.
+            pass
+        else:
+            raise ValueError("Requires arg")
+            
+    # except Exception as e:
+    #         # Logs error and sends error to sprite
+    #         error_info = traceback.format_exc()
+    #         print(f'An error occurred in run.py main(): {e}\n{error_info}')
+    #         raise
+
+def run_deployment():
+    for moniker, sprites in BaseClass.deployment_sprites.items():
+        for platform in sprites:
+            run_sprite(moniker, platform)
+            
+def run_sprite(moniker, platform):
+    match platform:
+        case 'discord':
+            DiscordSprite(moniker)
+        case _:
+            print(f'oops no {platform} of that name')
+            
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--deployment', action='store_true', help='Run complete deployment')
+    group.add_argument('--config', help='Run config from file')
+    group.add_argument('--web', help='Run specific sprite')
+    group.add_argument('--index', help='Run specific sprite')
+    
+    # Manually create args for testing
+    # test_args = ['--config', 'app/deploy/test_deployment_config.yaml']
+    test_args = ['--deployment']
+    args = parser.parse_args(test_args)
+    
+    # args = parser.parse_args(sys.argv[1:])
+    
+    main(args)
+    
 
 # from sprites.web.web_sprite import WebSprite
 
@@ -21,52 +75,3 @@ from services.log_service import LogService
 
 # Remove comment to run index_agent
 # manage_index()
-
-
-def main(args):
-    try: 
-        log_service = LogService('Run', 'Run.log', level='INFO')
-
-        if args.deployment:
-            if len(args.deployment) != 3:
-                raise ValueError("Deployment argument needs exactly 3 parameters: deployment, moniker, sprite")
-            deployment_name, moniker_name, platform = args.deployment
-        
-        elif args.config:
-            from services.deployment_service import DeploymentService
-            deployment_service = DeploymentService(args.config, log_service)
-            deployment_service.create_deployment_from_file()
-        
-        elif args.web:
-            # Call your web function here.
-            pass
-        
-        elif args.index:
-            # Call your index function here.
-            pass
-        
-        else:
-            raise ValueError("Requires arg")
-            
-    except Exception as e:
-            # Logs error and sends error to sprite
-            error_info = traceback.format_exc()
-            log_service.print_and_log(f'An error occurred in run.py main(): {e}\n{error_info}')
-            raise
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--deployment', nargs=3, help='Run complete deployment: deployment moniker sprite')
-    group.add_argument('--config', help='Run config from file')
-    group.add_argument('--web', help='Run specific sprite')
-    group.add_argument('--index', help='Run specific sprite')
-    
-    # Manually create args for testing
-    test_args = ['--config', 'app/deploy/test_deployment_config.yaml']
-    args = parser.parse_args(test_args)
-    
-    # args = parser.parse_args(sys.argv[1:])
-    
-    main(args)
-    

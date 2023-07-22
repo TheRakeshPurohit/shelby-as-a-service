@@ -3,7 +3,7 @@
 
 # Start scripts in background
 python app/run.py --deployment test personal discord &
-python app/run.py --deployment test tatum slack &
+python app/run.py --deployment test tatum discord &
 
 
 # Wait for all background processes to finish

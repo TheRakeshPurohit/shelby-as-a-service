@@ -4,50 +4,50 @@ index_names:
       - document_namespace: "deepgram"
         description: "Advanced AI services including, speech-to-text, translation, and sentiment analysis."
         resources:
-          - source: "developers.deepgram.com/reference":
-              update_enabled: True
-              target_url: "index/inputs/input_open_api_specs/deepgram"
-              target_type: "open_api_spec"
-              doc_type: "hard"
-              api_url_format: "https://developers.deepgram.com/reference/{operationId}"
-          - source: "developers.deepgram.com/docs":
-              update_enabled: True
-              target_url: "https://developers.deepgram.com/sitemap.xml"
-              filter_url: "https://developers.deepgram.com/docs/"
-              target_type: "sitemap"
-              doc_type: "soft"
+          - source: "developers.deepgram.com/reference"
+            update_enabled: True
+            target_url: "index/inputs/input_open_api_specs/deepgram"
+            target_type: "open_api_spec"
+            doc_type: "hard"
+            api_url_format: "https://developers.deepgram.com/reference/{operationId}"
+          - source: "developers.deepgram.com/docs"
+            update_enabled: True
+            target_url: "https://developers.deepgram.com/sitemap.xml"
+            filter_url: "https://developers.deepgram.com/docs/"
+            target_type: "sitemap"
+            doc_type: "soft"
       - document_namespace: "tatum"
         description: "Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API."
         resources:
-          - source: "docs.tatum.com":
-              update_enabled: True
-              load_all_paths: True
-              target_url: "https://docs.tatum.com"
-              target_type: "gitbook"
-              doc_type: "soft"
-          - source:"docs.tatum.io":
-              update_enabled: True
-              load_all_paths: True
-              target_url: "https://docs.tatum.io"
-              target_type: "gitbook"
-              doc_type: "soft"
-          - source: "api.tatum.io":
-              update_enabled: True
-              target_url: "index/inputs/input_open_api_specs/tatum"
-              target_type: "open_api_spec"
-              doc_type: "hard"
-              api_url_format: "https://apidoc.tatum.io/tag/{tag}#operation/{operationId}"
+          - source: "docs.tatum.com"
+            update_enabled: True
+            load_all_paths: True
+            target_url: "https://docs.tatum.com"
+            target_type: "gitbook"
+            doc_type: "soft"
+          - source: "docs.tatum.io"
+            update_enabled: True
+            load_all_paths: True
+            target_url: "https://docs.tatum.io"
+            target_type: "gitbook"
+            doc_type: "soft"
+          - source: "api.tatum.io"
+            update_enabled: True
+            target_url: "index/inputs/input_open_api_specs/tatum"
+            target_type: "open_api_spec"
+            doc_type: "hard"
+            api_url_format: "https://apidoc.tatum.io/tag/{tag}#operation/{operationId}"
       - document_namespace: "stackpath"
         description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
         resources:
-          - source: "stackpath.dev/docs":
-              enabled: True
-              target_url: "https://stackpath.dev/docs"
-              target_type: "generic"
-              doc_type: "soft"
-          - source: "stackpath.dev/reference":
-              enabled: True
-              target_url: "index/inputs/input_open_api_specs/stackpath"
-              target_type: "open_api_spec"
-              doc_type: "hard"
-              api_url_format: "https://stackpath.dev/reference/{operationId}"
+          - source: "stackpath.dev/docs"
+            enabled: True
+            target_url: "https://stackpath.dev/docs"
+            target_type: "generic"
+            doc_type: "soft"
+          - source: "stackpath.dev/reference"
+            enabled: True
+            target_url: "index/inputs/input_open_api_specs/stackpath"
+            target_type: "open_api_spec"
+            doc_type: "hard"
+            api_url_format: "https://stackpath.dev/reference/{operationId}"
