@@ -1,7 +1,7 @@
 #region
 from services.log_service import LogService
 from sprites.discord.discord_sprite_config import DiscordSpriteConfig
-from services.shelby_agent import ShelbyAgent
+# from services.shelby_agent import ShelbyAgent
 
 import os 
 import random
@@ -13,9 +13,9 @@ from discord.ext import commands
 class DiscordSprite:
     def __init__(self, moniker):
         self.log_service = LogService(f'{moniker}_discord_sprite', f'{moniker}_discord_sprite.log', level='INFO')
-        self.config = DiscordSpriteConfig(moniker, self.log_service) 
-        self.config.load_config(self.log_service)
-        self.shelby_agent = ShelbyAgent(moniker, self.config.platform)
+        self.config = DiscordSpriteConfig() 
+        self.config.load_discord_config(moniker, self.log_service)
+        # self.shelby_agent = ShelbyAgent(moniker, self.config.platform)
         
         self.intents = discord.Intents.default()
         self.intents.guilds = True

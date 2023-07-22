@@ -1,0 +1,86 @@
+name: deploy-test
+
+on: workflow_dispatch
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    env:
+        ### Secrets ###
+        # Secrets in the format of 'secrets.NAME'
+        # Should be added be added to github secrets as 'NAME'
+
+        STACKPATH_CLIENT_ID: ${{ secrets.STACKPATH_CLIENT_ID }}
+        STACKPATH_API_CLIENT_SECRET: ${{ secrets.STACKPATH_API_CLIENT_SECRET }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        PERSONAL_DISCORD_SPRITE_BOT_TOKEN: ${{ secrets.PERSONAL_DISCORD_SPRITE_BOT_TOKEN }}
+        TATUM_SLACK_BOT_TOKEN: ${{ secrets.TATUM_SLACK_SPRITE_BOT_TOKEN }}
+        TATUM_SLACK_APP_TOKEN: ${{ secrets.TATUM_SLACK_SPRITE_APP_TOKEN }}
+
+        ### deployment_services_environment_variables ###
+
+        DOCKER_REGISTRY: docker.io
+        DOCKER_USERNAME: shelbyjenkins
+        DOCKER_REPO: shelby-as-a-service
+        STACKPATH_STACK_ID: shelby-stack-327b67
+        DOCKER_SERVER: docker.io/shelbyjenkins/shelby-as-a-service
+        DOCKER_IMAGE_PATH: shelbyjenkins/shelby-as-a-service:test-latest
+        GITHUB_ACTION_WORKFLOW_NAME: deploy-test
+        WORKLOAD_NAME: test-workload
+        WORKLOAD_SLUG: test-slug
+
+        ### config_overrides_variables ###
+
+        VECTORSTORE_INDEX: str = 'shelby-as-a-service'
+        VECTORSTORE_ENVIRONMENT: str = 'us-central1-gcp'
+        ACTION_LLM_MODEL: str = 'gpt-4'
+        PRE_QUERY_LLM_MODEL: str = 'gpt-4'
+        QUERY_LLM_MODEL: str = 'gpt-4'
+        MAX_RESPONSE_TOKENS: int = 300
+        OPENAI_TIMEOUT_SECONDS: float = 180.0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: ~/.cache/pip 
+          key: ${{  runner.os }}-pip-${{  hashFiles('**app/deploy/automation/test/requirements.txt') }}
+          restore-keys: |
+            ${{  runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f app/deploy/automation/test/requirements.txt ]; then pip install -r app/deploy/automation/test/requirements.txt; fi
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v2 
+        with:
+          registry: docker.io
+          username: shelbyjenkins
+          password: ${{  secrets.DOCKER_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: app/deployment/test/Dockerfile
+          push: true
+          tags: shelbyjenkins/shelby-as-a-service:test-latest
+
+      - name: Add execute permissions to the script
+        run: chmod +x app/deploy/automation/deploy_stackpath_container.py
+
+      - name: Run deployment script
+        run: app/deploy/automation/deploy_stackpath_container.py

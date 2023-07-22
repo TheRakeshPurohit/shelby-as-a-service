@@ -9,8 +9,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from pinecone_text.sparse import BM25Encoder
 
 from .log_service import LogService
-from .config_service import ConfigService
-
+from services.config_service import DeployedLoadVarsFromEnv, DeploymentOverrideConfigs
 #endregion
 
 class ShelbyAgent:
@@ -20,7 +19,8 @@ class ShelbyAgent:
     def __init__(self, moniker, platform):
         
         self.log_service = LogService(f'{moniker}_{platform}_ShelbyAgent', f'{moniker}_{platform}_ShelbyAgent.log', level='INFO')
-        self.config = ShelbyAgentConfig(moniker, platform, self.log_service) 
+        self.config = ShelbyAgentConfig() 
+        self.config.load_shelby_agent_config(self.log_service)
         self.action_agent = ActionAgent(self, self.log_service, self.config)
         self.query_agent = QueryAgent(self, self.log_service, self.config)
         self.API_agent = APIAgent(self, self.log_service, self.config)
@@ -705,7 +705,7 @@ class APIAgent:
             return response
     
 class ShelbyAgentConfig:
-     def __init__(self, moniker, platform, log_service):
+    def __init__(self, log_service):
         ### You probably don't need to change anything here ###
         # Index
         self.vectorstore_index: str = 'shelby-as-a-service'
@@ -729,16 +729,14 @@ class ShelbyAgentConfig:
         self.create_function_llm_model: str = 'gpt-4'
         self.populate_function_llm_model: str = 'gpt-4'
         ### Don't touch anything below here ###
-        self.platform: str = platform
-        self.moniker: str = moniker
         self.openai_api_key: str = ''
         self.pinecone_api_key: str = ''
-        with open(os.path.join(f'index/{self.moniker}_{self.platform}_document_sources.yaml'), 'r') as stream:
+        with open(os.path.join(f'index/personal_index_config.yaml'), 'r') as stream:
             data_sources = yaml.safe_load(stream)
         self.vectorstore_namespaces = {key: value['description'] for key, value in data_sources.items()}
         
-        ConfigService(self, log_service)
+        DeployedLoadVarsFromEnv(self, log_service)
+ 
+
         
-        # If loaded from .env or container env it will be a string we need to destructure
-        if isinstance(self.vectorstore_namespaces, str):
-            self.vectorstore_namespaces = json.loads(self.vectorstore_namespaces)
+       

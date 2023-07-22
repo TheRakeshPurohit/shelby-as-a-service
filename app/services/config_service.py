@@ -1,21 +1,19 @@
 import os
-import json, yaml
 
 from dotenv import load_dotenv
 
-# Set your services in the YourConfig class. These are used to automatically create the github action workflows
-
-class ConfigService():
-    def __init__(self):
-        pass
-    ### Running a sprite ###
-    def load_env_config(self, generic_config, log_service):
+class DeployedLoadVarsFromEnv():
+    def __init__(self, generic_config, log_service):
+        self.log_service = log_service
+        self.moniker = generic_config.moniker
+        self.platform = generic_config.platform
         load_dotenv()
-        required_vars_dict: dict = self.add_vars_to_dict(generic_config)
-        required_consts_dict: dict = self.load_vars_from_env(generic_config, required_vars_dict)
-        self.set_and_check(required_consts_dict, generic_config, log_service)
-    
-    def add_vars_to_dict(self, generic_config) -> dict:
+        
+        required_vars_dict: dict = self.create_required_vars_dict(generic_config)
+        vars_to_set: dict = self.load_vars_from_env(required_vars_dict)
+        self.set_and_check(vars_to_set, generic_config)
+
+    def create_required_vars_dict(self, generic_config) -> dict:
         required_vars_dict: dict = {}
         for var, value in vars(generic_config).items():
             if not var.startswith('_'):
@@ -23,48 +21,62 @@ class ConfigService():
 
         return  required_vars_dict
         
-    def load_vars_from_env(self, generic_config, required_vars_dict) -> dict: 
-        required_consts_dict: dict = {}
+    def load_vars_from_env(self, required_vars_dict) -> dict: 
+        vars_to_set: dict = {}
         for required_var, value in required_vars_dict.items():
-            env_value = os.getenv(f'{generic_config.moniker.upper()}_{generic_config.platform.upper()}_{required_var.upper()}')
+            env_value = os.getenv(f'{self.moniker.upper()}_{self.platform.upper()}_{required_var.upper()}')
+            if env_value is None:
+                env_value = os.getenv(f'{required_var.upper()}')
             if env_value is not None:
                 value = env_value
-            required_consts_dict[required_var] = value
+                
+            vars_to_set[required_var] = value
         
-        return required_consts_dict
+        return vars_to_set
     
-    def set_and_check(self, required_consts_dict: dict, generic_config, log_service):
+    def set_and_check(self, vars_to_set: dict, generic_config):
         # Checks all variables to make sure they're not None
-        for var, value in required_consts_dict.items():
-            if value is None or value is '':
-                    log_service.print_log_error(f"{var} variable cannot be {value} in {generic_config.moniker}_{generic_config.platform}_config")
+        for var, value in vars_to_set.items():
+            if value is None:
+                    raise ValueError(f"{var} variable cannot be 'None' in config_service")
             setattr(generic_config, var, value)
     
-    ### Creating a deployment ###
-    def load_deployment_config(self, generic_config, deployment_config, log_service):
-        required_vars_dict: dict = self.check_and_add_vars_to_dict(generic_config)
-        required_consts_dict: dict = self.load_vars_from_file(required_vars_dict, deployment_config)
-        self.set_and_check(required_consts_dict, generic_config, log_service)
+class DeploymentRequiredConfigs:
+    def __init__(self, generic_config, deployment_config, log_service):
+        self.log_service = log_service
+        
+        required_vars_dict: dict = self.create_required_vars_dict(generic_config)
+        vars_to_set: dict = self.load_vars_from_file(deployment_config, required_vars_dict)
+        self.set_and_check(generic_config, vars_to_set)
     
-    def check_and_add_vars_to_dict(self, generic_config) -> dict:
+    def create_required_vars_dict(self, generic_config) -> dict:
         required_vars_dict: dict = {}
+        # Checks all variables to make sure they're not None
         for var, value in vars(generic_config).items():
-            if not var.startswith('_') and not var == '':
-                required_vars_dict[var] = value
-
+            if not var.startswith('_'):
+                if value is None:
+                        raise ValueError(f"{var} variable cannot be 'None' in config_service")
+            required_vars_dict[var] = value
+                
         return  required_vars_dict
     
-    def load_vars_from_file(self, required_vars_dict, deployment_config) -> dict: 
-        required_consts_dict: dict = {}
+    def load_vars_from_file(self, deployment_config, required_vars_dict) -> dict: 
+        vars_to_set: dict = {}
         for required_var, value in required_vars_dict.items():
-            env_value = deployment_config.get(required_var) 
-            if env_value is not None:
-                value = env_value
-            required_consts_dict[required_var] = value
+            deployment_var = deployment_config.get(required_var)
+            if deployment_var is None:
+                 raise ValueError(f"{deployment_var} variable cannot be 'None' in config_service")
+            vars_to_set[required_var] = deployment_var
         
-        return required_consts_dict
+        return vars_to_set
     
-
+    def set_and_check(self, generic_config, vars_to_set):
+        # Checks all variables to make sure they're not None
+        for var, value in vars_to_set.items():
+            if value is None:
+                    raise ValueError(f"{var} variable cannot be 'None' in config_service")
+            setattr(generic_config, var, value)
+            
     
     # def __init__(self):
 

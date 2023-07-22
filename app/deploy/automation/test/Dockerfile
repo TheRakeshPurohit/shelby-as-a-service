@@ -11,6 +11,8 @@ WORKDIR /shelby-as-a-service
 COPY ./ ./ 
 
 # Install python packages
-RUN pip install --no-cache-dir -r app/deployment/discord/discord_requirements.txt
+RUN pip install --no-cache-dir -r app/deploy/automation/test/requirements.txt
 
-CMD ["python", "app/discord_sprite.py"]
+# Run Sprites
+CMD ["/bin/bash", "app/deploy/automation/test/startup.sh"]
+        
