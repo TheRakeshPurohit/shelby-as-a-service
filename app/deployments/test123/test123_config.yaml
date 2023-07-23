@@ -1,0 +1,8 @@
+deployment_name: test123
+moniker_level_variables: True
+monikers:
+- name: your_first_moniker
+  sprites:
+    discord: true
+    slack: false
+    web: false

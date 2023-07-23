@@ -5,19 +5,19 @@ from dotenv import load_dotenv
 
 class BaseClass:
     
-    # Shared variables
     index_available_namespaces: str = None
-    
     index_description: str = None
     openai_api_key: str = None
     pinecone_api_key: str = None
-    
-    # Devops variables
     deployment_monikers_sprites: str = None
-    stackpath_client_id: str = None
-    stackpath_api_client_secret: str = None
-    docker_token: str = None
-    
+
+    _DEVOPS_VARIABLES: list = [
+        'docker_token',
+        'stackpath_client_id',
+        'stackpath_api_client_secret',
+        'docker_username',
+        'docker_repo',
+        ]
     _SECRET_VARIABLES: list = [
         'docker_token',
         'stackpath_client_id',
@@ -34,15 +34,14 @@ class BaseClass:
         self.LoadInstanceVarsFromEnv()
 
     def LoadInstanceVarsFromEnv(self):
-        # Finds the correct var. Sets from the least specific to the most specific.
+        # Finds the most granular var available for an instance. 
+        # Starting with the least specific, and overriding if a more specific var exists
         deployment = self.deployment_name.upper()
         moniker = getattr(self, 'moniker', None)
         class_name = getattr(self, 'class_name', None)
-
         for var, _ in vars(self).items():
             if var.startswith('_') and callable(getattr(self, var)):
                 continue
-            
             env_var_name = f'{deployment.upper()}_{var.upper()}'
             env_value = self.get_and_convert_env_vars(env_var_name)
             if env_value is not None:

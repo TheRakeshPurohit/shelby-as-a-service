@@ -230,4 +230,18 @@ class DiscordSprite(BaseClass):
         if self.discord_all_channels_enabled == self.discord_specific_channels_enabled:
             raise ValueError('Error: all_channels_enabled and specific_channels_enabled cannot have the same boolean state.')
 
-        
+    # def create_discord_deployment(self, moniker, deployment_config, log_service):
+    #     # Populates variables from deployment_config.yaml
+    #     DeploymentRequiredConfigs(self, deployment_config, log_service)
+    #     self.moniker: str = moniker
+    #     self.platform: str = 'discord'
+    #     # make lists and strings to actions workflow friendly
+    #     if hasattr(self, 'all_channels_excluded_channels') and isinstance(self.all_channels_excluded_channels, list):
+    #         self.all_channels_excluded_channels = f'"{",".join(map(str, self.all_channels_excluded_channels))}"'
+    #     if hasattr(self, 'specific_channel_ids') and isinstance(self.specific_channel_ids, list):
+    #         self.specific_channel_ids = f'"{",".join(map(str, self.specific_channel_ids))}"'
+    #     # "" are required for formating in github actions workflow
+    #     self.welcome_message: str = f'"{self.welcome_message}"'
+    #     self.short_message: str = f'"{self.short_message}"'
+    #     self.message_start: str = f'"{self.message_start}"'
+    #     self.message_end: str = f'"{self.message_end}"'

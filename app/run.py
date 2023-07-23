@@ -10,11 +10,11 @@ from services.deployment_service import ConfigBuilder, DeploymentService
 def main(args):
     try: 
         if args.create_config:
-            ConfigBuilder().create_config(args.create_config.strip())
+            ConfigBuilder(args.create_config.strip()).create_config()
         elif args.create_template:
-            ConfigBuilder().create_template(args.create_template.strip())
-        elif args.create_deployment:
-            DeploymentService().create_deployment_from_file(args.create_deployment.strip())
+            ConfigBuilder(args.create_template.strip()).create_template()
+        # elif args.create_deployment:
+        #     DeploymentService(args.create_deployment.strip()).create_deployment_from_file()
             
         elif args.container_deployment:
             run_container_deployment(args.container_deployment.strip())
@@ -67,8 +67,8 @@ if __name__ == "__main__":
 
     # Manually create args for testing
     test_args = ['--local_deployment', 'test']
-    # test_args = ['--create_config', 'test']
-    # test_args = ['--create_template', 'test']
+    # test_args = ['--create_config', 'test123']
+    # test_args = ['--create_template', 'test123']
     # test_args = ['--create_deployment', 'test']
 
     args = parser.parse_args(test_args)
