@@ -319,7 +319,7 @@ class ConfigBuilder(BaseClass):
                     for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
                         env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{var.upper()}={getattr(BaseClass, var)}')
                     env_list = self.iterate_sprites_moniker_level(new_deployment_name, env_list, sprites, services, moniker)
-            env_list.append(f'\n{new_deployment_name.upper()}_DEPLOYMENT_POPULATED=False')
+            env_list.append(f'\nDEPLOYMENT_POPULATED=False')
         except Exception as error:
             error_info = traceback.format_exc()
             print('Error: config.yaml must have at least one moniker and at least one sprite.')

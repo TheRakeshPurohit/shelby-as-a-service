@@ -16,8 +16,10 @@ def main(args):
         elif args.create_deployment:
             DeploymentService().create_deployment_from_file(args.create_deployment.strip())
             
+        elif args.container_deployment:
+            run_container_deployment(args.container_deployment.strip())
         elif args.local_deployment:
-            run_deployment(args.local_deployment.strip())
+            run_local_deployment(args.local_deployment.strip())
             
         elif args.web:
             # Call your web function here.
@@ -33,8 +35,15 @@ def main(args):
         print(f'An error occurred in run.py main(): {error}\n{error_info}')
         raise
 
-def run_deployment(deployment_name):
-    BaseClass.LoadAndCheckEnvVars(deployment_name)
+def run_container_deployment(deployment_name):
+    BaseClass.InitialConfigCheck(deployment_name)
+    for moniker, sprites in BaseClass.deployment_monikers_sprites.items():
+        for platform in sprites:
+            run_sprite(moniker, platform)
+            
+def run_local_deployment(deployment_name):
+    path = f'app/deployments/{deployment_name}/{deployment_name}.env'
+    BaseClass.InitialConfigCheck(deployment_name, path)
     for moniker, sprites in BaseClass.deployment_monikers_sprites.items():
         for platform in sprites:
             run_sprite(moniker, platform)
@@ -50,6 +59,7 @@ def run_sprite(moniker, platform):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--container_deployment', help='Run container deployment from specified .env file.')
     group.add_argument('--local_deployment', help='Run local deployment from specified .env file.')
     group.add_argument('--create_config', help='Creates an initial config from your deployment name.')
     group.add_argument('--create_deployment', help='Create a final deployment workflow from your deployment name.')

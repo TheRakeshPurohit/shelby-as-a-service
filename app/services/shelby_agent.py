@@ -13,7 +13,7 @@ from services.base_class import BaseClass
 class ShelbyAgent(BaseClass):
     
     #region
-    ### You probably don't need to change anything here ###
+    ### These will all be set by file ###
     # ActionAgent
     action_llm_model: str = 'gpt-4'
     # QueryAgent
@@ -32,13 +32,23 @@ class ShelbyAgent(BaseClass):
     select_operationID_llm_model: str = 'gpt-4'
     create_function_llm_model: str = 'gpt-4'
     populate_function_llm_model: str = 'gpt-4'
+    _SECRET_VARIABLES: list = [
+        'deployment_monikers_sprites',
+        'index_description',
+        'index_available_namespaces',
+        'pinecone_env',
+        'pinecone_index',
+        'pinecone_api_key'
+        ]
 
     # vectorstore_namespaces = {key: value['description'] for key, value in BaseClass.data_sources.items()}    
     #endregion
     
-    def __init__(self, sprite, **kwargs):
-        super().__init__(**kwargs)  
-        self.LoadVarsFromEnv()
+    def __init__(self, moniker=None):
+        self.moniker = moniker
+        self.class_name = self.__class__.__name__
+        super().__init__()  
+
         self.check_shelby_agent_config()
         
         # self.log_service = LogService(f'{moniker}_{platform}_ShelbyAgent', f'{moniker}_{platform}_ShelbyAgent.log', level='INFO')
@@ -113,7 +123,13 @@ class ShelbyAgent(BaseClass):
         return parsed_respoonse
     
     def check_shelby_agent_config(self):
-        pass 
+        # Parse things here and then check everything is good
+        required_vars = []  
+        for var in vars(__class__):
+            # if var == '' and self. == False:
+            #     continue
+            required_vars.append(var) 
+        self.CheckRequiredVars(required_vars)
     
 # class ActionAgent:
     
