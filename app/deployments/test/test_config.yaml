@@ -1,0 +1,13 @@
+deployment_name: test
+moniker_level_variables: True
+monikers:
+- name: personal
+  sprites:
+    discord: true
+    slack: false
+    web: false
+- name: tatum
+  sprites:
+    discord: true
+    slack: false
+    web: false

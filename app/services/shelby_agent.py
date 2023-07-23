@@ -14,9 +14,6 @@ class ShelbyAgent(BaseClass):
     
     #region
     ### You probably don't need to change anything here ###
-    # Index
-    vectorstore_index: str = 'shelby-as-a-service'
-    vectorstore_environment: str = 'us-central1-gcp'
     # ActionAgent
     action_llm_model: str = 'gpt-4'
     # QueryAgent
@@ -35,10 +32,7 @@ class ShelbyAgent(BaseClass):
     select_operationID_llm_model: str = 'gpt-4'
     create_function_llm_model: str = 'gpt-4'
     populate_function_llm_model: str = 'gpt-4'
-    ### Don't touch anything below here ###
-    openai_api_key: str = ''
-    pinecone_api_key: str = ''
-    
+
     # vectorstore_namespaces = {key: value['description'] for key, value in BaseClass.data_sources.items()}    
     #endregion
     

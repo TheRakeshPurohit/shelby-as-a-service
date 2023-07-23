@@ -1,55 +1,67 @@
 import sys
+import os
 import argparse
 import traceback
 from services.base_class import BaseClass
 from sprites.discord_sprite import DiscordSprite
+from services.deployment_service import ConfigBuilder, DeploymentService
+
 
 def main(args):
-    # try: 
-
-        if args.deployment:
-            run_deployment()
-        elif args.config:
-            pass
+    try: 
+        if args.create_config:
+            ConfigBuilder().create_config(args.create_config.strip())
+        elif args.create_template:
+            ConfigBuilder().create_template(args.create_template.strip())
+        elif args.create_deployment:
+            DeploymentService().create_deployment_from_file(args.create_deployment.strip())
+            
+        elif args.local_deployment:
+            run_deployment(args.local_deployment.strip())
+            
         elif args.web:
             # Call your web function here.
             pass
         elif args.index:
             # Call your index function here.
             pass
-        else:
-            raise ValueError("Requires arg")
+
             
-    # except Exception as e:
-    #         # Logs error and sends error to sprite
-    #         error_info = traceback.format_exc()
-    #         print(f'An error occurred in run.py main(): {e}\n{error_info}')
-    #         raise
+    except Exception as error:
+        # Logs error and sends error to sprite
+        error_info = traceback.format_exc()
+        print(f'An error occurred in run.py main(): {error}\n{error_info}')
+        raise
 
 def run_deployment():
-    for moniker, sprites in BaseClass.deployment_sprites.items():
+    BaseClass.LoadAndCheckEnvVars()
+    for moniker, sprites in BaseClass.deployment_monikers_sprites.items():
         for platform in sprites:
             run_sprite(moniker, platform)
             
 def run_sprite(moniker, platform):
     match platform:
         case 'discord':
-            DiscordSprite(moniker)
+            DiscordSprite(moniker).run_discord_sprite()
         case _:
             print(f'oops no {platform} of that name')
-            
+        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--deployment', action='store_true', help='Run complete deployment')
-    group.add_argument('--config', help='Run config from file')
-    group.add_argument('--web', help='Run specific sprite')
-    group.add_argument('--index', help='Run specific sprite')
+    group.add_argument('--local_deployment', help='Run local deployment from specified .env file.')
+    group.add_argument('--create_config', help='Creates an initial config from your deployment name.')
+    group.add_argument('--create_deployment', help='Create a final deployment workflow from your deployment name.')
+    group.add_argument('--create_template', help='Creates a .env template to be populated.')
+
     
     # Manually create args for testing
-    # test_args = ['--config', 'app/deploy/test_deployment_config.yaml']
-    test_args = ['--deployment']
+    test_args = ['--local_deployment', 'test']
+    # test_args = ['--create_config', 'test']
+    # test_args = ['--create_template', 'test']
+    # test_args = ['--create_deployment', 'test']
+
     args = parser.parse_args(test_args)
     
     # args = parser.parse_args(sys.argv[1:])
@@ -57,21 +69,3 @@ if __name__ == "__main__":
     main(args)
     
 
-# from sprites.web.web_sprite import WebSprite
-
-# from services.shelby_agent import ShelbyAgent
-
-# from services.index_service import IndexService
-# from services.deployment_service import DeploymentService
-
-### Index Managment ###
-
-# def manage_index():
-#     agent = IndexAgent()
-#     agent.ingest_docs()
-#     # agent.delete_index()
-#     # agent.clear_index()
-#     # agent.clear_namespace('stackpath')
-
-# Remove comment to run index_agent
-# manage_index()

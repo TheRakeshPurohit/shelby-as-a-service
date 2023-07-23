@@ -1,11 +1,15 @@
 import os
 import textwrap
 import yaml
-
+import traceback
 from services.config_service import DeploymentRequiredConfigs
-from sprites.discord.discord_sprite_config import DiscordSpriteConfig
+from services.shelby_agent import ShelbyAgent
+from sprites.discord_sprite import DiscordSprite
+
 # from .index_service import IndexService
 # from sprites.web.web_sprite_config import WebSpriteConfig
+
+from services.base_class import BaseClass
 
 # Outputs github action workflow and dockerfile
 
@@ -163,24 +167,7 @@ wait
         # with open(f'.github/workflows/{deployment_settings.github_action_workflow_name}.yaml', 'w') as f:
         with open(f'.github/workflows/{self.deployment_name}_deployment.yaml', 'w') as f:
             f.write(github_actions_script)
-                
-    def generate_local_env_file(self, local_env_list, local_secrets_list):
-         # Positioning is required to create correct formatting. Hack work.
-        secrets_string = '\n'.join(local_secrets_list)
-        secrets_string = textwrap.indent(secrets_string, ' ' * 24)
-
-        env_string = '\n'.join(local_env_list )
-        env_string = textwrap.indent(env_string, ' ' * 24)
-                
-        local_env_file = textwrap.dedent(f"""\
-{secrets_string}
-{env_string}
-        """)
-        
-        os.makedirs(f'app/deploy/automation/{self.deployment_name}', exist_ok=True)
-        with open(f'app/deploy/automation/{self.deployment_name}/.env {self.deployment_name}', 'w') as f:
-            f.write(local_env_file)
-            
+                      
     def populate_variables(self):
         
         deploy_env_list = []
@@ -238,7 +225,6 @@ wait
         return deploy_secrets_list, local_secrets_list
     
 class DeploymentServicesRequiredEnvs:
-    
     def __init__(self, deployment_settings, log_service):
         ### Everything here can be set by file ###
         self.docker_registry: str = ''
@@ -252,3 +238,143 @@ class DeploymentServicesRequiredEnvs:
         self.github_action_workflow_name: str = f'deploy-{deployment_settings["deployment_name"]}'
         self.workload_name: str = f'{deployment_settings["deployment_name"]}-workload'
         self.workload_slug: str = f'{deployment_settings["deployment_name"]}-slug'
+    
+class ConfigBuilder(BaseClass):
+    def __init__(self):
+        pass
+            
+    def create_config(self, new_deployment_name):
+        
+        config_file = {
+            'deployment_name': new_deployment_name,
+            'moniker_level_variables': False,
+            'monikers': [
+                {
+                    'name': 'your_first_moniker',
+                    'sprites': {
+                        'discord': True,
+                        'slack': False,
+                        'web': False,
+                    }
+                },
+                {
+                    'name': 'your_second_moniker',
+                    'sprites': {
+                        'discord': True,
+                        'slack': True,
+                        'web': True,
+                    }
+                }
+            ]
+        }
+
+        os.makedirs(f'app/deployments/{new_deployment_name}', exist_ok=True)
+        with open(f'app/deployments/{new_deployment_name}/{new_deployment_name}_config.yaml', 'w') as outfile:
+            yaml.dump(config_file, outfile, default_flow_style=False)
+
+    def create_template(self, new_deployment_name):
+        try:
+            services = set([ShelbyAgent])
+            
+            with open(f'app/deployments/{new_deployment_name}/{new_deployment_name}_config.yaml', 'r') as infile:
+                config_file = yaml.safe_load(infile)
+                
+            moniker_level_variables = config_file['moniker_level_variables']
+            sprites = set()
+            monikers = []
+            for moniker in config_file['monikers']:
+                moniker_name = moniker['name']
+                monikers.append(moniker_name)
+                for sprite_name, sprite_value in moniker['sprites'].items():
+                    if sprite_value is True:
+                        match sprite_name:
+                            case 'discord':
+                                sprite_class = DiscordSprite
+                            # case 'web':
+                            #     sprite_class = WebSprite
+                            # case 'slack':
+                            #     sprite_class = SlackSprite
+                            case _:
+                                continue
+                        sprites.add(sprite_class)
+                
+            env_list = []
+            env_list.append('### Deplyoment level Variables ###\n')
+            env_list.append('\t## Devops variables only set at deployment level ##\n')
+            env_list.append('\t\t# Required Here #')
+            env_list.append(f'\t\tDEPLOYMENT_NAME={new_deployment_name}')
+            for var in BaseClass._DEVOPS_VARIABLES:
+                env_list.append(f'\t\t{new_deployment_name.upper()}_{var.upper()}={getattr(BaseClass, var)}')
+            env_list.append('\n\t## 3rd Party Services ##\n')
+            env_list.append('\t\t# Required here or in sprite variables #')
+            for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
+                env_list.append(f'\t\t{new_deployment_name.upper()}_{var.upper()}={getattr(BaseClass, var)}')
+            env_list = self.iterate_sprites_deployment_level(new_deployment_name, env_list, sprites, services)
+
+            if moniker_level_variables:
+                for moniker in monikers:
+                    env_list.append(f'\n### Moniker {moniker} level variables ###\n')
+                    env_list.append('\t## 3rd Party Services ##\n')
+                    env_list.append('\t\t# Required here or at deplyoment level or in sprite variables #')
+                    for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
+                        env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{var.upper()}={getattr(BaseClass, var)}')
+                    env_list = self.iterate_sprites_moniker_level(new_deployment_name, env_list, sprites, services, moniker)
+            
+        except Exception as error:
+            error_info = traceback.format_exc()
+            print('Error: config.yaml must have at least one moniker and at least one sprite.')
+            print(f'{error}\n{error_info}')
+            raise
+
+        env_string = '\n'.join(env_list)
+        env_string = textwrap.indent(env_string, ' ' * 24)
+                
+        local_env_file = textwrap.dedent(f"""\
+{env_string}
+        """)
+
+        os.makedirs(f'app/deployments/{new_deployment_name}', exist_ok=True)
+        with open(f'app/deployments/{new_deployment_name}/{new_deployment_name}.env', 'w') as f:
+            f.write(local_env_file)
+    
+    def iterate_sprites_deployment_level(self, new_deployment_name, env_list, sprites, services):
+        for sprite in sprites:
+                env_list.append(f'\n\t## {sprite.__name__.upper()} Variables ##\n')
+                env_list.append('\t\t# Required here #')
+                for var in sprite._REQUIRED_VARIABLES:
+                    env_list.append(f'\t\t{new_deployment_name.upper()}_{sprite.__name__.upper()}_{var.upper()}=None')
+                env_list.append('\n\t\t# Required here or at deplyoment level #')
+                for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
+                    env_list.append(f'\t\t{new_deployment_name.upper()}_{sprite.__name__.upper()}_{var.upper()}={getattr(BaseClass, var)}')
+                env_list.append('\n\t\t# Recommended #')
+                for var, val in vars(sprite).items():
+                    if not var.startswith('_') and not callable(getattr(sprite, var)):
+                        env_list.append(f'\t\t{new_deployment_name.upper()}_{sprite.__name__.upper()}_{var.upper()}={val}')
+                env_list.append('\n\t\t# Optional #')
+                for service in services:
+                    for var, val in vars(service).items():
+                        if not var.startswith('_') and not callable(getattr(service, var)):
+                            env_list.append(f'\t\t{new_deployment_name.upper()}_{sprite.__name__.upper()}_{var.upper()}={val}')
+                        
+        return env_list
+    
+    def iterate_sprites_moniker_level(self, new_deployment_name, env_list, sprites, services, moniker):
+        for sprite in sprites:
+                env_list.append(f'\n\t## {sprite.__name__.upper()} Variables ##\n')
+                env_list.append('\t\t# Required here or at deployment level #')
+                for var in sprite._REQUIRED_VARIABLES:
+                    env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{sprite.__name__.upper()}_{var.upper()}=None')
+                env_list.append('\n\t\t# Required here or at deplyoment level or at moniker level #')
+                for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
+                    env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{sprite.__name__.upper()}_{var.upper()}={getattr(BaseClass, var)}')
+                env_list.append('\n\t\t# Recommended #')
+                for var, val in vars(sprite).items():
+                    if not var.startswith('_') and not callable(getattr(sprite, var)):
+                        env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{sprite.__name__.upper()}_{var.upper()}={val}')
+                env_list.append('\n\t\t# Optional #')
+                for service in services:
+                    for var, val in vars(service).items():
+                        if not var.startswith('_') and not callable(getattr(service, var)):
+                            env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{sprite.__name__.upper()}_{var.upper()}={val}')
+                        
+        return env_list
