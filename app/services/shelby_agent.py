@@ -38,7 +38,7 @@ class ShelbyAgent(BaseClass):
     
     def __init__(self, sprite, **kwargs):
         super().__init__(**kwargs)  
-        self.LoadVarsFromEnv(sprite.modifier)
+        self.LoadVarsFromEnv()
         self.check_shelby_agent_config()
         
         # self.log_service = LogService(f'{moniker}_{platform}_ShelbyAgent', f'{moniker}_{platform}_ShelbyAgent.log', level='INFO')

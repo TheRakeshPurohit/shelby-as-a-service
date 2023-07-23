@@ -33,8 +33,8 @@ def main(args):
         print(f'An error occurred in run.py main(): {error}\n{error_info}')
         raise
 
-def run_deployment():
-    BaseClass.LoadAndCheckEnvVars()
+def run_deployment(deployment_name):
+    BaseClass.LoadAndCheckEnvVars(deployment_name)
     for moniker, sprites in BaseClass.deployment_monikers_sprites.items():
         for platform in sprites:
             run_sprite(moniker, platform)
@@ -55,7 +55,6 @@ if __name__ == "__main__":
     group.add_argument('--create_deployment', help='Create a final deployment workflow from your deployment name.')
     group.add_argument('--create_template', help='Creates a .env template to be populated.')
 
-    
     # Manually create args for testing
     test_args = ['--local_deployment', 'test']
     # test_args = ['--create_config', 'test']

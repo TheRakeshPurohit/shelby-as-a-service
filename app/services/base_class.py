@@ -15,6 +15,7 @@ class BaseClass:
     _DEVOPS_VARIABLES: list = [
         'deployment_monikers_sprites',
         'stackpath_client_id',
+        'stackpath_api_client_secret',
         'docker_token',
         'index_available_namespaces',
         'index_description',
@@ -40,26 +41,57 @@ class BaseClass:
             if k in self.vars:
                 self.vars[k] = v
 
+    @staticmethod
+    def get_env_var_value(env_var_name):
+
+        env_value = os.getenv(env_var_name)
+        if env_value is not None and env_value.lower() != 'none':
+            if isinstance(env_value, bool):
+                return env_value
+            if env_value.lower() in ('yes', 'true', 't', 'y', '1'):
+                return True
+            elif env_value.lower() in ('no', 'false', 'f', 'n', '0'):
+                return False
+            else:
+                return env_value
+        return None
+    
     @classmethod
-    def LoadVarsFromEnv(cls, modifier=None):
+    def LoadVarsFromEnv(cls, moniker=None, class_name=None):
+        # Add secret variables to the list of vars to be checked
+        all_vars = []
         for var, _ in vars(cls).items():
-            if not var.startswith('_') and not callable(getattr(cls, var)):
-                env_var_name = f'{modifier.upper()}_{var.upper()}' if modifier else var.upper()
-                env_value = os.getenv(env_var_name)
-                if env_value is None:                 
-                    env_var_name = f'{var.upper()}'
-                    env_value = os.getenv(env_var_name)
+            if not var.startswith('_') and not callable(getattr(cls, var, None)):
+                all_vars.append((var, None))
+        all_vars += [(var, None) for var in cls._SECRET_VARIABLES]
+        # Tries to find var in env from most specific pattern to least specific
+        for var, _ in all_vars:
+            base_name = f'{cls.deployment_name.upper()}'
+            if moniker and class_name:
+                env_var_name = f'{base_name}_{moniker.upper()}_{class_name.upper()}_{var.upper()}'
+                env_value = cls.get_env_var_value(env_var_name)
                 if env_value is not None:
                     setattr(cls, var, env_value)
-                    
-                # Special rules due to limitation of .env vars
-                if var == 'deployment_monikers_sprites':
-                    BaseClass.deployment_monikers_sprites = json.loads(BaseClass.deployment_monikers_sprites)
-                if var == 'index_available_namespaces':
-                    BaseClass.index_available_namespaces = BaseClass.index_available_namespaces.split(',')
-                if var == 'index_description':
-                    with open(f'index/index_description.yaml', 'r') as stream:
-                        BaseClass.index_description = yaml.safe_load(stream)
+                    continue
+            if class_name:
+                env_var_name = f'{base_name}_{class_name.upper()}_{var.upper()}'
+                env_value = cls.get_env_var_value(env_var_name)
+                if env_value is not None:
+                    setattr(cls, var, env_value)
+                    continue
+            env_var_name = f'{base_name}_{var.upper()}'
+            env_value = cls.get_env_var_value(env_var_name)
+            if env_value is not None:
+                setattr(cls, var, env_value)
+                
+            # Special rules due to limitation of .env vars
+            if var == 'deployment_monikers_sprites':
+                BaseClass.deployment_monikers_sprites = json.loads(BaseClass.deployment_monikers_sprites)
+            if var == 'index_available_namespaces':
+                BaseClass.index_available_namespaces = BaseClass.index_available_namespaces.split(',')
+            if var == 'index_description':
+                with open(f'index/index_description.yaml', 'r') as stream:
+                    BaseClass.index_description = yaml.safe_load(stream)
         
     @classmethod
     def CheckRequiredVars(cls, required_vars):
@@ -70,15 +102,15 @@ class BaseClass:
                     raise ValueError(f"{var} is not set or is an empty string after loading environment variables")
                 
     @classmethod
-    def LoadAndCheckEnvVars(cls):
-        # First, it loads the environment variables.
-        load_dotenv()
+    def LoadAndCheckEnvVars(cls, deployment_name):
+        path = f'app/deployments/{deployment_name}/{deployment_name}.env'
+        load_dotenv(path)
         cls.deployment_name = os.getenv('DEPLOYMENT_NAME')
         if cls.deployment_name is None or cls.deployment_name == '':
             raise ValueError("No deployment found. Try run.py --config 'new deployment name'")
-        cls.deployment_check = os.getenv('DEPLOYMENT_POPULATED')
+        cls.deployment_check = os.getenv(f'{cls.deployment_name.upper()}_DEPLOYMENT_POPULATED')
         if cls.deployment_check is None or cls.deployment_check is False:
-            raise ValueError("Please set all required vars in .env in specified deployment folder. Then set 'DEPLOYMENT_POPULATED'=True to continue.")
+            raise ValueError(f"Please set all required vars in .env in specified deployment folder. Then set '{cls.deployment_name.upper()}_DEPLOYMENT_POPULATED'=True to continue.")
 
         # It then loads the rest of the class variables.
         cls.LoadVarsFromEnv()

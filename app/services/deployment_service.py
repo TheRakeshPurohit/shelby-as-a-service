@@ -319,7 +319,7 @@ class ConfigBuilder(BaseClass):
                     for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
                         env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{var.upper()}={getattr(BaseClass, var)}')
                     env_list = self.iterate_sprites_moniker_level(new_deployment_name, env_list, sprites, services, moniker)
-            
+            env_list.append(f'\n{new_deployment_name.upper()}_DEPLOYMENT_POPULATED=False')
         except Exception as error:
             error_info = traceback.format_exc()
             print('Error: config.yaml must have at least one moniker and at least one sprite.')
@@ -342,7 +342,7 @@ class ConfigBuilder(BaseClass):
                 env_list.append(f'\n\t## {sprite.__name__.upper()} Variables ##\n')
                 env_list.append('\t\t# Required here #')
                 for var in sprite._REQUIRED_VARIABLES:
-                    env_list.append(f'\t\t{new_deployment_name.upper()}_{sprite.__name__.upper()}_{var.upper()}=None')
+                    env_list.append(f'\t\t{new_deployment_name.upper()}_{sprite.__name__.upper()}_{var.upper()}=')
                 env_list.append('\n\t\t# Required here or at deplyoment level #')
                 for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
                     env_list.append(f'\t\t{new_deployment_name.upper()}_{sprite.__name__.upper()}_{var.upper()}={getattr(BaseClass, var)}')
@@ -363,7 +363,7 @@ class ConfigBuilder(BaseClass):
                 env_list.append(f'\n\t## {sprite.__name__.upper()} Variables ##\n')
                 env_list.append('\t\t# Required here or at deployment level #')
                 for var in sprite._REQUIRED_VARIABLES:
-                    env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{sprite.__name__.upper()}_{var.upper()}=None')
+                    env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{sprite.__name__.upper()}_{var.upper()}=')
                 env_list.append('\n\t\t# Required here or at deplyoment level or at moniker level #')
                 for var in BaseClass._EXTERNAL_SERVICES_VARIABLES:
                     env_list.append(f'\t\t{new_deployment_name.upper()}_{moniker.upper()}_{sprite.__name__.upper()}_{var.upper()}={getattr(BaseClass, var)}')
