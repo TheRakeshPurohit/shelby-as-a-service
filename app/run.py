@@ -4,15 +4,15 @@ import argparse
 import traceback
 from services.base_class import BaseClass
 from sprites.discord_sprite import DiscordSprite
-from services.deployment_service import ConfigBuilder, DeploymentService
+from services.deployment_service import ConfigCreator
 
 
 def main(args):
     try: 
         if args.create_config:
-            ConfigBuilder(args.create_config.strip()).create_config()
+            ConfigCreator(args.create_config.strip()).create_config()
         elif args.create_template:
-            ConfigBuilder(args.create_template.strip()).create_template()
+            ConfigCreator(args.create_template.strip()).create_template()
         # elif args.create_deployment:
         #     DeploymentService(args.create_deployment.strip()).create_deployment_from_file()
             
@@ -62,13 +62,13 @@ if __name__ == "__main__":
     group.add_argument('--container_deployment', help='Run container deployment from specified .env file.')
     group.add_argument('--local_deployment', help='Run local deployment from specified .env file.')
     group.add_argument('--create_config', help='Creates an initial config from your deployment name.')
+    group.add_argument('--create_template', help='Creates a .env template to be populated from your name_config.yaml.')
     group.add_argument('--create_deployment', help='Create a final deployment workflow from your deployment name.')
-    group.add_argument('--create_template', help='Creates a .env template to be populated.')
 
     # Manually create args for testing
-    test_args = ['--local_deployment', 'test']
-    # test_args = ['--create_config', 'test123']
-    # test_args = ['--create_template', 'test123']
+    # test_args = ['--local_deployment', 'test']
+    # test_args = ['--create_config', 'test']
+    test_args = ['--create_template', 'test']
     # test_args = ['--create_deployment', 'test']
 
     args = parser.parse_args(test_args)

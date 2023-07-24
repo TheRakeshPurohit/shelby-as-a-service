@@ -23,7 +23,20 @@ from .open_api_minifier_service import OpenAPIMinifierService
 class IndexService:
     
     ### IndexAgent loads configs and data sources ###
-    
+    # IndexAgent
+    embedding_model: str = "text-embedding-ada-002"
+    embedding_max_chunk_size: int = 8191
+    embedding_batch_size: int = 100
+    vectorstore_dimension: int = 1536
+    vectorstore_upsert_batch_size: int = 20
+    vectorstore_metric: str = "dotproduct"
+    vectorstore_pod_type: str = "p1"
+    preprocessor_min_length: int = 100
+    text_splitter_goal_length: int = 1500
+    text_splitter_max_length: int = 2000
+    text_splitter_chunk_overlap: int = 100
+    indexed_metadata: list[str] = ["data_source", "doc_type", "target_type", "resource_name"]
+        
     def __init__(self):
         
         try:
@@ -257,7 +270,7 @@ class DataSourceConfig:
         self.output_folder = f'index/{namespace}/{resource_name}'
         
         # From document_sources.yaml
-        self.namespace: str = namespace
+        self.'namespace': str = namespace
         self.resource_name: str = resource_name
         self.filter_url: str = resource_content.get('filter_url')
         self.enabled: bool = resource_content.get('enabled')

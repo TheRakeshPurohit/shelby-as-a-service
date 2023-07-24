@@ -5,12 +5,10 @@ from dotenv import load_dotenv
 
 class BaseClass:
     
-    index_available_namespaces: str = None
-    index_description: str = None
     openai_api_key: str = None
     pinecone_api_key: str = None
-    deployment_monikers_sprites: str = None
-
+    enabled_monikers: str = None
+    
     _DEVOPS_VARIABLES: list = [
         'docker_token',
         'stackpath_client_id',
