@@ -1,12 +1,8 @@
-Description: This file will define the deployment. It is used to generate a .env file
-  (with --create_template) that is use for local testing and for generating the github
-  actions workflow for container deployment. This field is unused.
-deployment_name: test
-moniker_level_variables: '# If you want to specify specific variables for your different
-  monikers, set this to true.'
+# This file will define the deployment.
+deployment_name: template
 monikers:
-  - name: personal # Your moniker/org/business/club add more if you require more than one instance of a discord/slack/web sprite.
-    enabled: true
+  - name: personal # Monikers are a name for people, clubs, chat rooms, businesses, and other organizations of people.
+    enabled: true # Will disable the moniker when creating a deployment workflow.
     sprites:
       discord: true
       slack: false

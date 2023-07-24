@@ -4,15 +4,15 @@ import argparse
 import traceback
 from services.base_class import BaseClass
 from sprites.discord_sprite import DiscordSprite
-from services.deployment_service import ConfigCreator
+from services.deployment_service import ConfigTemplate, ConfigCreator
 
 
 def main(args):
     try: 
-        if args.create_config:
-            ConfigCreator(args.create_config.strip()).create_config()
-        elif args.create_template:
-            ConfigCreator(args.create_template.strip()).create_template()
+        if args.create_template:
+            ConfigTemplate(args.create_template.strip()).create_template()
+        elif args.update_config:
+            ConfigCreator(args.update_config.strip()).update_config()
         # elif args.create_deployment:
         #     DeploymentService(args.create_deployment.strip()).create_deployment_from_file()
             
@@ -61,14 +61,15 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--container_deployment', help='Run container deployment from specified .env file.')
     group.add_argument('--local_deployment', help='Run local deployment from specified .env file.')
-    group.add_argument('--create_config', help='Creates an initial config from your deployment name.')
-    group.add_argument('--create_template', help='Creates a .env template to be populated from your name_config.yaml.')
-    group.add_argument('--create_deployment', help='Create a final deployment workflow from your deployment name.')
+    group.add_argument('--create_template', help='Creates a blank deployment.env and config.yaml from your deployment name.')
+    group.add_argument('--update_config', help='Creates or updates deployment.env from config.yaml.')
+    group.add_argument('--create_deployment', help='Creates deployment workflow from deployment.env and config.yaml.')
 
     # Manually create args for testing
     # test_args = ['--local_deployment', 'test']
-    # test_args = ['--create_config', 'test']
-    test_args = ['--create_template', 'test']
+    
+    # test_args = ['--create_template', 'test']
+    test_args = ['--update_config', 'test']
     # test_args = ['--create_deployment', 'test']
 
     args = parser.parse_args(test_args)
