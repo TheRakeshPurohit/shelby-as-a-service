@@ -32,10 +32,10 @@ class ShelbyAgent(BaseClass):
     select_operationID_llm_model: str = 'gpt-4'
     create_function_llm_model: str = 'gpt-4'
     populate_function_llm_model: str = 'gpt-4'
+    index_name: str = None
+    index_env: str = None
     _SECRET_VARIABLES: list = [
         'openai_api_key',
-        'pinecone_env',
-        'pinecone_index',
         'pinecone_api_key'
         ]
 

@@ -4,10 +4,10 @@ Description: This file will define the deployment. It is used to generate a .env
 deployment_name: test
 monikers:
   - name: personal # Monikers are a name for people, clubs, chat rooms, businesses, and other organizations of people.
-    enabled: false # Will disable the moniker when creating a deployment workflow.
+    enabled: true # Will disable the moniker when creating a deployment workflow.
     sprites:
       discord: true
-      slack: false
+      slack: true
       web: false
     enabled_data_namespaces:
       - stackpath

@@ -7,6 +7,10 @@ class BaseClass:
     
     openai_api_key: str = None
     pinecone_api_key: str = None
+    index_name: str = None
+    index_env: str = None
+    
+    _MONIKERS: list[str] = None
     
     _DEVOPS_VARIABLES: list = [
         'docker_token',

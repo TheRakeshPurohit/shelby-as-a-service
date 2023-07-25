@@ -35,6 +35,8 @@ class IndexService:
     text_splitter_goal_length: int = 1500
     text_splitter_max_length: int = 2000
     text_splitter_chunk_overlap: int = 100
+    index_name: str = None
+    index_env: str = None
     indexed_metadata: list[str] = ["data_source", "doc_type", "target_type", "resource_name"]
         
     def __init__(self):
