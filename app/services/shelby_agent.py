@@ -2,27 +2,27 @@
 import os, asyncio
 from concurrent.futures import ThreadPoolExecutor
 import traceback
-from dataclasses import dataclass, field
 import json, yaml, re
 import openai, pinecone, tiktoken
 from typing import Optional
 from langchain.embeddings import OpenAIEmbeddings
 from pinecone_text.sparse import BM25Encoder
 
-from services.base_class import BaseClass
+from .classes.base import BaseClass
+from .classes.config import ShelbyConfig
 
 # endregion
 
 
 class ShelbyAgent(BaseClass):
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
-        super().__init__()
-  
+    def __init__(self, sprite_config):
 
-        # self.action_agent = ActionAgent(self, self.config)
-        # self.query_agent = QueryAgent(self, self.config)
+        # Loads config from calling sprite
+        BaseClass.load_service_config(sprite_config, ShelbyConfig, self)
+        
+        # self.action_agent = ActionAgent(self)
+        # self.query_agent = QueryAgent(self)
         
         # openai.api_key = self.openai_api_key
         
@@ -34,7 +34,6 @@ class ShelbyAgent(BaseClass):
             response = await loop.run_in_executor(
                 executor, self.request_thread, request
             )
-
             return response 
           
     def request_thread(self, request):
@@ -707,44 +706,3 @@ class ShelbyAgent(BaseClass):
 # #             return response
 
     
-@dataclass
-class ShelbyConfig(BaseClass):
-    ### These will all be set by file ###
-    action_llm_model: str = "gpt-4"
-    # QueryAgent
-    pre_query_llm_model: str = "gpt-4"
-    max_doc_token_length: int = 1200
-    embedding_model: str = "text-embedding-ada-002"
-    tiktoken_encoding_model: str = "text-embedding-ada-002"
-    # pre_query_llm_model: str = 'gpt-3.5-turbo'
-    query_llm_model: str = "gpt-4"
-    vectorstore_top_k: int = 5
-    max_docs_tokens: int = 3500
-    max_docs_used: int = 5
-    max_response_tokens: int = 300
-    openai_timeout_seconds: float = 180.0
-    # APIAgent
-    select_operationID_llm_model: str = "gpt-4"
-    create_function_llm_model: str = "gpt-4"
-    populate_function_llm_model: str = "gpt-4"
-    index_name: str = None
-    index_env: str = None
-    _SECRET_VARIABLES: list = field(default_factory=lambda: [
-        "openai_api_key",
-        "pinecone_api_key",
-    ])
-    required_vars: list = field(default_factory=list)
-    
-    def load_class_config(self):
-        pass
-    
-    def check_class_config(self):
-        for var in vars(self):
-            if not var.startswith("_") and not callable(getattr(self, var)):
-                if (var == "discord_all_channels_excluded_channels" and self.discord_all_channels_enabled == False):
-                    continue
-                if (var == "discord_specific_channel_ids" and self.discord_specific_channels_enabled == False):
-                    continue
-            self.required_vars.append(var)
-            
-        BaseClass.check_required_vars(self)

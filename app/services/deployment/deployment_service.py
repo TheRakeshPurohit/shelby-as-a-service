@@ -6,10 +6,10 @@ import traceback
 from services.shelby_agent import ShelbyAgent
 from sprites.discord_sprite import DiscordSprite
 from sprites.slack_sprite import SlackSprite
-from services.base_class import BaseClass
+from app.services.classes.config import DeploymentClass
 
 
-class ConfigTemplate(BaseClass):
+class ConfigTemplate(DeploymentClass):
     def __init__(self, deployment_name):
         self.deployment_name = deployment_name
 
@@ -43,7 +43,7 @@ class ConfigTemplate(BaseClass):
             raise FileExistsError(f"The file {file_path} already exists.")
 
 
-class ConfigCreator(BaseClass):
+class ConfigCreator(DeploymentClass):
     def __init__(self, deployment_name):
         self.deployment_name = deployment_name
         self.dir_path = f"app/deployments/{self.deployment_name}"
@@ -98,11 +98,11 @@ class ConfigCreator(BaseClass):
                 )
                 class_vars = [
                     var
-                    for var in vars(BaseClass)
-                    if not var in BaseClass._DEVOPS_VARIABLES
+                    for var in vars(DeploymentClass)
+                    if not var in DeploymentClass._DEVOPS_VARIABLES
                 ]
                 for var in class_vars:
-                    if not (var.startswith("_") or callable(getattr(BaseClass, var))):
+                    if not (var.startswith("_") or callable(getattr(DeploymentClass, var))):
                         env_var_name = f"{self.deployment_name.upper()}_{moniker_name.upper()}_{var.upper()}"
                         check_env = self.check_existing(env_var_name, var)
                         self.env_list.append(f"\t\t{check_env}")
@@ -145,7 +145,7 @@ class ConfigCreator(BaseClass):
         self.env_list.append("\t## Devops variables only set at deployment level ##\n")
         self.env_list.append("\t\t# These are required to deploy to container #")
         self.env_list.append(f"\t\tDEPLOYMENT_NAME={self.deployment_name}")
-        for var in BaseClass._DEVOPS_VARIABLES:
+        for var in DeploymentClass._DEVOPS_VARIABLES:
             env_var_name = f"{self.deployment_name.upper()}_{var.upper()}"
             check_env = self.check_existing(env_var_name, var)
             self.env_list.append(f"\t\t{check_env}")
@@ -156,10 +156,10 @@ class ConfigCreator(BaseClass):
             f'\t\t{self.deployment_name.upper()}_ENABLED_MONIKERS={",".join(moniker["name"] for moniker in self.config_file["monikers"])}'
         )
         self.env_list.append("\n\t\t# Required here or in sprite variables #")
-        for var, val in vars(BaseClass).items():
+        for var, val in vars(DeploymentClass).items():
             if not (
                 var.startswith("_")
-                or callable(getattr(BaseClass, var))
+                or callable(getattr(DeploymentClass, var))
                 or var in self.used_vars
             ):
                 env_var_name = f"{self.deployment_name.upper()}_{var.upper()}"
@@ -289,7 +289,7 @@ class ConfigCreator(BaseClass):
         return f"{env_var_name}="
 
 
-class WorkflowBuilder(BaseClass):
+class WorkflowBuilder(DeploymentClass):
     def __init__(self, deployment_name):
         ConfigCreator(deployment_name).update_config()
 

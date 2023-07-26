@@ -2,15 +2,9 @@ import sys
 import os
 import argparse
 import traceback
-from sprites.discord_sprite import DiscordSprite
-from sprites.slack_sprite import SlackSprite
-from services.deployment.deployment_service import (
-    ConfigTemplate,
-    ConfigCreator,
-    WorkflowBuilder,
-)
-from services.base_class import DeploymentClass
 
+from services.classes.deployment_runner import DeploymentClass
+from sprites.discord_sprite import DiscordSprite
 
 def main(args):
     try:
@@ -45,7 +39,7 @@ def run_container_deployment(deployment_name):
     deployment = DeploymentClass()
     deployment.load_and_check_deployment(deployment_name)
     for moniker in deployment.monikers:
-        for sprite in moniker.enabled_sprites:
+        for sprite in moniker.enabled_sprite_names:
             run_sprite(sprite)
 
 
@@ -53,18 +47,14 @@ def run_local_deployment(deployment_name):
     deployment = DeploymentClass()
     deployment.load_and_check_deployment(deployment_name)
     for _, moniker_instance in deployment.monikers.items():
-        for sprite in moniker_instance.enabled_sprites: 
-            run_sprite(sprite)
-
-
-def run_sprite(sprite):
-    match sprite:
-        case "discord":
-            DiscordSprite().run_discord_sprite()
-        case "slack":
-            SlackSprite().run_slack_sprite()
-        case _:
-            print(f"oops no {sprite} of that name")
+        for sprite in moniker_instance.enabled_sprite_names: 
+            match sprite:
+                case "discord":
+                    DiscordSprite(deployment).run_discord_sprite()
+                case "slack":
+                    SlackSprite().run_slack_sprite()
+                case _:
+                    print(f"oops no {sprite} of that name")
 
 
 if __name__ == "__main__":

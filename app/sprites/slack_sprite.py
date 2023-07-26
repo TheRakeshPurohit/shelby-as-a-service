@@ -2,14 +2,14 @@
 import os, asyncio, random
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
-from services.base_class import BaseClass
-from services.shelby_agent import ShelbyAgent
+
+
 
 # from app.services.log_service import LogService
 # endregion
 
 
-class SlackSprite(BaseClass):
+class SlackSprite(DeploymentClass):
     # region
     ### These will all be set by file ###
     # Content

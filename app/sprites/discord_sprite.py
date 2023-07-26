@@ -5,44 +5,50 @@ import random
 from dataclasses import dataclass, field
 import discord
 from discord.ext import commands
-from services.base_class import BaseClass, DeploymentClass
+from services.classes.base import BaseClass
 from services.shelby_agent import ShelbyAgent
 # endregion
 
 
 class DiscordSprite(BaseClass):
-    def __init__(self):
+    def __init__(self, deployment):
 
+        self.deployment = deployment
+        
+        
         self.intents = discord.Intents.default()
         self.intents.guilds = True
         self.bot = commands.Bot(
             command_prefix=commands.when_mentioned_or("!"), intents=self.intents
         )
-        DeploymentClass
-        self.config = DiscordConfig()
-        
-        
-        self.shelby_agent = ShelbyAgent()
+
         # self.log_service = LogService(f'{moniker}_discord_sprite', f'{moniker}_discord_sprite.log', level='INFO')
 
-    def run_discord_sprite(self):
+        
         @self.bot.event
         async def on_guild_join(guild):
-            channel = await check_server_for_channel_id(guild)
+            # Checks the guild server ID in the list of monikers, and returns none if it can't find it
+            guild_config = self.find_guild_config(guild)
+            if guild_config is None:
+                await guild.leave()
+            channel = self.channel_join_ready(guild_config, guild)
             if channel:
                 await channel.send(
-                    format_message(self.discord_welcome_message, get_random_animal())
+                    self.format_message(guild_config.discord_welcome_message, self.get_random_animal())
                 )
 
         @self.bot.event
         async def on_ready():
             # App start up actions
             for guild in self.bot.guilds:
-                channel = await check_server_for_channel_id(guild)
+                guild_config = self.find_guild_config(guild)
+                if guild_config is None:
+                    await guild.leave()
+                channel = self.channel_join_ready(guild_config, guild)
                 if channel:
                     await channel.send(
-                        format_message(
-                            self.discord_welcome_message, get_random_animal()
+                        self.format_message(
+                            self.format_message(guild_config.discord_welcome_message, self.get_random_animal())
                         )
                     )
 
@@ -51,196 +57,155 @@ class DiscordSprite(BaseClass):
 
         @self.bot.event
         async def on_message(message):
-            # On messages in the server. The bot should be configured in discord developer portal to only recieve messages where it's tagged,
-            # but in the case it's configured to receive all messages we cover for this case as well
+            # The bot has four configurations for messages:
+            # 1st, to only receive messages when it's tagged with @sprite-name
+            # Or 2nd to auto-respond to all messages that it thinks it can answer
+            # 3rd, the bot can be in restricted to specific channels 
+            # 4th, the bot can be allowed to respond in all channels (channels can be excluded)
+            
             # self.log_service.print_and_log(f'Message received: {message.content} (From: {message.author.name})')
-            if self.bot.user.mentioned_in(message):
+            
+            guild_config = self.find_guild_config(message.guild)
+            if guild_config is None:
+                await message.guild.leave()
+                return
+                    
+            if message.author == self.bot.user.id:
                 # Don't respond to ourselves
-                if message.author == self.bot.user.id:
+                return
+            
+            # 1st case: bot must be tagged with @sprite-name
+            if guild_config.discord_manual_requests_enabled:
+                if not self.bot.user.mentioned_in(message):
+                    # Tagging required, but bot was not tagged in message
                     return
-                if "rabbit" in message.content.lower():
-                    await message.channel.send(
-                        f"No, I will not tell you about the rabbits, <@{message.author.id}>,."
-                    )
-                    return
-                # Must be in the approved channel
-                channel_id = await check_message_for_channel_id(message)
+            # 2nd case: is  bot auto-responds to all messages that it thinks it can answer
+            elif guild_config.discord_auto_response_enabled:
+                # if guild_config.discord_auto_response_cooldown:
+                #     return
+                # To implement
+                pass
+            # 3rd case: bot restricted to responses in specific channels
+            if guild_config.discord_specific_channels_enabled:
+                channel_id = self.message_specific_channels(guild_config, message)
                 if not channel_id:
+                    # Message not in specified channels
                     return
-
-                request = message.content.replace(f"<@{self.bot.user.id}>", "").strip()
-
-                # If question is too short
-                if len(request.split()) < 4:
-                    await message.channel.send(
-                        format_message(self.discord_short_message, message.author.id)
-                    )
+            # 4th case: bot allowed in all channels, excluding some
+            elif guild_config.discord_all_channels_enabled:
+                channel_id = self.message_excluded_channels(guild_config, message)
+                if not channel_id:
+                    # Message in excluded channel
                     return
+            # Implement auto responses in threads guild_config.discord_auto_respond_in_threads
+            
+            request = message.content.replace(f"<@{self.bot.user.id}>", "").strip()
 
-                # Create thread
-                thread = await message.create_thread(
-                    name=f"{get_random_animal()} {message.author.name}'s request",
-                    auto_archive_duration=60,
+            # If question is too short
+            if len(request.split()) < 4:
+                await message.channel.send(
+                    self.format_message(guild_config.discord_short_message, message.author.id)
                 )
+                return
 
-                await thread.send(self.discord_message_start)
+            # Create thread
+            thread = await message.create_thread(
+                name=f"{self.get_random_animal()} {message.author.name}'s request",
+                auto_archive_duration=60,
+            )
 
-                request_response = await self.shelby_agent.run_request(request)
-
-                if (
-                    isinstance(request_response, dict)
-                    and "answer_text" in request_response
-                ):
-                    # Parse for discord and then respond
-                    parsed_reponse = parse_discord_markdown(request_response)
-                    await thread.send(parsed_reponse)
-                    await thread.send(self.discord_message_end)
-                    # self.log_service.print_and_log(f'Parsed output: {parsed_reponse})')
-                else:
-                    # If not dict, then consider it an error
-                    await thread.send(request_response)
-                    # self.log_service.print_and_log(f'Error: {request_response})')
-
-        def parse_discord_markdown(request_response):
-            # Start with the answer text
-            markdown_string = f"{request_response['answer_text']}\n\n"
-
-            # Add the sources header if there are any documents
-            if request_response["documents"]:
-                markdown_string += "**Sources:**\n"
-
-                # For each document, add a numbered list item with the title and URL
-                for doc in request_response["documents"]:
-                    markdown_string += (
-                        f"[{doc['doc_num']}] **{doc['title']}**: <{doc['url']}>\n"
-                    )
-            else:
-                markdown_string += "No related documents found.\n"
-
-            return markdown_string
-
-        def get_random_animal():
-            # Very important
-            animals_txt_path = os.path.join("app/prompt_templates/", "animals.txt")
-            with open(animals_txt_path, "r") as file:
-                animals = file.readlines()
-
-            return random.choice(animals).strip().lower()
-
-        def format_message(template, var=None):
-            # Formats messages from premade templates
-            if var:
-                return template.format(var)
-
-            return template.format
-
-        async def check_server_for_channel_id(guild):
-            # This checks if the specified channel_id exists in the server the bot is added to and leaves if it doesn't exist
-            # This prevents the bot from being added to servers that aren't approved
-
-            # Initialize a variable to store the matching channel ID
-            matching_channel_id = None
-
-            # Check each channel ID in the self.discord_specific_channel_ids list
-            for config_channel_id in self.discord_specific_channel_ids:
-                # Convert the config_channel_id to an integer
-                config_channel_id = int(config_channel_id)
-
-                # Check if the config_channel_id is in the guild's channels
-                if any(channel.id == config_channel_id for channel in guild.channels):
-                    matching_channel_id = config_channel_id
-                    break  # Exit the loop when we find a match
-
-            # If we didn't find a matching channel ID, leave the guild
-            if matching_channel_id is None:
-                # self.log_service.print_and_log(f'Leaving guild {guild.name} (ID: {guild.id}) due to missing channel.')
-                await guild.leave()
-
-                return None
-            else:
-                # If we found a matching channel ID, get the channel
-                channel = self.bot.get_channel(matching_channel_id)
-
-                return channel
-
-        async def check_message_for_channel_id(message):
-            # Initialize a variable to store the matching channel ID
-            matching_channel_id = None
-
-            # Check each channel ID in the self.discord_specific_channel_ids list
-            for config_channel_id in self.discord_specific_channel_ids:
-                # Convert the config_channel_id to an integer
-                config_channel_id = int(config_channel_id)
-
-                # Check if the config_channel_id is in the guild's channels
-                if message.channel.id == config_channel_id:
-                    matching_channel_id = config_channel_id
-                    break  # Exit the loop when we find a match
-
-            # If we didn't find a matching channel ID, leave the guild
-            if matching_channel_id is None:
-                return None
-            else:
-                return matching_channel_id
-
-        # def identify_moniker():
+            await thread.send(guild_config.discord_message_start)
             
-        #     return moniker
+            shelby_agent = ShelbyAgent(guild_config)
+            request_response = await shelby_agent.run_request(request)
+            del shelby_agent
 
-        self.bot.run(self.discord_bot_token)
+            if (
+                isinstance(request_response, dict)
+                and "answer_text" in request_response
+            ):
+                # Parse for discord and then respond
+                parsed_reponse = self.parse_discord_markdown(request_response)
+                await thread.send(parsed_reponse)
+                await thread.send(guild_config.discord_message_end)
+                # self.log_service.print_and_log(f'Parsed output: {parsed_reponse})')
+            else:
+                # If not dict, then consider it an error
+                await thread.send(request_response)
+                # self.log_service.print_and_log(f'Error: {request_response})')
 
-@dataclass
-class DiscordConfig(BaseClass):
-    ### These will all be set by file ###
-    discord_enabled_servers: list[int] = None
-    discord_manual_requests_enabled: bool = True 
-    discord_auto_response_enabled: bool = False
-    discord_auto_response_cooldown: int = 10
-    discord_auto_respond_in_threads: bool = False 
-    discord_all_channels_enabled: bool = False
-    discord_all_channels_excluded_channels: list[int] = None
-    discord_specific_channels_enabled: bool = True 
-    discord_specific_channel_ids: list[int] = None
-    discord_user_daily_token_limit: int = 30000
-    discord_welcome_message: str = 'ima tell you about the {}.'
-    discord_short_message: str = '<@{}>, brevity is the soul of wit, but not of good queries. Please provide more details in your request.'
-    discord_message_start: str = 'Running request... relax, chill, and vibe a minute.'
-    discord_message_end: str = 'Generated by: gpt-4. Memory not enabled. Has no knowledge of past or current queries. For code see https://github.com/ShelbyJenkins/shelby-as-a-service.'
-    discord_bot_token: str = None
-    _SECRET_VARIABLES: list = field(default_factory=lambda: [
-        "discord_bot_token"
-    ])
-    required_vars: list = field(default_factory=list)
+    def parse_discord_markdown(self, request_response):
+        # Start with the answer text
+        markdown_string = f"{request_response['answer_text']}\n\n"
+
+        # Add the sources header if there are any documents
+        if request_response["documents"]:
+            markdown_string += "**Sources:**\n"
+
+            # For each document, add a numbered list item with the title and URL
+            for doc in request_response["documents"]:
+                markdown_string += (
+                    f"[{doc['doc_num']}] **{doc['title']}**: <{doc['url']}>\n"
+                )
+        else:
+            markdown_string += "No related documents found.\n"
+
+        return markdown_string
+
+    def get_random_animal(self):
+        # Very important
+        animals_txt_path = os.path.join("app/prompt_templates/", "animals.txt")
+        with open(animals_txt_path, "r") as file:
+            animals = file.readlines()
+
+        return random.choice(animals).strip().lower()
+
+    def format_message(self, template, var=None):
+        # Formats messages from premade templates
+        if var:
+            return template.format(var)
+
+        return template.format
+
+    def message_specific_channels(self, guild_config, message):
+        for config_channel_id in guild_config.discord_specific_channel_ids:
+            if message.channel.id == int(config_channel_id):
+                return message.channel.id
+        return None
     
-    def load_class_config(self):
-        try:
-            self.discord_all_channels_excluded_channels = [int(id.strip()) for id in self.discord_enabled_servers.split(",") if id.strip()]
-            self.discord_specific_channel_ids = [int(id.strip()) for id in self.discord_enabled_servers.split(",") if id.strip()]
-            self.discord_enabled_servers = [int(id.strip()) for id in self.discord_enabled_servers.split(",") if id.strip()]
-            self.discord_welcome_message = self.discord_welcome_message.strip('"')
-            self.discord_short_message = self.discord_short_message.strip('"')
-            self.discord_message_start = self.discord_message_start.strip('"')
-            self.discord_message_end = self.discord_message_end.strip('"')
-        except AttributeError:
-            pass
+    def message_excluded_channels(self, guild_config, message):
+        for config_channel_id in guild_config.discord_all_channels_excluded_channels:
+            if message.channel.id == int(config_channel_id):
+                return None
+        return message.channel.id
 
-        if self.discord_manual_requests_enabled is False and self.discord_auto_response_enabled is False:
-            raise ValueError(
-                "Error: manual_requests_enabled and auto_response_enabled cannot both be False."
-            )
-        if (self.discord_all_channels_enabled or self.discord_specific_channels_enabled is not None) and \
-            self.discord_all_channels_enabled == self.discord_specific_channels_enabled:
-            raise ValueError(
-                "Error: all_channels_enabled and specific_channels_enabled cannot have the same boolean state."
-            )
+    def find_guild_config(self, guild):
+        if guild:
+            for moniker in self.deployment:
+                if 'discord' in moniker.enabled_sprite_names:
+                    if guild in moniker.discord_config.discord_enabled_servers:
+                        return moniker.discord_config
+        print(f"No matching discord config found for guild: {guild}")
+        return None
+    
+    def channel_join_ready(self, guild_config, guild):
+            # If specific channels enabled, find one that is named 'general' or any approved channel
+            matching_channel_id = None
+            if guild_config.discord_specific_channels_enabled and guild_config.discord_specific_channel_ids is not None:
+                for channel in guild.channels:
+                    for config_channel_id in guild_config.discord_specific_channel_ids:
+                        if channel.id == int(config_channel_id):
+                            if isinstance(channel, discord.TextChannel) and channel.name == 'general':
+                                return channel.id
+                            matching_channel_id = channel.id
+                return matching_channel_id
             
-    def check_class_config(self):
-        for var in vars(self):
-            if not var.startswith("_") and not callable(getattr(self, var)):
-                if (var == "discord_all_channels_excluded_channels" and self.discord_all_channels_enabled == False):
-                    continue
-                if (var == "discord_specific_channel_ids" and self.discord_specific_channels_enabled == False):
-                    continue
-            self.required_vars.append(var)
-            
-        BaseClass.check_required_vars(self)
+            # Otherwise try to return 'general', and return None if we can't.
+            for channel in guild.channels:
+                if isinstance(channel, discord.TextChannel) and channel.name == 'general':
+                    return channel.id
+            # In the future we can say hi in the last channel we spoke in
+            return None
+    
+    def run_discord_sprite(self):
+        self.bot.run(self.deployment.discord_bot_token)
