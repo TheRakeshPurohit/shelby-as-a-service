@@ -86,6 +86,12 @@ class ConfigCreator(BaseClass):
                 self.env_list.append(
                     f'\t\t{self.deployment_name.upper()}_{moniker_name.upper()}_ENABLED_DATA_NAMESPACES={",".join(moniker["enabled_data_namespaces"])}'
                 )
+                self.env_list.append(
+                    f'\t\t{self.deployment_name.upper()}_{moniker_name.upper()}_ENABLED_DISCORD_SERVERS={",".join(str(server) for server in moniker["enabled_discord_servers"])}'
+                )
+                # self.env_list.append(
+                #     f'\t\t{self.deployment_name.upper()}_{moniker_name.upper()}_ENABLED_SLACK_SERVERS={",".join(moniker["enabled_slack_servers"])}'
+                # )
 
                 self.env_list.append(
                     "\n\t\t# Required here or at deployment level or in sprite variables #"

@@ -1,22 +1,41 @@
-Description: This file will define the deployment. It is used to generate a .env file
-  (with --create_template) that is use for local testing and for generating the github
-  actions workflow for container deployment. This field is unused.
+# This file will define the deployment.env file. If you want to update it later and add monikers, I suggest doing so manually here.
 deployment_name: test
 monikers:
   - name: personal # Monikers are a name for people, clubs, chat rooms, businesses, and other organizations of people.
-    enabled: true # Will disable the moniker when creating a deployment workflow.
+    moniker_enabled: true # Will disable the moniker when creating a deployment workflow.
     sprites:
-      discord: true
-      slack: true
+      discord:
+        discord_sprite_enabled: true
+        discord_enabled_servers:
+          - 111
+        # Requests method - at least one is required  
+        discord_manual_requests_enabled: true # Manual allows for @discord-sprite engagement
+        discord_auto_response:
+          discord_auto_response_enabled: false # Auto responds automatically to relevant questions
+          discord_auto_response_cooldown: 10 # Time in minutes to cooldown between auto-responding to specific users
+          discord_auto_respond_in_threads: false
+        # Channel selection - at least one is required
+        discord_channel_space:
+          discord_all_channels:
+            discord_all_channels_enabled: false # Respond in all channels
+            discord_all_channels_excluded_channels: # List of channels sprite is excluded from replying in
+              - 1
+              - 1
+          discord_specific_channels:
+            discord_specific_channels_enabled: true # Respond in specific channels
+            discord_specific_channel_ids: # List of channels sprite will reply in. At least one channel is required
+              - 1
+              - 1
+        discord_user_daily_token_limit: 30000
+      slack: false
       web: false
     enabled_data_namespaces:
-      - stackpath
-      - tatum
-      - deepgram
-Index management description: Your data sources and index(es) will be configured here.
-  I suggest you configure your discord/slack/sprite first, and then attempt to add
-  documents. You can add more data sources as you like. See documentation for complete
-  list of options.
+      - wikipedia
+      - wookiepedia
+      - census.gov
+# Your data sources and index(es) will be configured here. 
+# I suggest you configure your discord/slack/sprite first, and then attempt to add documents. 
+# You can add more data sources as you like. See documentation for complete list of options.
 index_names:
   - index_name: shelby-as-a-service
     document_namespaces:

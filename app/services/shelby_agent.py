@@ -1,63 +1,43 @@
-#region
+# region
 import os, asyncio
 from concurrent.futures import ThreadPoolExecutor
 import traceback
+from dataclasses import dataclass, field
 import json, yaml, re
 import openai, pinecone, tiktoken
 from typing import Optional
 from langchain.embeddings import OpenAIEmbeddings
 from pinecone_text.sparse import BM25Encoder
+
 from services.base_class import BaseClass
-#endregion
+
+# endregion
+
 
 class ShelbyAgent(BaseClass):
-    
-    #region
-    ### These will all be set by file ###
-    # ActionAgent
-    action_llm_model: str = 'gpt-4'
-    # QueryAgent
-    pre_query_llm_model: str = 'gpt-4'
-    max_doc_token_length: int = 1200
-    embedding_model: str = 'text-embedding-ada-002'
-    tiktoken_encoding_model: str = 'text-embedding-ada-002'
-    # pre_query_llm_model: str = 'gpt-3.5-turbo'
-    query_llm_model: str = 'gpt-4'
-    vectorstore_top_k: int = 5
-    max_docs_tokens: int = 3500
-    max_docs_used: int = 5
-    max_response_tokens: int = 300
-    openai_timeout_seconds: float = 180.0
-    # APIAgent
-    select_operationID_llm_model: str = 'gpt-4'
-    create_function_llm_model: str = 'gpt-4'
-    populate_function_llm_model: str = 'gpt-4'
-    index_name: str = None
-    index_env: str = None
-    _SECRET_VARIABLES: list = [
-        'openai_api_key',
-        'pinecone_api_key'
-        ]
 
-    # vectorstore_namespaces = {key: value['description'] for key, value in BaseClass.data_sources.items()}    
-    #endregion
-    
-    def __init__(self, moniker=None):
-        self.moniker = moniker
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        super().__init__()  
+        super().__init__()
+  
 
-        self.check_shelby_agent_config()
-        
-        # self.log_service = LogService(f'{moniker}_{platform}_ShelbyAgent', f'{moniker}_{platform}_ShelbyAgent.log', level='INFO')
-        # self.load_shelby_agent_config()
         # self.action_agent = ActionAgent(self, self.config)
         # self.query_agent = QueryAgent(self, self.config)
-        # self.API_agent = APIAgent(self, self.config)
-        openai.api_key = self.openai_api_key
-
-    def request_thread(self, request):
         
+        # openai.api_key = self.openai_api_key
+        
+    
+    async def run_request(self, request):
+        # Required to run multiple requests at a time in async
+        with ThreadPoolExecutor() as executor:
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                executor, self.request_thread, request
+            )
+
+            return response 
+          
+    def request_thread(self, request):
         try:
             # ActionAgent determines the workflow
             # workflow = self.action_agent.action_decision(request)
@@ -69,7 +49,7 @@ class ShelbyAgent(BaseClass):
                     if len(self.vectorstore_namespaces) == 1:
                         # If only one topic, then we skip the ActionAgent topic decision.
                         topic = next(iter(self.vectorstore_namespaces))
-                    else: 
+                    else:
                         topic = self.action_agent.topic_decision(request)
                     if topic == 0:
                         # If no topics found message is sent to sprite
@@ -79,18 +59,20 @@ class ShelbyAgent(BaseClass):
                         # self.log_service.print_and_log(no_topics)
                         response = no_topics
                     else:
-                        response = self.query_agent.run_context_enriched_query(request, topic)
+                        response = self.query_agent.run_context_enriched_query(
+                            request, topic
+                        )
                 case 2:
                     # Run APIAgent
-                    response= self.API_agent.run_API_agent(request)
+                    response = self.API_agent.run_API_agent(request)
                 case _:
                     # Else just run the docs agent for now
-                    no_workflow = 'No workflow found for request.'
+                    no_workflow = "No workflow found for request."
                     # self.log_service.print_and_log(no_workflow)
                     return no_workflow
-                
+
             return response
-        
+
         except Exception as e:
             # Logs error and sends error to sprite
             error_message = f"An error occurred while processing request: {e}\n"
@@ -98,49 +80,31 @@ class ShelbyAgent(BaseClass):
             error_message += traceback.format_exc()
 
             # self.log_service.print_and_log(error_message)
-           
+
             return f"Bot broke. Probably just an API issue. Feel free to try again. Otherwise contact support."
 
-    async def run_request(self, request):
-        
-        # Required to run multiple requests at a time in async
-        with ThreadPoolExecutor() as executor:
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(executor, self.request_thread, request)
-            
-            return response
-        
     def check_response(self, response):
         # Check if keys exist in dictionary
-        parsed_respoonse = response.get('choices', [{}])[0].get('message', {}).get('content')
-        
-        if not parsed_respoonse:
+        parsed_response = (
+            response.get("choices", [{}])[0].get("message", {}).get("content")
+        )
+        if not parsed_response:
             # self.log_service.print_and_log(f'Error in response: {response}')
             return None
-        
-        return parsed_respoonse
-    
-    def check_shelby_agent_config(self):
-        # Parse things here and then check everything is good
-        required_vars = []  
-        for var in vars(__class__):
-            # if var == '' and self. == False:
-            #     continue
-            required_vars.append(var) 
-        self.CheckRequiredVars(required_vars)
-    
+
+        return parsed_response
+
+
 # class ActionAgent:
-    
+
 #     ### ActionAgent orchestrates the path requests flow through workflows ###
-    
-#     def __init__(self, shelby_agent, log_service, config):
-        
+
+#     def __init__(self, shelby_agent):
+
 #         self.shelby_agent = shelby_agent
-#         # self.log_service = log_service
-#         self.config = config
 
 #     def action_prompt_template(self, query):
-        
+
 #         # Chooses workflow
 #         # Currently disabled
 #         with open(os.path.join('app/prompt_templates/', 'action_agent_action_prompt_template.yaml'), 'r') as stream:
@@ -151,9 +115,9 @@ class ShelbyAgent(BaseClass):
 #         for role in prompt_template:
 #             if role['role'] == 'user':  # If the 'role' is 'user'
 #                 role['content'] = query  # Replace the 'content' with 'prompt_message'
-        
+
 #         return prompt_template
-    
+
 #     def action_prompt_llm(self, prompt, actions):
 
 #         # Shamelessly copied from https://github.com/minimaxir/simpleaichat/blob/main/PROMPTS.md#tools
@@ -168,18 +132,18 @@ class ShelbyAgent(BaseClass):
 #             max_tokens=1,
 #             logit_bias=logit_bias
 #         )
-        
+
 #         return response['choices'][0]['message']['content']
-        
+
 #     def action_decision(self, query):
-        
+
 #         prompt_template = self.action_prompt_template(query)
 #         actions = ['questions_on_docs', 'function_calling']
 #         workflow = self.action_prompt_llm(prompt_template, actions)
-#         return workflow 
-    
+#         return workflow
+
 #     def topic_prompt_template(self, query):
-        
+
 #         # Chooses topic
 #         # If no matching topic found, returns 0.
 #         with open(os.path.join('app/prompt_templates/', 'action_agent_topic_prompt_template.yaml'), 'r') as stream:
@@ -194,12 +158,12 @@ class ShelbyAgent(BaseClass):
 
 #         # Append the documents string to the query
 #         prompt_message  = "user query: " + query + " topics: " + topics_str
-        
+
 #         # Loop over the list of dictionaries in data['prompt_template']
 #         for role in prompt_template:
-#             if role['role'] == 'user':  
-#                 role['content'] = prompt_message  
-        
+#             if role['role'] == 'user':
+#                 role['content'] = prompt_message
+
 #         return prompt_template
 
 #     def topic_prompt_llm(self, prompt):
@@ -213,7 +177,7 @@ class ShelbyAgent(BaseClass):
 #             max_tokens=1,
 #             logit_bias=logit_bias
 #         )
-        
+
 #         topic_response = self.shelby_agent.check_response(response)
 #         if not topic_response:
 #             return None
@@ -224,55 +188,54 @@ class ShelbyAgent(BaseClass):
 #             return 0
 #         # Otherwise return string with the namespace of the topic in the vectorstore
 #         topic = list(self.vectorstore_namespaces.keys())[topic_key - 1]  # We subtract 1 because list indices start at 0
-        
+
 #         return topic
-        
+
 #     def topic_decision(self, query):
-        
+
 #         prompt_template = self.topic_prompt_template(query)
 #         topic = self.topic_prompt_llm(prompt_template)
-        
+
 #         # self.log_service.print_and_log(f"{self.action_llm_model} chose to fetch context docs from {topic} namespace.")
-        
-#         return topic 
+
+#         return topic
 
 # class QueryAgent:
-    
+
 #     ### QueryAgent answers questions ###
-    
-#     def __init__(self, shelby_agent, log_service, config):
-        
+
+#     def __init__(self, shelby_agent):
+
 #         self.shelby_agent = shelby_agent
 #         # self.log_service = log_service
-#         self.config = config
 
 #     def pre_query(self, query):
-        
+
 #         with open(os.path.join('app/prompt_templates/', 'query_agent_pre_query_template.yaml'), 'r') as stream:
 #             # Load the YAML data and print the result
 #             prompt_template = yaml.safe_load(stream)
-            
+
 #         # Loop over the list of dictionaries in data['prompt_template']
 #         for role in prompt_template:
 #             if role['role'] == 'user':  # If the 'role' is 'user'
 #                 role['content'] = query  # Replace the 'content' with 'prompt_message'
-                
+
 #         response = openai.ChatCompletion.create(
 #             model=self.pre_query_llm_model,
 #             messages=prompt_template,
 #             max_tokens=25
 #         )
-        
+
 #         pre_query_response = self.shelby_agent.check_response(response)
 #         if not pre_query_response:
 #             return None
 
 #         pre_query = f'query: {query}, keywords: {pre_query_response}'
-        
+
 #         return pre_query
-    
+
 #     def get_query_embeddings(self, query):
-            
+
 #         embedding_retriever = OpenAIEmbeddings(
 #             model=self.embedding_model,
 #             openai_api_key=self.openai_api_key,
@@ -288,10 +251,10 @@ class ShelbyAgent(BaseClass):
 #         return dense_embedding, sparse_embedding
 
 #     def query_vectorstore(self, dense_embedding, sparse_embedding, topic):
-            
+
 #         pinecone.init(api_key=self.pinecone_api_key, environment=self.vectorstore_environment)
 #         index = pinecone.Index(self.vectorstore_index)
-        
+
 #         soft_query_response = index.query(
 #             top_k=self.vectorstore_top_k,
 #             include_values=False,
@@ -333,15 +296,15 @@ class ShelbyAgent(BaseClass):
 #                 'id': m.id
 #             }
 #             returned_documents.append(response)
-                            
+
 #         return returned_documents
 
 #     def doc_check(self, query, documents):
-        
+
 #         with open(os.path.join('app/prompt_templates/', 'query_agent_doc_check_template.yaml'), 'r') as stream:
 #             # Load the YAML data and print the result
 #             prompt_template = yaml.safe_load(stream)
-        
+
 #         doc_counter = 1
 #         content_strs = []
 #         for doc in documents:
@@ -349,18 +312,18 @@ class ShelbyAgent(BaseClass):
 #             documents_str = " ".join(content_strs)
 #             doc_counter += 1
 #         prompt_message  = "Query: " + query + " Documents: " + documents_str
-        
+
 #         logit_bias_weight = 100
 #         # 0-9
-#         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(documents) + 1)}             
+#         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(documents) + 1)}
 #         # \n
 #         logit_bias["198"] = logit_bias_weight
- 
+
 #         # Loop over the list of dictionaries in data['prompt_template']
 #         for role in prompt_template:
 #             if role['role'] == 'user':  # If the 'role' is 'user'
 #                 role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
-                
+
 #         response = openai.ChatCompletion.create(
 #             model=self.pre_query_llm_model,
 #             messages=prompt_template,
@@ -371,7 +334,7 @@ class ShelbyAgent(BaseClass):
 #         doc_check = self.shelby_agent.check_response(response)
 #         if not doc_check:
 #             return None
-        
+
 #         # This finds all instances of n in the LLM response
 #         pattern_num = r"\d"
 #         matches = re.findall(pattern_num, doc_check)
@@ -400,7 +363,7 @@ class ShelbyAgent(BaseClass):
 #                 disallowed_special=()
 #             )
 #             return len(tokens)
-        
+
 #         def _docs_tiktoken_len(documents):
 #             tokenizer = tiktoken.encoding_for_model(self.tiktoken_encoding_model)
 #             token_count = 0
@@ -412,7 +375,7 @@ class ShelbyAgent(BaseClass):
 #                 ))
 #                 token_count += tokens
 #             return token_count
-        
+
 #         # Count the number of 'hard' and 'soft' documents
 #         hard_count = sum(1 for doc in returned_documents if doc['doc_type'] == 'hard')
 #         soft_count = sum(1 for doc in returned_documents if doc['doc_type'] == 'soft')
@@ -427,9 +390,9 @@ class ShelbyAgent(BaseClass):
 #                 continue
 #             document['token_count'] = token_count
 #             document['doc_num'] = i
-        
+
 #         embeddings_tokens = _docs_tiktoken_len(sorted_documents)
-        
+
 #         self.log_service.print_and_log(f"context docs token count: {embeddings_tokens}")
 #         iterations = 0
 #         original_documents_count = len(sorted_documents)
@@ -437,7 +400,7 @@ class ShelbyAgent(BaseClass):
 #             if iterations >= original_documents_count:
 #                 break
 #             # Find the index of the document with the highest token_count that exceeds max_doc_token_length
-#             max_token_count_idx = max((idx for idx, document in enumerate(sorted_documents) if document['token_count'] > self.max_doc_token_length), 
+#             max_token_count_idx = max((idx for idx, document in enumerate(sorted_documents) if document['token_count'] > self.max_doc_token_length),
 #                     key=lambda idx: sorted_documents[idx]['token_count'], default=None)
 #             # If a document was found that meets the conditions, remove it from the list
 #             if max_token_count_idx is not None:
@@ -488,10 +451,10 @@ class ShelbyAgent(BaseClass):
 #                         hard_count -= 1
 #                         break
 #             self.log_service.print_and_log("removed lowest scoring embedding doc.")
-                            
+
 #         for i, document in enumerate(sorted_documents, start=1):
 #             document['doc_num'] = i
-        
+
 #         return sorted_documents
 
 #     def docs_prompt_template(self, query, documents):
@@ -515,13 +478,13 @@ class ShelbyAgent(BaseClass):
 #         for role in prompt_template:
 #             if role['role'] == 'user':  # If the 'role' is 'user'
 #                 role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
-                
+
 #         self.log_service.print_and_log(f"prepared prompt: {json.dumps(prompt_template, indent=4)}")
-        
+
 #         return prompt_template
 
 #     def docs_prompt_llm(self, prompt):
-        
+
 #         response = openai.ChatCompletion.create(
 #             model=self.query_llm_model,
 #             messages=prompt,
@@ -530,9 +493,9 @@ class ShelbyAgent(BaseClass):
 #         prompt_response = self.shelby_agent.check_response(response)
 #         if not prompt_response:
 #             return None
-        
+
 #         return prompt_response
-        
+
 #     def append_meta(self, input_text, parsed_documents):
 
 #         # Covering LLM doc notations cases
@@ -580,21 +543,21 @@ class ShelbyAgent(BaseClass):
 #                     answer_obj["documents"].append(document)
 #                 else:
 #                     # self.log_service.print_and_log(f"Document{doc_num} not found in the list.")
-                    
+
 #         # self.log_service.print_and_log(f"response with metadata: {answer_obj}")
-        
+
 #         return answer_obj
 
 #     def run_context_enriched_query(self, query, topic):
-        
+
 #         # self.log_service.print_and_log(f'Running query: {query}')
-        
+
 #         pre_query = self.pre_query(query)
 #         # self.log_service.print_and_log(f"Pre-query response: {pre_query}")
-        
+
 #         dense_embedding, sparse_embedding = self.get_query_embeddings(pre_query)
 #         # self.log_service.print_and_log("Sparse and dense embeddings retrieved")
-        
+
 #         returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, topic)
 #         if not returned_documents:
 #             # self.log_service.print_and_log("No supporting documents found!")
@@ -602,7 +565,7 @@ class ShelbyAgent(BaseClass):
 #         for returned_doc in returned_documents:
 #             returned_documents_list.append(returned_doc['url'])
 #         # self.log_service.print_and_log(f"{len(returned_documents)} documents returned from vectorstore: {returned_documents_list}")
-        
+
 #         returned_documents = self.doc_check(query, returned_documents)
 #         if not returned_documents:
 #             # self.log_service.print_and_log("No supporting documents after doc_check!")
@@ -610,39 +573,39 @@ class ShelbyAgent(BaseClass):
 #         for returned_doc in returned_documents:
 #             returned_documents_list.append(returned_doc['url'])
 #         # self.log_service.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
-        
+
 #         parsed_documents = self.parse_documents(returned_documents)
 #         final_documents_list = []
 #         for parsed_document in parsed_documents:
 #             final_documents_list.append(parsed_document['url'])
 #         # self.log_service.print_and_log(f"{len(parsed_documents)} documents returned after parsing: {final_documents_list}")
-            
+
 #         prompt = self.docs_prompt_template(query, parsed_documents)
-        
+
 #         # self.log_service.print_and_log(f'Sending prompt to LLM')
 #         llm_response = self.docs_prompt_llm(prompt)
 #         # self.log_service.print_and_log(f'LLM response: {llm_response}')
-                
+
 #         parsed_response = self.append_meta(llm_response, parsed_documents)
 #         # self.log_service.print_and_log(f'LLM response with appended metadata: {parsed_response}')
-        
+
 #         return parsed_response
 
 # # class APIAgent:
-        
+
 # #         ### APIAgent makes API calls on behalf the user ###
 # #         # Currently under development
-        
+
 # #         def __init__(self, shelby_agent, log_service, config):
-            
+
 # #             self.shelby_agent = shelby_agent
 # #             # self.log_service = log_service
 # #             self.config = config
-        
+
 # #         # Selects the correct API and endpoint to run action on.
 # #         # Eventually, we should create a merged file that describes all available API.
 # #         def select_API_operationID(self, query):
-            
+
 # #             API_spec_path = self.API_spec_path
 # #             # Load prompt template to be used with all APIs
 # #             with open(os.path.join('app/prompt_templates/', 'API_agent_select_operationID_prompt_template.yaml'), 'r') as stream:
@@ -658,20 +621,20 @@ class ShelbyAgent(BaseClass):
 # #                         keypoint = yaml.safe_load(stream)
 # #                         prompt_message  = "query: " + query + " spec: " + keypoint
 # #                         for role in prompt_template:
-# #                             if role['role'] == 'user': 
-# #                                 role['content'] = prompt_message  
-                                
+# #                             if role['role'] == 'user':
+# #                                 role['content'] = prompt_message
+
 # #                         logit_bias_weight = 100
 # #                         # 0-9
-# #                         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + 5 + 1)}             
+# #                         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + 5 + 1)}
 # #                         # \n
 # #                         logit_bias["198"] = logit_bias_weight
 # #                         # x
 # #                         logit_bias["87"] = logit_bias_weight
- 
+
 # #                         # Creates a dic of tokens that are the only acceptable answers
 # #                         # This forces GPT to choose one.
-                  
+
 # #                         response = openai.ChatCompletion.create(
 # #                             model=self.select_operationID_llm_model,
 # #                             messages=prompt_template,
@@ -683,15 +646,15 @@ class ShelbyAgent(BaseClass):
 # #                 operation_response = self.shelby_agent.check_response(response)
 # #                 if not operation_response:
 # #                     return None
-        
+
 # #                 # need to check if there are no numbers in answer
 # #                 if 'x' in operation_response or operation_response == '':
 # #                     # Continue until you find a good operationID.
 # #                     continue
 # #                 else:
-# #                     digits = operation_response.split('\n')  
-# #                     number_str = ''.join(digits)  
-# #                     number = int(number_str)  
+# #                     digits = operation_response.split('\n')
+# #                     number_str = ''.join(digits)
+# #                     number = int(number_str)
 # #                     directory_path = f"data/minified_openAPI_specs/{entry.name}/operationIDs/"
 # #                     for filename in os.listdir(directory_path):
 # #                         if filename.endswith(f"-{number}.json"):
@@ -702,22 +665,22 @@ class ShelbyAgent(BaseClass):
 # #                     break
 # #             if operationID_file is None:
 # #                 # self.log_service.print_and_log("No matching operationID found.")
-            
+
 # #             return operationID_file
-                
+
 # #         def create_bodyless_function(self, query, operationID_file):
-            
+
 # #             with open(os.path.join('app/prompt_templates/', 'API_agent_create_bodyless_function_prompt_template.yaml'), 'r') as stream:
 # #                 # Load the YAML data and print the result
 # #                 prompt_template = yaml.safe_load(stream)
-                
-# #             prompt_message  = "user_request: " + query 
+
+# #             prompt_message  = "user_request: " + query
 # #             prompt_message  += f"\nurl: " + operationID_file['metadata']['server_url'] + " operationid: " + operationID_file['metadata']['operation_id']
 # #             prompt_message  += f"\nspec: " + operationID_file['context']
 # #             for role in prompt_template:
-# #                 if role['role'] == 'user': 
-# #                     role['content'] = prompt_message 
-                    
+# #                 if role['role'] == 'user':
+# #                     role['content'] = prompt_message
+
 # #             response = openai.ChatCompletion.create(
 # #                             model=self.create_function_llm_model,
 # #                             messages=prompt_template,
@@ -726,24 +689,62 @@ class ShelbyAgent(BaseClass):
 # #             url_response = self.shelby_agent.check_response(response)
 # #             if not url_response:
 # #                 return None
-                
+
 # #             return url_response
-             
+
 # #         def run_API_agent(self, query):
-            
+
 # #             # self.log_service.print_and_log(f"new action: {query}")
 # #             operationID_file = self.select_API_operationID(query)
 # #             # Here we need to run a doc_agent query if operationID_file is None
 # #             function = self.create_bodyless_function(query, operationID_file)
 # #             # Here we need to run a doc_agent query if url_maybe does not parse as a url
-            
+
 # #             # Here we need to run a doc_agent query if the function doesn't run correctly
-            
+
 # #             # Here we send the request to GPT to evaluate the answer
-            
+
 # #             return response
+
     
-
-
-        
-       
+@dataclass
+class ShelbyConfig(BaseClass):
+    ### These will all be set by file ###
+    action_llm_model: str = "gpt-4"
+    # QueryAgent
+    pre_query_llm_model: str = "gpt-4"
+    max_doc_token_length: int = 1200
+    embedding_model: str = "text-embedding-ada-002"
+    tiktoken_encoding_model: str = "text-embedding-ada-002"
+    # pre_query_llm_model: str = 'gpt-3.5-turbo'
+    query_llm_model: str = "gpt-4"
+    vectorstore_top_k: int = 5
+    max_docs_tokens: int = 3500
+    max_docs_used: int = 5
+    max_response_tokens: int = 300
+    openai_timeout_seconds: float = 180.0
+    # APIAgent
+    select_operationID_llm_model: str = "gpt-4"
+    create_function_llm_model: str = "gpt-4"
+    populate_function_llm_model: str = "gpt-4"
+    index_name: str = None
+    index_env: str = None
+    _SECRET_VARIABLES: list = field(default_factory=lambda: [
+        "openai_api_key",
+        "pinecone_api_key",
+    ])
+    required_vars: list = field(default_factory=list)
+    
+    def load_class_config(self):
+        pass
+    
+    def check_class_config(self):
+        for var in vars(self):
+            if not var.startswith("_") and not callable(getattr(self, var)):
+                if (var == "discord_all_channels_excluded_channels" and self.discord_all_channels_enabled == False):
+                    continue
+                if (var == "discord_specific_channel_ids" and self.discord_specific_channels_enabled == False):
+                    continue
+            self.required_vars.append(var)
+            
+        BaseClass.check_required_vars(self)
