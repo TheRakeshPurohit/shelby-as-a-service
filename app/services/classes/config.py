@@ -21,10 +21,10 @@ class DiscordConfig(BaseClass):
     discord_bot_token: str = None
     discord_enabled_servers: list[int] = None
     
-    DEPLOYMENT_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
+    _DEPLOYMENT_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
         "discord_bot_token"
     ])
-    MONIKER_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
+    _MONIKER_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
         "discord_enabled_servers",
         "discord_specific_channel_ids",
         "discord_all_channels_excluded_channels"
@@ -71,7 +71,7 @@ class DiscordConfig(BaseClass):
                     
                 required_vars.append(var)
             
-        BaseClass.check_required_vars_list(required_vars)
+        BaseClass.check_required_vars_list(self, required_vars)
 
 @dataclass
 class ShelbyConfig(BaseClass):
@@ -98,11 +98,11 @@ class ShelbyConfig(BaseClass):
     openai_api_key: str = None
     pinecone_api_key: str = None
     
-    DEPLOYMENT_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
+    _DEPLOYMENT_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
         "openai_api_key",
         "pinecone_api_key"
     ])
-    MONIKER_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
+    _MONIKER_REQUIRED_VARIABLES: list = field(default_factory=lambda: [
     ])
     _SECRET_VARIABLES: list = field(default_factory=lambda: [
         "openai_api_key",

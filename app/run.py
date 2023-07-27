@@ -34,14 +34,12 @@ def main(args):
         print(f"An error occurred in run.py main(): {error}\n{error_info}")
         raise
 
-
 def run_container_deployment(deployment_name):
     deployment = DeploymentClass()
     deployment.load_and_check_deployment(deployment_name)
     for moniker in deployment.monikers:
         for sprite in moniker.enabled_sprite_names:
             run_sprite(sprite)
-
 
 def run_local_deployment(deployment_name):
     deployment = DeploymentClass()

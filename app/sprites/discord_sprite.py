@@ -34,7 +34,7 @@ class DiscordSprite(BaseClass):
             channel = self.channel_join_ready(guild_config, guild)
             if channel:
                 await channel.send(
-                    self.format_message(guild_config.discord_welcome_message, self.get_random_animal())
+                    self.format_message(guild_config.get('discord_welcome_message'), self.get_random_animal())
                 )
 
         @self.bot.event
@@ -47,9 +47,7 @@ class DiscordSprite(BaseClass):
                 channel = self.channel_join_ready(guild_config, guild)
                 if channel:
                     await channel.send(
-                        self.format_message(
-                            self.format_message(guild_config.discord_welcome_message, self.get_random_animal())
-                        )
+                        self.format_message(guild_config.get('discord_welcome_message'), self.get_random_animal())
                     )
 
             # self.log_service.print_and_log(f'Bot has logged in as {self.bot.user.name} (ID: {self.bot.user.id})')
@@ -75,24 +73,24 @@ class DiscordSprite(BaseClass):
                 return
             
             # 1st case: bot must be tagged with @sprite-name
-            if guild_config.discord_manual_requests_enabled:
+            if guild_config.get('discord_manual_requests_enabled'):
                 if not self.bot.user.mentioned_in(message):
                     # Tagging required, but bot was not tagged in message
                     return
             # 2nd case: is  bot auto-responds to all messages that it thinks it can answer
-            elif guild_config.discord_auto_response_enabled:
+            elif guild_config.get('discord_auto_response_enabled'):
                 # if guild_config.discord_auto_response_cooldown:
                 #     return
                 # To implement
                 pass
             # 3rd case: bot restricted to responses in specific channels
-            if guild_config.discord_specific_channels_enabled:
+            if guild_config.get('discord_specific_channels_enabled'):
                 channel_id = self.message_specific_channels(guild_config, message)
                 if not channel_id:
                     # Message not in specified channels
                     return
             # 4th case: bot allowed in all channels, excluding some
-            elif guild_config.discord_all_channels_enabled:
+            elif guild_config.get('discord_all_channels_enabled'):
                 channel_id = self.message_excluded_channels(guild_config, message)
                 if not channel_id:
                     # Message in excluded channel
@@ -104,7 +102,7 @@ class DiscordSprite(BaseClass):
             # If question is too short
             if len(request.split()) < 4:
                 await message.channel.send(
-                    self.format_message(guild_config.discord_short_message, message.author.id)
+                    self.format_message(guild_config.get('discord_short_message'), message.author.id)
                 )
                 return
 
@@ -114,7 +112,7 @@ class DiscordSprite(BaseClass):
                 auto_archive_duration=60,
             )
 
-            await thread.send(guild_config.discord_message_start)
+            await thread.send(guild_config.get('discord_message_start'))
             
             shelby_agent = ShelbyAgent(guild_config)
             request_response = await shelby_agent.run_request(request)
@@ -127,7 +125,7 @@ class DiscordSprite(BaseClass):
                 # Parse for discord and then respond
                 parsed_reponse = self.parse_discord_markdown(request_response)
                 await thread.send(parsed_reponse)
-                await thread.send(guild_config.discord_message_end)
+                await thread.send(guild_config.get('discord_message_end'))
                 # self.log_service.print_and_log(f'Parsed output: {parsed_reponse})')
             else:
                 # If not dict, then consider it an error
@@ -165,40 +163,42 @@ class DiscordSprite(BaseClass):
         if var:
             return template.format(var)
 
-        return template.format
+        return template.format()
 
     def message_specific_channels(self, guild_config, message):
-        for config_channel_id in guild_config.discord_specific_channel_ids:
+        for config_channel_id in guild_config.get('discord_specific_channel_ids'):
             if message.channel.id == int(config_channel_id):
                 return message.channel.id
         return None
     
     def message_excluded_channels(self, guild_config, message):
-        for config_channel_id in guild_config.discord_all_channels_excluded_channels:
+        for config_channel_id in guild_config.get('discord_all_channels_excluded_channels'):
             if message.channel.id == int(config_channel_id):
                 return None
         return message.channel.id
 
     def find_guild_config(self, guild):
         if guild:
-            for moniker in self.deployment:
+            for moniker in self.deployment.monikers.values():
                 if 'discord' in moniker.enabled_sprite_names:
-                    if guild in moniker.discord_config.discord_enabled_servers:
+                    servers = moniker.discord_config.get('discord_enabled_servers')
+                    if servers and guild.id in servers:
                         return moniker.discord_config
+
         print(f"No matching discord config found for guild: {guild}")
         return None
     
     def channel_join_ready(self, guild_config, guild):
             # If specific channels enabled, find one that is named 'general' or any approved channel
-            matching_channel_id = None
-            if guild_config.discord_specific_channels_enabled and guild_config.discord_specific_channel_ids is not None:
+            matching_channel = None
+            if guild_config.get('discord_specific_channels_enabled') and guild_config.get('discord_specific_channel_ids') is not None:
                 for channel in guild.channels:
-                    for config_channel_id in guild_config.discord_specific_channel_ids:
+                    for config_channel_id in guild_config.get('discord_specific_channel_ids'):
                         if channel.id == int(config_channel_id):
                             if isinstance(channel, discord.TextChannel) and channel.name == 'general':
-                                return channel.id
-                            matching_channel_id = channel.id
-                return matching_channel_id
+                                return channel
+                            matching_channel = channel
+                return matching_channel
             
             # Otherwise try to return 'general', and return None if we can't.
             for channel in guild.channels:

@@ -31,7 +31,7 @@ class BaseClass:
     
     @staticmethod
     def parse_env_string_list(env_var):
-        if not isinstance(env_var, str):
+        if isinstance(env_var, str):
             potential_vars = [
                 str(id).strip() for id in env_var.split(",") if id.strip()
             ]
@@ -46,7 +46,7 @@ class BaseClass:
     
     @staticmethod
     def parse_env_int_list(env_var):
-        if not isinstance(env_var, list):
+        if isinstance(env_var, str):
             potential_vars = [
                 int(id.strip()) for id in env_var.split(",") if id.strip()
             ]
@@ -62,32 +62,33 @@ class BaseClass:
     @staticmethod
     def check_required_env_vars(instance, moniker_env_vars, deployment_env_vars):
         # Moniker_env_vars
-        if instance.MONIKER_REQUIRED_VARIABLES:
-            for req in instance.MONIKER_REQUIRED_VARIABLES:
+        if instance._MONIKER_REQUIRED_VARIABLES:
+            for req in instance._MONIKER_REQUIRED_VARIABLES:
                 if req not in moniker_env_vars:
                     raise ValueError(
                         f"Error: required config var missing at moniker level: {req}"
                     )
-        if instance.DEPLOYMENT_REQUIRED_VARIABLES:
-            for req in instance.DEPLOYMENT_REQUIRED_VARIABLES:
-                if req in moniker_env_vars:
-                    raise ValueError(
-                        f"Error: config var must be set at deployment level: {req}"
-                    )
-        # Deployment_env_vars
-        if instance.DEPLOYMENT_REQUIRED_VARIABLES:
-            for req in instance.DEPLOYMENT_REQUIRED_VARIABLES:
-                if req not in deployment_env_vars:
-                    raise ValueError(
-                        f"Error: required config var missing at deployment level: {req}"
-                    )
-        if instance.MONIKER_REQUIRED_VARIABLES:
-            for req in instance.MONIKER_REQUIRED_VARIABLES:
+        if instance._MONIKER_REQUIRED_VARIABLES:
+            for req in instance._MONIKER_REQUIRED_VARIABLES:
                 if req in deployment_env_vars:
                     raise ValueError(
                         f"Error: config var must be set at moniker level: {req}"
                     )
-
+        # Deployment_env_vars
+        if instance._DEPLOYMENT_REQUIRED_VARIABLES:
+            for req in instance._DEPLOYMENT_REQUIRED_VARIABLES:
+                if req in moniker_env_vars:
+                    raise ValueError(
+                        f"Error: config var must be set at deployment level: {req}"
+                    )
+        if instance._DEPLOYMENT_REQUIRED_VARIABLES:
+            for req in instance._DEPLOYMENT_REQUIRED_VARIABLES:
+                if req not in deployment_env_vars:
+                    raise ValueError(
+                        f"Error: required config var missing at deployment level: {req}"
+                    )
+                value = moniker_env_vars.get(req)
+                
     @staticmethod
     def check_class_required_vars(instance):
         for var in vars(instance):
@@ -99,10 +100,10 @@ class BaseClass:
                     )
     
     @staticmethod
-    def check_required_vars_list(required_vars):
+    def check_required_vars_list(instance, required_vars):
         for var in required_vars:
             if not var.startswith("_"):
-                value = getattr(required_vars, var, None)
+                value = getattr(instance, var, None)
                 if value is None or value == "":
                     raise ValueError(
                         f"{var} is not set or is an empty string after loading environment variables"
@@ -114,7 +115,7 @@ class BaseClass:
             if not var.startswith("_") and not callable(getattr(class_config, var)):
                 if var in sprite_config:
                     raise ValueError(f"{var} from {class_config.__class__.__name__} already exists in sprite_config!")
-                setattr(sprite_config, var, val)
+                sprite_config[var] = val
         return sprite_config
     
     @staticmethod

@@ -28,10 +28,8 @@ class DeploymentClass(BaseClass):
         ShelbyConfig
     ]
     
-    
     @classmethod
     def load_and_check_deployment(cls, deployment_name):
-
 
         cls.deployment_name = deployment_name
         # Confirm env is loaded for deployment names
@@ -110,8 +108,6 @@ class MonikerClass(DeploymentClass):
         for var in list(vars(self).keys()):
             if var.startswith("_") and callable(getattr(self, var)):
                 continue
-            if var not None:
-                continue
             env_var_name = f"{deployment}_{moniker}_{var.upper()}"
             env_value = BaseClass.get_and_convert_env_vars(env_var_name)
             if env_value is not None:
@@ -145,6 +141,8 @@ class MonikerClass(DeploymentClass):
                 # Else we default to class default settings
             # Check required env_vars exist
             BaseClass.check_required_env_vars(class_config, moniker_env_vars, deployment_env_vars)
+            for var, val in deployment_env_vars.items():
+                setattr(DeploymentClass, var, val)
             class_config.check_parse_config()
             # Then merge classes to sprite_config
             BaseClass.merge_vars_to_instance(sprite_config, class_config)
