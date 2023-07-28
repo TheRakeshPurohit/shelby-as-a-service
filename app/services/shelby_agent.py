@@ -6,7 +6,7 @@ import json, yaml, re
 import openai, pinecone, tiktoken
 from typing import Optional
 from langchain.embeddings import OpenAIEmbeddings
-from pinecone_text.sparse import BM25Encoder
+# from .pinecone_io_pinecone_text.sparse import BM25Encoder
 
 from .classes.base import BaseClass
 from .classes.config import ShelbyConfig

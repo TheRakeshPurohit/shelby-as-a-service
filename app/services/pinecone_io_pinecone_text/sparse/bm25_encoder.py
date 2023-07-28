@@ -8,9 +8,9 @@ import wget
 from typing import List, Optional, Dict, Union, Tuple
 from collections import Counter
 
-from pinecone_text.sparse import SparseVector
-from pinecone_text.sparse.base_sparse_encoder import BaseSparseEncoder
-from pinecone_text.sparse.bm25_tokenizer import BM25Tokenizer
+from app.services.pinecone_io_pinecone_text.sparse import SparseVector
+from app.services.pinecone_io_pinecone_text.sparse import BaseSparseEncoder
+from app.services.pinecone_io_pinecone_text.sparse.bm25_tokenizer import BM25Tokenizer
 
 
 class BM25Encoder(BaseSparseEncoder):

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Union, List
 
-from pinecone_text.sparse import SparseVector
+from app.services.pinecone_io_pinecone_text.sparse import SparseVector
 
 
 class BaseSparseEncoder(ABC):

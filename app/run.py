@@ -5,28 +5,29 @@ import traceback
 
 from services.classes.deployment_runner import DeploymentClass
 from sprites.discord_sprite import DiscordSprite
+from services.build.deployment_builder import ConfigTemplateCreator, EnvConfigCreator, WorkflowBuilder
 
-def main(args):
+def main(command):
     try:
-        if args.create_template:
-            ConfigTemplate(args.create_template.strip()).create_template()
-        elif args.update_config:
-            ConfigCreator(args.update_config.strip()).update_config()
-        elif args.build_workflow:
-            WorkflowBuilder(args.build_workflow.strip()).build_workflow()
+        if command.create_template:
+            ConfigTemplateCreator(command.create_template).create_template()
+        elif command.update_config:
+            EnvConfigCreator(command.update_config).update_config()
+        elif command.build_workflow:
+            WorkflowBuilder(command.build_workflow).build_workflow()
         
         
-        if args.container_deployment:
-            run_container_deployment(args.container_deployment.strip())
-        if args.local_deployment:
-            run_local_deployment(args.local_deployment.strip())
+        if command.container_deployment:
+            run_container_deployment(command.container_deployment)
+        if command.local_deployment:
+            run_local_deployment(command.local_deployment)
 
-        elif args.web:
-            # Call your web function here.
-            pass
-        elif args.index:
-            # Call your index function here.
-            pass
+        # if command.web:
+        #     # Call your web function here.
+        #     pass
+        # if command.index:
+        #     # Call your index function here.
+        #     pass
 
     except Exception as error:
         # Logs error and sends error to sprite
@@ -54,7 +55,6 @@ def run_local_deployment(deployment_name):
                 case _:
                     print(f"oops no {sprite} of that name")
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
@@ -78,10 +78,10 @@ if __name__ == "__main__":
     )
 
     # Manually create args for testing
-    test_args = ["--local_deployment", "test"]
+    # test_args = ["--local_deployment", "test"]
 
     # test_args = ['--create_template', 'test']
-    # test_args = ['--update_config', 'test']
+    test_args = ['--update_config', 'test']
     # test_args = ['--build_workflow', 'test']
 
     args = parser.parse_args(test_args)
