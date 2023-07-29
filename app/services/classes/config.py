@@ -88,3 +88,12 @@ class ShelbyConfig(BaseClass):
     def check_parse_config(self):
 
         BaseClass.check_class_required_vars(self)
+
+@dataclass
+class AllSpritesAndServices(BaseClass):
+    all_sprites: list = [
+        DiscordConfig
+        ]
+    all_services: list = [
+        ShelbyConfig
+        ]

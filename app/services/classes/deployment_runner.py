@@ -113,7 +113,6 @@ class MonikerClass(DeploymentClass):
                 case 'discord':
                     self.discord_config = self.load_moniker_services(DiscordConfig)
 
-
     def load_moniker_vars(self):
         deployment = BaseClass.deployment_name
         moniker = self.moniker_name
