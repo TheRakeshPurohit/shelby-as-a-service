@@ -39,14 +39,14 @@ def run_container_deployment(deployment_name):
     deployment = DeploymentClass()
     deployment.load_and_check_deployment(deployment_name)
     for moniker in deployment.monikers:
-        for sprite in moniker.enabled_sprite_names:
+        for sprite in moniker.moniker_enabled_sprite_names:
             run_sprite(sprite)
 
 def run_local_deployment(deployment_name):
     deployment = DeploymentClass()
     deployment.load_and_check_deployment(deployment_name)
     for _, moniker_instance in deployment.monikers.items():
-        for sprite in moniker_instance.enabled_sprite_names: 
+        for sprite in moniker_instance.moniker_enabled_sprite_names: 
             match sprite:
                 case "discord":
                     DiscordSprite(deployment).run_discord_sprite()
@@ -78,10 +78,10 @@ if __name__ == "__main__":
     )
 
     # Manually create args for testing
-    # test_args = ["--local_deployment", "test"]
+    test_args = ["--local_deployment", "test"]
 
     # test_args = ['--create_template', 'test']
-    test_args = ['--update_config', 'test']
+    # test_args = ['--update_config', 'test']
     # test_args = ['--build_workflow', 'test']
 
     args = parser.parse_args(test_args)

@@ -1,22 +1,10 @@
 import os
+import string
+import ast
 
 class BaseClass:
     
     deployment_name: str = None
-    
-    @staticmethod
-    def get_and_convert_env_var(env_var_name=None):
-        # If None pulls from .env for container deployments
-        # Other wise it paths to deployment folder
-        env_value = os.getenv(env_var_name)
-        env_value = BaseClass.parse_env_variable(env_value)
-        if env_value is None:
-            return None
-        if isinstance(env_value, str):
-            env_value = BaseClass.check_str_for_list(env_value)
-        if env_value is None:
-            return None
-        return env_value
     
     @staticmethod
     def load_existing_env_file(filepath):
@@ -39,14 +27,21 @@ class BaseClass:
         return env_vars
     
     @staticmethod
-    def parse_env_variable(env_var):
-        if env_var is None or env_var.lower() == "none" or env_var == "":
+    def get_and_convert_env_var(env_var_name):
+        env_value = os.getenv(env_var_name.upper())
+        env_value = BaseClass.parse_env_variable(env_value)
+        if env_value is None:
             return None
-        if env_var.lower() in ("yes", "true", "t", "y"):
-            return True
-        if env_var.lower() in ("no", "false", "f", "n"):
-            return False
-        # try to convert to int or float
+        if isinstance(env_value, str):
+            env_value = BaseClass.check_str_for_list(env_value)
+        if env_value is None:
+            return None
+        return env_value
+    
+    @staticmethod
+    def parse_env_variable(env_var):
+        if env_var is None:
+            return None
         try:
             # check for integer
             env_var = int(env_var)
@@ -56,73 +51,47 @@ class BaseClass:
                 # if not integer, check for float
                 env_var = float(env_var)
             except ValueError:
-                # if it's neither, leave it as is
-                pass
+                if env_var.lower() == "none" or env_var == "":
+                    return None
+                # bool check
+                if env_var.lower() in ("yes", "true", "t", "y"):
+                    return True
+                if env_var.lower() in ("no", "false", "f", "n"):
+                    return False
+        # Otherwise it's a a string
         return env_var
     
     @staticmethod
     def check_str_for_list(env_var):
-        env_var = env_var.strip().split(",")
-        if len(env_var) == 1:
-            # Not a list, so skip.
-            return env_var[0]
-        env_var_list = []
-        for split in env_var:
-            env_var_list.append(BaseClass.parse_env_variable(split))
-        return env_var
-            
-    @staticmethod 
-    def load_and_check_env_list(var, moniker_name=None):
-        if moniker_name is None:
-            return BaseClass.get_and_convert_env_var(f"{BaseClass.deployment_name.upper()}_{var.upper()}")
-        else:
-            return BaseClass.get_and_convert_env_var(f"{BaseClass.deployment_name.upper()}_{moniker_name.upper()}_{var.upper()}")
+        try:
+            maybe_list = ast.literal_eval(env_var)
+            env_var_list = []
+            for split in maybe_list:
+                env_var_list.append(BaseClass.parse_env_variable(split))
+            return env_var_list
+        except (ValueError, SyntaxError):
+            # If a ValueError or SyntaxError is raised, return the original string value
+            return env_var
         
     @staticmethod
-    def parse_env_int_list(env_var):
-        if isinstance(env_var, str):
-            potential_vars = [
-                int(id.strip()) for id in env_var.split(",") if id.strip()
-            ]
-        else:
-            potential_vars = env_var
-        if potential_vars is None or potential_vars == []:
-            raise ValueError(f"No list items for: {env_var}")
-        for potential_var in potential_vars:
-            if potential_var is None or potential_var == "":
-                raise ValueError(f"Invalid list item in: {env_var}")
-        return potential_vars
-        
+    def get_and_convert_env_list(env_var_name):
+        # For getting a list from the env
+        env_value = os.getenv(env_var_name.upper())
+        return BaseClass.parse_list(env_value)
+       
     @staticmethod
-    def check_required_env_vars(instance, moniker_env_vars, deployment_env_vars):
-        # Moniker_env_vars
-        if instance.MONIKER_REQUIRED_VARIABLES_:
-            for req in instance.MONIKER_REQUIRED_VARIABLES_:
-                if req not in moniker_env_vars:
-                    raise ValueError(
-                        f"Error: required config var missing at moniker level: {req}"
-                    )
-        if instance.MONIKER_REQUIRED_VARIABLES_:
-            for req in instance.MONIKER_REQUIRED_VARIABLES_:
-                if req in deployment_env_vars:
-                    raise ValueError(
-                        f"Error: config var must be set at moniker level: {req}"
-                    )
-        # Deployment_env_vars
-        if instance.DEPLOYMENT_REQUIRED_VARIABLES_:
-            for req in instance.DEPLOYMENT_REQUIRED_VARIABLES_:
-                if req in moniker_env_vars:
-                    raise ValueError(
-                        f"Error: config var must be set at deployment level: {req}"
-                    )
-        if instance.DEPLOYMENT_REQUIRED_VARIABLES_:
-            for req in instance.DEPLOYMENT_REQUIRED_VARIABLES_:
-                if req not in deployment_env_vars:
-                    raise ValueError(
-                        f"Error: required config var missing at deployment level: {req}"
-                    )
-                value = moniker_env_vars.get(req)
-                
+    def parse_list(env_var):
+        # When you know it's a list
+        try:
+            maybe_list = ast.literal_eval(env_var)
+            env_var_list = []
+            for split in maybe_list:
+                env_var_list.append(BaseClass.parse_env_variable(split))
+            return env_var_list
+        except (ValueError, SyntaxError):
+            # If a ValueError or SyntaxError is raised, return the original string value
+            return [env_var]
+    
     @staticmethod
     def check_class_required_vars(instance):
         for var in vars(instance):
@@ -152,13 +121,4 @@ class BaseClass:
                 sprite_config[var] = val
         return sprite_config
     
-    @staticmethod
-    def load_service_config(sprite_config, service_config, service_instance):
-        for var, _ in vars(service_config).items_():
-            if not var.startswith("_") and not var.endswith("_") and not callable(getattr(service_config, var)):
-                sprite_val = getattr(sprite_config, var, None)
-                if sprite_val is None:
-                    raise ValueError(f"{var} not found in sprite_config for {service_instance.__class__.__name__}")
-                setattr(service_instance, var, sprite_val)
-        return sprite_config
-        
+ 

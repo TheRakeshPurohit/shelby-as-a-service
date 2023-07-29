@@ -1,0 +1,108 @@
+# This file will define the deployment.env file. If you want to update it later and add monikers, I suggest doing so manually here
+deployment_name: test
+monikers:
+  - moniker_name: personal # Monikers are a name for people, clubs, chat rooms, businesses, and other organizations of people
+    moniker_enabled: true # Will disable the moniker when creating a deployment workflow
+    moniker_enabled_data_namespaces: # Topics agent will respond to and retrieve data from
+      - deepgram
+      - tatum
+      - stackpath
+    sprites:
+      discord:
+        discord_sprite_enabled: true
+        discord_enabled_servers:
+          - 397459590767312906
+          - 1132125546340421733
+        # Requests method - at least one is required
+        discord_requests_options:
+          discord_manual_requests_enabled: true # Manual allows for @discord-sprite engagement
+          discord_auto_response:
+            discord_auto_response_enabled: false # Auto responds automatically to relevant questions
+            discord_auto_response_cooldown: 10 # Time in minutes to cooldown between auto-responding to specific users
+            discord_auto_respond_in_threads: false
+        # Channel selection - at least one is required
+        discord_channel_options:
+          discord_all_channels:
+            discord_all_channels_enabled: false # Respond in all channels
+            discord_all_channels_excluded_channels: # List of channels sprite is excluded from replying in
+              -
+              -
+          discord_specific_channels:
+            discord_specific_channels_enabled: true # Respond in specific channels
+            discord_specific_channel_ids: # List of channels sprite will reply in. At least one channel is required
+              - 1110379342745321472
+              - 1128776389227720795
+              - 1133913077268627526
+        discord_user_daily_token_limit: 30000
+      slack:
+        slack_sprite_enabled: false
+        slack_enabled_servers:
+        slack_requests_options:
+          slack_manual_requests_enabled: true # Manual allows for @slack-sprite engagement
+          slack_auto_response:
+            slack_auto_response_enabled: false # Auto responds automatically to relevant questions
+            slack_auto_response_cooldown: 10 # Time in minutes to cooldown between auto-responding to specific users
+            slack_auto_respond_in_threads: false
+      web:
+        web_sprite_enabled: false
+# Your data sources and index(es) will be configured here. 
+# I suggest you configure your discord/slack/sprite first, and then attempt to add documents. 
+# You can add more data sources as you like. See documentation for complete list of options.
+index_names:
+  - index_name: shelby-as-a-service
+    document_namespaces:
+      - document_namespace: deepgram
+        description: Advanced AI services including, speech-to-text, translation,
+          and sentiment analysis.
+        resources:
+          - source: developers.deepgram.com/reference
+            update_enabled: true
+            target_url: index/inputs/input_open_api_specs/deepgram
+            target_type: open_api_spec
+            doc_type: hard
+            api_url_format: https://developers.deepgram.com/reference/{operationId}
+          - source: developers.deepgram.com/docs
+            update_enabled: true
+            target_url: https://developers.deepgram.com/sitemap.xml
+            filter_url: https://developers.deepgram.com/docs/
+            target_type: sitemap
+            doc_type: soft
+      - document_namespace: tatum
+        description: Blockchain and web3 infrastructure and services like RPC, NFTs,
+          and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and
+          an API.
+        resources:
+          - source: docs.tatum.com
+            update_enabled: true
+            load_all_paths: true
+            target_url: https://docs.tatum.com
+            target_type: gitbook
+            doc_type: soft
+          - source: docs.tatum.io
+            update_enabled: true
+            load_all_paths: true
+            target_url: https://docs.tatum.io
+            target_type: gitbook
+            doc_type: soft
+          - source: api.tatum.io
+            update_enabled: true
+            target_url: index/inputs/input_open_api_specs/tatum
+            target_type: open_api_spec
+            doc_type: hard
+            api_url_format: https://apidoc.tatum.io/tag/{tag}#operation/{operationId}
+      - document_namespace: stackpath
+        description: cloud infrastructure such as CDN, WAF, VMs, serverless javascript,
+          and containers
+        resources:
+          - source: stackpath.dev/docs
+            enabled: true
+            target_url: https://stackpath.dev/docs
+            target_type: generic
+            doc_type: soft
+          - source: stackpath.dev/reference
+            enabled: true
+            target_url: index/inputs/input_open_api_specs/stackpath
+            target_type: open_api_spec
+            doc_type: hard
+            api_url_format: https://stackpath.dev/reference/{operationId}
+

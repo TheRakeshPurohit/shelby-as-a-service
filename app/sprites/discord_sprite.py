@@ -31,6 +31,7 @@ class DiscordSprite(BaseClass):
             guild_config = self.find_guild_config(guild)
             if guild_config is None:
                 await guild.leave()
+                return
             channel = self.channel_join_ready(guild_config, guild)
             if channel:
                 await channel.send(
@@ -44,6 +45,7 @@ class DiscordSprite(BaseClass):
                 guild_config = self.find_guild_config(guild)
                 if guild_config is None:
                     await guild.leave()
+                    return
                 channel = self.channel_join_ready(guild_config, guild)
                 if channel:
                     await channel.send(
@@ -180,7 +182,7 @@ class DiscordSprite(BaseClass):
     def find_guild_config(self, guild):
         if guild:
             for moniker in self.deployment.monikers.values():
-                if 'discord' in moniker.enabled_sprite_names:
+                if 'discord' in moniker.moniker_enabled_sprite_names:
                     servers = moniker.discord_config.get('discord_enabled_servers')
                     if servers and guild.id in servers:
                         return moniker.discord_config

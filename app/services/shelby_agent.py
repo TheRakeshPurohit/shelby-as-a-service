@@ -18,8 +18,7 @@ class ShelbyAgent(BaseClass):
 
     def __init__(self, sprite_config):
 
-        # Loads config from calling sprite
-        BaseClass.load_service_config(sprite_config, ShelbyConfig, self)
+        pass
         
         # self.action_agent = ActionAgent(self)
         # self.query_agent = QueryAgent(self)
