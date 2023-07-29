@@ -1,9 +1,9 @@
 
 from dataclasses import dataclass
-from .base import BaseClass
+from .shared_tools import ConfigSharedTools
 
 @dataclass
-class DiscordConfig(BaseClass):
+class DiscordConfig:
     ### These will all be set by file ###
     discord_manual_requests_enabled: bool = True 
     discord_auto_response_enabled: bool = False
@@ -52,28 +52,34 @@ class DiscordConfig(BaseClass):
                     continue
                 required_vars.append(var)
             
-        BaseClass.check_required_vars_list(self, required_vars)
+        ConfigSharedTools.check_required_vars_list(self, required_vars)
 
 @dataclass
-class ShelbyConfig(BaseClass):
+class ShelbyConfig:
     ### These will all be set by file ###
+    # _llm_model: str = 'gpt-3.5-turbo'
     action_llm_model: str = "gpt-4"
     # QueryAgent
-    pre_query_llm_model: str = "gpt-4"
-    max_doc_token_length: int = 1200
-    embedding_model: str = "text-embedding-ada-002"
-    tiktoken_encoding_model: str = "text-embedding-ada-002"
-    # pre_query_llm_model: str = 'gpt-3.5-turbo'
-    query_llm_model: str = "gpt-4"
-    vectorstore_top_k: int = 5
-    max_docs_tokens: int = 3500
-    max_docs_used: int = 5
-    max_response_tokens: int = 300
+    ceq_data_domain_constraints_enabled: bool = False
+    ceq_data_domain_constraints_llm_model: str = "gpt-4"
+    ceq_data_domain_none_found_message: str = "Query not related to any supported data domains (aka topics). Supported data domains are:\n"
+    ceq_keyword_generator_enabled: bool = False
+    ceq_keyword_generator_llm_model: str = "gpt-4"
+    ceq_doc_relevancy_check_enabled: bool = False
+    ceq_doc_relevancy_check_llm_model: str = "gpt-4"
+    ceq_embedding_model: str = "text-embedding-ada-002"
+    ceq_tiktoken_encoding_model: str = "text-embedding-ada-002"
+    ceq_docs_to_retrieve: int = 5
+    ceq_docs_max_token_length: int = 1200
+    ceq_docs_max_total_tokens: int = 3500
+    ceq_docs_max_used: int = 5
+    ceq_main_prompt_llm_model: str = "gpt-4"
+    ceq_max_response_tokens: int = 300
     openai_timeout_seconds: float = 180.0
     # APIAgent
-    select_operationID_llm_model: str = "gpt-4"
-    create_function_llm_model: str = "gpt-4"
-    populate_function_llm_model: str = "gpt-4"
+    api_agent_select_operationID_llm_model: str = "gpt-4"
+    api_agent_create_function_llm_model: str = "gpt-4"
+    api_agent_populate_function_llm_model: str = "gpt-4"
     
     # Adds as 'required' to deployment.env and workflow
     DEPLOYMENT_REQUIRED_VARIABLES_ = [
@@ -87,13 +93,14 @@ class ShelbyConfig(BaseClass):
  
     def check_parse_config(self):
 
-        BaseClass.check_class_required_vars(self)
+        ConfigSharedTools.check_class_required_vars(self)
 
 @dataclass
-class AllSpritesAndServices(BaseClass):
-    all_sprites: list = [
+class AllSpritesAndServices:
+    all_sprites = [
         DiscordConfig
         ]
-    all_services: list = [
+    all_services = [
         ShelbyConfig
         ]
+    

@@ -1,9 +1,7 @@
 import os
 import ast
 
-class BaseClass:
-    
-    deployment_name: str = None
+class ConfigSharedTools:
     
     @staticmethod
     def load_existing_env_file(filepath):
@@ -15,11 +13,11 @@ class BaseClass:
                 except ValueError:
                     # ignore lines that don't contain an equals sign
                     continue
-                env_value = BaseClass.parse_env_variable(env_value)
+                env_value = ConfigSharedTools.parse_env_variable(env_value)
                 if env_value is None:
                     continue
                 if isinstance(env_value, str):
-                    env_value = BaseClass.check_str_for_list(env_value)
+                    env_value = ConfigSharedTools.check_str_for_list(env_value)
                 if env_value is None:
                     continue
                 env_vars[env_var] = env_value
@@ -28,11 +26,11 @@ class BaseClass:
     @staticmethod
     def get_and_convert_env_var(env_var_name):
         env_value = os.getenv(env_var_name.upper())
-        env_value = BaseClass.parse_env_variable(env_value)
+        env_value = ConfigSharedTools.parse_env_variable(env_value)
         if env_value is None:
             return None
         if isinstance(env_value, str):
-            env_value = BaseClass.check_str_for_list(env_value)
+            env_value = ConfigSharedTools.check_str_for_list(env_value)
         if env_value is None:
             return None
         return env_value
@@ -66,7 +64,7 @@ class BaseClass:
             maybe_list = ast.literal_eval(env_var)
             env_var_list = []
             for split in maybe_list:
-                env_var_list.append(BaseClass.parse_env_variable(split))
+                env_var_list.append(ConfigSharedTools.parse_env_variable(split))
             return env_var_list
         except (ValueError, SyntaxError):
             # If a ValueError or SyntaxError is raised, return the original string value
@@ -76,7 +74,7 @@ class BaseClass:
     def get_and_convert_env_list(env_var_name):
         # For getting a list from the env
         env_value = os.getenv(env_var_name.upper())
-        return BaseClass.parse_list(env_value)
+        return ConfigSharedTools.parse_list(env_value)
        
     @staticmethod
     def parse_list(env_var):
@@ -85,7 +83,7 @@ class BaseClass:
             maybe_list = ast.literal_eval(env_var)
             env_var_list = []
             for split in maybe_list:
-                env_var_list.append(BaseClass.parse_env_variable(split))
+                env_var_list.append(ConfigSharedTools.parse_env_variable(split))
             return env_var_list
         except (ValueError, SyntaxError):
             # If a ValueError or SyntaxError is raised, return the original string value
@@ -111,13 +109,5 @@ class BaseClass:
                         f"{var} is not set or is an empty string after loading environment variables"
                     )
     
-    @staticmethod
-    def merge_vars_to_instance(sprite_config, class_config):
-        for var, val in vars(class_config).items():
-            if not var.startswith("_") and not var.endswith("_") and not callable(getattr(class_config, var)):
-                if var in sprite_config:
-                    raise ValueError(f"{var} from {class_config.__class__.__name__} already exists in sprite_config!")
-                sprite_config[var] = val
-        return sprite_config
     
  

@@ -3,7 +3,7 @@ deployment_name: test
 monikers:
   - moniker_name: personal # Monikers are a name for people, clubs, chat rooms, businesses, and other organizations of people
     moniker_enabled: true # Will disable the moniker when creating a deployment workflow
-    moniker_enabled_data_namespaces: # Topics agent will respond to and retrieve data from
+    moniker_enabled_data_domains: # Topics agent will respond to and retrieve data from
       - deepgram
       - tatum
       - stackpath

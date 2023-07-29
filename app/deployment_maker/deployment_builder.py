@@ -3,11 +3,11 @@ import textwrap
 import traceback
 import yaml
 from ruamel.yaml import YAML
-from services.classes.deployment_runner import DeploymentClass, MonikerClass
-from services.classes.base import BaseClass
-from services.classes.config import AllSpritesAndServices, DiscordConfig, ShelbyConfig
+from deployment_configurator.deployment_instance import DeploymentInstance, MonikerInstance
+from deployment_configurator.shared_tools import ConfigSharedTools 
+from deployment_configurator.data_classes import AllSpritesAndServices, DiscordConfig, ShelbyConfig
 
-class ConfigTemplateCreator(DeploymentClass):
+class ConfigTemplateCreator(DeploymentInstance):
     def __init__(self, deployment_name):
         self.deployment_name = deployment_name
 
@@ -40,7 +40,7 @@ class ConfigTemplateCreator(DeploymentClass):
         else:
             raise FileExistsError(f"The file {file_path} already exists.")
 
-class EnvConfigCreator(DeploymentClass):
+class EnvConfigCreator(DeploymentInstance):
     
     def __init__(self, deployment_name):
         self.deployment_name = deployment_name
@@ -48,7 +48,7 @@ class EnvConfigCreator(DeploymentClass):
         self.dir_path = f"deployments/{self.deployment_name}"
         self.file_path = f"{self.dir_path}/{self.deployment_name}_deployment.env"
         if os.path.exists(self.file_path):
-            self.existing_env_vars = self.load_existing_env_file(self.file_path)
+            self.existing_env_vars = ConfigSharedTools.load_existing_env_file(self.file_path)
         else:
             self.existing_env_vars = None
         with open(
@@ -87,7 +87,7 @@ class EnvConfigCreator(DeploymentClass):
         self.env_list.append("\t## Devops variables only set at deployment level ##\n")
         self.env_list.append("\t\t# These are required to deploy to container #")
         self.env_list.append(f"\t\tDEPLOYMENT_NAME={self.deployment_name}")
-        for var in DeploymentClass.DEVOPS_VARIABLES_:
+        for var in DeploymentInstance.DEVOPS_VARIABLES_:
             env_var_name = f"{self.deployment_name}_{var}"
             check_env = self.only_add_env_vars(env_var_name)
             self.env_list.append(f"\t\t{check_env}")
@@ -96,7 +96,7 @@ class EnvConfigCreator(DeploymentClass):
         used_vars = []
         self.env_list.append("\n### Deployment Level Variables ###\n")
         self.env_list.append("\t\t# Required here #")
-        for var in DeploymentClass.DEPLOYMENT_REQUIRED_VARIABLES_:
+        for var in DeploymentInstance.DEPLOYMENT_REQUIRED_VARIABLES_:
             env_var_name = f"{self.deployment_name}_{var}"
             check_env = self.only_add_env_vars(env_var_name)
             self.env_list.append(f"\t\t{check_env}")
@@ -153,7 +153,7 @@ class EnvConfigCreator(DeploymentClass):
             f"\n### {moniker_name.upper()} Level Variables ###\n"
         )
         self.env_list.append("\t\t# Required here #")
-        for var in MonikerClass.MONIKER_REQUIRED_VARIABLES_:
+        for var in MonikerInstance.MONIKER_REQUIRED_VARIABLES_:
             env_var_name = f"{self.deployment_name}_{moniker_name}_{var}"
             check_env = self.only_add_env_vars(env_var_name)
             self.env_list.append(f"\t\t{check_env}")
@@ -226,7 +226,7 @@ class EnvConfigCreator(DeploymentClass):
                 return f"{env_var_name}={env_val}"
         return f"{env_var_name}="
 
-class WorkflowBuilder(DeploymentClass):
+class WorkflowBuilder(DeploymentInstance):
     
     def __init__(self, deployment_name):
 
@@ -385,13 +385,13 @@ CMD ["/bin/bash", "-c", "python app/run.py --deployment {self.deployment_name}"]
             f.write(github_actions_script)
 
     def exclude_secrets(self, var):
-        if var in DeploymentClass.SECRET_VARIABLES_:
+        if var in DeploymentInstance.SECRET_VARIABLES_:
             return None
         return var
     
     def generate_secrets(self):
         self.secrets_list = []
-        for secret in DeploymentClass.SECRET_VARIABLES_:
+        for secret in DeploymentInstance.SECRET_VARIABLES_:
             secret_name = f"{self.deployment_name.upper()}_{secret.upper()}"
             self.secrets_list.append(
                 f"""{secret_name}: ${{{{ secrets.{secret_name} }}}}"""
@@ -401,7 +401,7 @@ CMD ["/bin/bash", "-c", "python app/run.py --deployment {self.deployment_name}"]
         
         used_vars = []
         self.env_list.append("\n### Deployment Level Requirements ###\n")
-        for var in DeploymentClass.DEPLOYMENT_REQUIRED_VARIABLES_:
+        for var in DeploymentInstance.DEPLOYMENT_REQUIRED_VARIABLES_:
             env_var_name = f"{self.deployment_name}_{var}"
             check_env = self.only_add_env_vars(env_var_name)
             self.env_list.append(f"\t\t{check_env}")

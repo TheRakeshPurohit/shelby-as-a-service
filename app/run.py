@@ -3,11 +3,13 @@ import os
 import argparse
 import traceback
 
-from services.classes.deployment_runner import DeploymentClass
+from services.log_service import Logger
+from deployment_configurator.deployment_instance import DeploymentInstance
 from sprites.discord_sprite import DiscordSprite
-from services.build.deployment_builder import ConfigTemplateCreator, EnvConfigCreator, WorkflowBuilder
+from deployment_maker.deployment_builder import ConfigTemplateCreator, EnvConfigCreator, WorkflowBuilder
 
 def main(command):
+    print(f"Starting deployment with command run.py --{command}")
     try:
         if command.create_template:
             ConfigTemplateCreator(command.create_template).create_template()
@@ -36,14 +38,14 @@ def main(command):
         raise
 
 def run_container_deployment(deployment_name):
-    deployment = DeploymentClass()
+    deployment = DeploymentInstance()
     deployment.load_and_check_deployment(deployment_name)
     for moniker in deployment.monikers:
         for sprite in moniker.moniker_enabled_sprite_names:
             run_sprite(sprite)
 
 def run_local_deployment(deployment_name):
-    deployment = DeploymentClass()
+    deployment = DeploymentInstance()
     deployment.load_and_check_deployment(deployment_name)
     for _, moniker_instance in deployment.monikers.items():
         for sprite in moniker_instance.moniker_enabled_sprite_names: 

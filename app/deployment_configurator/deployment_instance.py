@@ -1,10 +1,11 @@
 import os
 from dataclasses import dataclass, field
+from typing import Optional
 from dotenv import load_dotenv
-from .base import BaseClass
-from .config import DiscordConfig, ShelbyConfig
+from .shared_tools import ConfigSharedTools
+from .data_classes import DiscordConfig, ShelbyConfig
 
-class DeploymentClass(BaseClass):
+class DeploymentInstance:
     # Initialized with deployment_name as an arg
     deployment_name: str = None
     enabled_moniker_names: list = []
@@ -49,15 +50,17 @@ class DeploymentClass(BaseClass):
 
         cls.deployment_name = deployment_name
         # Confirm env is loaded for deployment names
-        DeploymentClass.load_deployment_name()
+        DeploymentInstance.load_deployment_name()
         
         # Get and and load monikers
-        cls.enabled_moniker_names = BaseClass.get_and_convert_env_list(f'{cls.deployment_name}_enabled_moniker_names')
+        cls.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_list(f'{cls.deployment_name}_enabled_moniker_names')
 
         for moniker_name in cls.enabled_moniker_names:
-            cls.monikers[moniker_name] = MonikerClass(moniker_name=moniker_name)
+            moniker = MonikerInstance(moniker_name=moniker_name)
+            moniker.load_and_check_moniker()
+            cls.monikers[moniker_name] = moniker
 
-        BaseClass.check_class_required_vars(cls)
+        ConfigSharedTools.check_class_required_vars(cls)
     
     @classmethod
     def load_deployment_name(cls):
@@ -78,65 +81,52 @@ class DeploymentClass(BaseClass):
             raise ValueError(
                 "No deployment found in env."
             )
-        BaseClass.deployment_name = cls.deployment_name
+        ConfigSharedTools.deployment_name = cls.deployment_name
       
 @dataclass
-class MonikerClass(DeploymentClass):
+class MonikerInstance(DeploymentInstance):
     
     moniker_name: str = field(default=None)
-    moniker_enabled_sprite_names: list = field(default_factory=list)
     moniker_enabled: bool = field(default=None)
+    moniker_enabled_sprite_names: list = field(default_factory=list)
+    moniker_enabled_data_domains: list = field(default_factory=list)
+    discord_config: Optional[dict] = field(default_factory=dict)
     
     # Adds as 'required' to deployment.env and workflow
     MONIKER_REQUIRED_VARIABLES_ = [
         "moniker_enabled",
         "moniker_enabled_sprite_names",
-        "moniker_enabled_data_namespaces"
+        "moniker_enabled_data_domains"
     ]
     
-    def __post_init__(self):
-        self.load_and_check_moniker()
-        
     def load_and_check_moniker(self):
        
-        self.load_moniker_vars()
-        if self.moniker_enabled is False:
-            raise ValueError(f"Moniker disabled: {self.moniker_name}")
-        self.moniker_enabled_sprite_names = MonikerClass.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_sprite_names')
-        self.moniker_enabled_data_namespaces = MonikerClass.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}moniker_enabled_data_namespaces')
-        
-        BaseClass.check_class_required_vars(self)
+        self.moniker_enabled = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled')
+        self.moniker_enabled_sprite_names = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_sprite_names')
+        self.moniker_enabled_data_domains = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_data_domains')
         
         # Load variables that are defined specifically for the moniker's sprites
         for sprite_name in self.moniker_enabled_sprite_names:
             match sprite_name:
                 case 'discord':
                     self.discord_config = self.load_moniker_services(DiscordConfig)
-
-    def load_moniker_vars(self):
-        deployment = BaseClass.deployment_name
-        moniker = self.moniker_name
-        for var in list(vars(self).keys()):
-            if var.startswith("_") and callable(getattr(self, var)):
-                continue
-            env_var_name = f"{deployment}_{moniker}_{var}"
-            env_value = BaseClass.get_and_convert_env_var(env_var_name)
-            if env_value is not None:
-                setattr(self, var, env_value)
+                    
+        ConfigSharedTools.check_class_required_vars(self)
     
     def load_moniker_services(self, sprite):
-        sprite_config = {}
-        # Outputs sprite_config which contains all variables from sprite and it's required classes
-        deployment = DeploymentClass.deployment_name
+        deployment = DeploymentInstance.deployment_name
         moniker = self.moniker_name
         sprite_name = sprite.__name__
         
+        # Outputs sprite_config which contains all requried data classes for sprite
+        sprite_config = {}
         # Load vars for moniker and deployment from env
         sprite_classes = []
         # Builds list of sprite and sprite's services to iterate
         for class_name in sprite.SPRITE_REQS_:
             sprite_classes.append(sprite)
             sprite_classes.append(self.CLASSES_[class_name])
+            
         for ClassConfig in sprite_classes:
             class_config = ClassConfig()
             deployment_env_vars = {}
@@ -144,9 +134,9 @@ class MonikerClass(DeploymentClass):
                 if var.startswith("_") and callable(getattr(class_config, var)):
                     continue
                 moniker_env_var_name = f"{deployment}_{moniker}_{sprite_name}_{var}"
-                moniker_env_value = BaseClass.get_and_convert_env_var(moniker_env_var_name)
+                moniker_env_value = ConfigSharedTools.get_and_convert_env_var(moniker_env_var_name)
                 deployment_env_var_name = f"{deployment}_{sprite_name}_{var.upper()}"
-                deployment_env_value = BaseClass.get_and_convert_env_var(deployment_env_var_name)
+                deployment_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_env_var_name)
                 # First we try to set class_config variable with moniker variable and then deployment variable
                 if moniker_env_value is not None:
                     setattr(class_config, var, moniker_env_value)
@@ -157,20 +147,18 @@ class MonikerClass(DeploymentClass):
             # Special rules
             for var in class_config.DEPLOYMENT_REQUIRED_VARIABLES_:
                 env_var_name = f"{self.deployment_name}_{var}"
-                env_value = BaseClass.get_and_convert_env_var(env_var_name)
+                env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
                 deployment_env_vars[var] = env_value
             # Appends to deployment class
             for var, val in deployment_env_vars.items():
-                setattr(DeploymentClass, var, val)
+                setattr(DeploymentInstance, var, val)
             for var in class_config.MONIKER_REQUIRED_VARIABLES_:
                 env_var_name = f"{self.deployment_name}_{moniker}_{sprite_name}_{var}"
-                env_value = BaseClass.get_and_convert_env_var(env_var_name)
+                env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
                 setattr(class_config, var, env_value)
                     
             class_config.check_parse_config()
-            # Then merge classes to sprite_config
-            BaseClass.merge_vars_to_instance(sprite_config, class_config)
-            
-            
+            sprite_config[f"{class_config.__class__.__name__}"] = class_config
+    
         return sprite_config
     
