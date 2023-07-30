@@ -86,7 +86,7 @@ for var, val in deployment_vars.items():
             {var: {"value": val}}
         )
     else:
-        val = f"'{val}'"
+        # val = f"'{val}'"
         config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
             {var: {"value": val}}
         )
