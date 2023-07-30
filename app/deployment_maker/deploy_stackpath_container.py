@@ -73,13 +73,16 @@ config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry
 config["payload"]["workload"]["name"] = deployment_vars["WORKLOAD_NAME"].lower()
 config["payload"]["workload"]["slug"] = deployment_vars["WORKLOAD_SLUG"].lower()
 
-if "env" not in config["payload"]["workload"]["spec"]["containers"]["webserver"]:
-    config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"] = {}
-
 for var, val in deployment_vars.items():
-    config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
-        {var: {"value": val}}
-    )
+    if isinstance(val, str):
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"value": val}}
+        )
+    else:
+        val = f"'{val}'"
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"value": val}}
+        )
 
 url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'
 headers = {
