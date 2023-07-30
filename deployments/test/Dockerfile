@@ -14,5 +14,5 @@ COPY ./ ./
 RUN pip install --no-cache-dir -r deployments/test/requirements.txt
 
 # Run Sprites
-CMD ["/bin/bash", "-c", "app/deployment_maker/deployment_runner.py --container_deployment test"]
+CMD ["/bin/bash", "-c", "app/deployment_runner.py --container_deployment test"]
         

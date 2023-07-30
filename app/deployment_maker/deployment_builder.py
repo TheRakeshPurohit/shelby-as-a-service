@@ -443,7 +443,7 @@ COPY ./ ./
 RUN pip install --no-cache-dir -r deployments/{self.deployment_name}/requirements.txt
 
 # Run Sprites
-CMD ["/bin/bash", "-c", "app/deployment_maker/deployment_runner.py --container_deployment {self.deployment_name}"]
+CMD ["/bin/bash", "-c", "app/deployment_runner.py --container_deployment {self.deployment_name}"]
         """
         with open(f"deployments/{self.deployment_name}/Dockerfile", "w", encoding="utf-8") as f:
             f.write(dockerfile)
