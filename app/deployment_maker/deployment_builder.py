@@ -2,6 +2,7 @@ import os
 import textwrap
 import traceback
 import yaml
+import json
 from ruamel.yaml import YAML
 from deployment_configurator.deployment_instance import DeploymentInstance, MonikerInstance
 from deployment_configurator.shared_tools import ConfigSharedTools 
@@ -483,13 +484,13 @@ CMD ["/bin/bash", "-c", "python app/run.py --container_deployment {self.deployme
         secret_string = '### Secrets ###\n'
         for secret in self.secrets_list:
             secret_string += f"{secret}\n"
-        secret_string += "# Secrets in the format of 'secrets.NAME' with the 'NAME' portion added to your forked repos secrets. #\n"
+        secret_string += "# Secrets in the format of 'secrets.NAME' with the 'NAME' portion added to your forked repos secrets. #"
         secret_string = textwrap.indent(secret_string, " " * 24)
-        
-        env_string = f'DEPLOYMENT_VARS: "{self.deployment_vars}"\n'
+        env_vars_json = json.dumps(self.deployment_vars)
+        env_vars_json = f"DEPLOYMENT_VARS: '{env_vars_json}'"
         # for env_var_name, env_var in self.deployment_vars.items():
         #     env_string += f'{env_var_name.upper()}: "{env_var}"\n'
-        env_string = textwrap.indent(env_string, " " * 24)
+        env_vars_json = textwrap.indent(env_vars_json, " " * 24)
 
         github_actions_script = textwrap.dedent(
             f"""\
@@ -502,7 +503,7 @@ CMD ["/bin/bash", "-c", "python app/run.py --container_deployment {self.deployme
                 runs-on: ubuntu-latest
                 env:
                     \n{secret_string}
-                    \n{env_string}
+                    \n{env_vars_json}
                 steps:
                     - name: Checkout code
                         uses: actions/checkout@v3
