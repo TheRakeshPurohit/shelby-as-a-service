@@ -29,6 +29,10 @@ payload = {
 }
 response = requests.post(url, json=payload, headers=headers)
 bearer_token = json.loads(response.text)["access_token"]
+if response.status_code == 200 and bearer_token:
+    print("Got bearer token.")
+else:
+    raise ValueError("Did not get bearer token.")
 
 # get stack id
 stackpath_stack_id = os.environ.get(f"{deployment_name.upper()}_STACKPATH_STACK_ID")
@@ -37,24 +41,31 @@ headers = {"accept": "application/json", "authorization": f"Bearer {bearer_token
 
 response = requests.get(url, headers=headers)
 stack_id = json.loads(response.text)["id"]
+if response.status_code == 200 and stack_id:
+    print(f"Got stack_id: {stack_id}")
+else:
+    raise ValueError("Did not get stack_id.")
 
 
 # Get existing workloads
-url = f'https://gateway.stackpath.com/stack/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}'
-
-response = requests.get(url, headers=headers)
-
 # And delete an existing workload with the same name as the one we're trying to deploy
-if response.status_code == 200:
-    workloads = response.json()
-    if workloads.get("results") is not None:
-        for workload in workloads.get("results"):
-            if workload["name"] == os.environ.get("WORKLOAD_NAME"):
-                workload_id = workload["id"]
-                url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads/{workload_id}"
-                response = requests.delete(url, headers=headers)
-                if response.status_code == 204:
-                    print("workload deleted")
+url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads"
+response = requests.get(url, headers=headers)
+workloads = response.json()
+workloads = workloads.get("results")
+if response.status_code == 200 and workloads:
+    print(f"Got workloads: {len(workloads)}")
+else:
+    raise ValueError("Did not get workloads.")
+
+for workload in workloads:
+    print(f'Existing workload name: {workload["name"]}')
+    if workload["name"] == deployment_vars["WORKLOAD_NAME"].lower():
+        workload_id = workload["id"]
+        url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads/{workload_id}"
+        response = requests.delete(url, headers=headers)
+        if response.status_code == 204:
+            print("workload deleted")
                 
 # Load configuration from JSON file
 with open("app/deployment_maker/sp-2_container_request_template.json", "r", encoding="utf-8") as f:
