@@ -12,137 +12,124 @@ from langchain.schema import Document
 from langchain.document_loaders import GitbookLoader, SitemapLoader, RecursiveUrlLoader
 from langchain.text_splitter import BalancedRecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
-from pinecone_text.sparse import BM25Encoder
-
-from .log_service import LogService
-
-from .open_api_minifier_service import OpenAPIMinifierService
+from services.pinecone_io_pinecone_text.sparse import BM25Encoder
+from services.log_service import Logger
+from services.open_api_minifier_service import OpenAPIMinifierService
 
 # endregion
 
 class IndexService:
-    
-    ### IndexAgent loads configs and data sources ###
-    # IndexAgent
-    embedding_model: str = "text-embedding-ada-002"
-    embedding_max_chunk_size: int = 8191
-    embedding_batch_size: int = 100
-    vectorstore_dimension: int = 1536
-    vectorstore_upsert_batch_size: int = 20
-    vectorstore_metric: str = "dotproduct"
-    vectorstore_pod_type: str = "p1"
-    preprocessor_min_length: int = 100
-    text_splitter_goal_length: int = 1500
-    text_splitter_max_length: int = 2000
-    text_splitter_chunk_overlap: int = 100
-    index_name: str = None
-    index_env: str = None
-    indexed_metadata: list[str] = ["data_source", "doc_type", "target_type", "resource_name"]
-        
-    def __init__(self):
+       
+    def __init__(self, deployment):
         
         try:
-
-            self.log_agent = LogService('IndexAgent', 'IndexAgent.log', level='INFO')
-            self.agent_config = AppConfig(self.log_agent) 
-            self.tokenizer = tiktoken.encoding_for_model(self.agent_config.tiktoken_encoding_model)
+            self.deployment = deployment
+            self.log = Logger(self.deployment.deployment_name, 'index_agent', f'index_agent.md', level='INFO')
+            self.config = self.deployment.index_config['IndexConfig']
+            self.tokenizer = tiktoken.encoding_for_model(self.config.index_tiktoken_encoding_model)
             
+            self.prompt_template_path = "app/prompt_templates"
+            self.index_dir = f"deployments/{self.deployment.deployment_name}/index"
             # Loads data sources from file
-            with open(self.agent_config.document_sources_filepath, 'r') as stream:
-                    self.data_source_config = yaml.safe_load(stream)
-                    
+            with open(f"{self.index_dir}/index_description.yaml", 'r', encoding="utf-8") as stream:
+                    self.index_description_file = yaml.safe_load(stream)
+            
+            if self.index_description_file['index_name'] != self.deployment.index_name:
+                raise ValueError("Index name in index_description.yaml does not match index from deployment.env!")
+            
             pinecone.init(
-                environment=self.agent_config.vectorstore_environment,
-                api_key=self.agent_config.pinecone_api_key, 
+                environment=self.deployment.index_env,
+                api_key=self.deployment.pinecone_api_key, 
             )
             
             indexes = pinecone.list_indexes()
-            if self.agent_config.vectorstore_index not in indexes:
+            if self.deployment.index_name not in indexes:
                 # create new index
                 response = self.create_index()
-                self.log_agent.print_and_log(f"Created index: {response}")
-            self.vectorstore = pinecone.Index(self.agent_config.vectorstore_index)
+                self.log.print_and_log(f"Created index: {response}")
+            self.vectorstore = pinecone.Index(self.deployment.index_name)
  
             ### Adds sources from yaml config file to queue ###
             
-            self.document_sources_resources = []
+            self.enabled_data_sources = []
             # Iterate over each source aka namespace
-            for namespace, resources_dict in self.data_source_config.items():
-                # Then iterate over each resource within a source
-                for resource_name, resource_content in resources_dict['resources'].items():
-                    data_source = DataSourceConfig(self, namespace, resource_name, resource_content)
-                    if data_source.enabled == False:
-                        continue
-                    self.document_sources_resources.append(data_source)
-                    self.log_agent.print_and_log(f'Will index: {resource_name}')
+            for moniker_name, moniker in self.index_description_file['monikers'].items():
+                for data_domain_name, domain in moniker['data_domains'].items():
+                    domain_description = domain['description']
+                    for data_source_name, source in domain['sources'].items():
+                        data_source = DataSourceConfig(self, moniker_name, data_domain_name, domain_description, data_source_name, source)
+                        if data_source.update_enabled == False:
+                            continue
+                        self.enabled_data_sources.append(data_source)
+                        self.log.print_and_log(f'Will index: {data_source_name}')
                 
         except Exception as e:
             # Logs error and sends error to sprite
             error_info = traceback.format_exc()
-            self.log_agent.print_and_log(f"An error occurred: {e}\n{error_info}")
+            self.log.print_and_log(f"An error occurred: {e}\n{error_info}")
         
-            pass
+            raise
              
     def ingest_docs(self):
         
-        self.log_agent.print_and_log(f'Initial index stats: {self.vectorstore.describe_index_stats()}\n')
+        self.log.print_and_log(f'Initial index stats: {self.vectorstore.describe_index_stats()}\n')
         
-        for data_resource in self.document_sources_resources:
+        for data_source in self.enabled_data_sources:
             # Retries if there is an error
             retry_count = 2
             for i in range(retry_count):
                 try: 
-                    self.log_agent.print_and_log(f'Now indexing: {data_resource.resource_name}\n')
+                    self.log.print_and_log(f'Now indexing: {data_source.data_source_name}\n')
                     # Load documents
-                    documents = data_resource.scraper.load()
+                    documents = data_source.scraper.load()
                     
-                    self.log_agent.print_and_log(f'Total documents loaded for indexing: {len(documents)}')
+                    self.log.print_and_log(f'Total documents loaded for indexing: {len(documents)}')
                     
                     if not documents:
-                        self.log_agent.print_and_log(f'Skipping data_resource: no data loaded for {data_resource.resource_name}')
+                        self.log.print_and_log(f'Skipping data_source: no data loaded for {data_source.data_source_name}')
                         break
                     
                     # Removes bad chars, and chunks text
-                    document_chunks = data_resource.preprocessor.run(documents)
-                    self.log_agent.print_and_log(f'Total document chunks after processing: {len(document_chunks)}')
+                    document_chunks = data_source.preprocessor.run(documents)
+                    self.log.print_and_log(f'Total document chunks after processing: {len(document_chunks)}')
                     
                     # Checks against local docs if there are changes or new docs
-                    has_changes, new_or_changed_chunks = data_resource.preprocessor.compare_chunks(data_resource, document_chunks)
+                    has_changes, new_or_changed_chunks = data_source.preprocessor.compare_chunks(data_source, document_chunks)
                     
-                    text_chunks, document_chunks = data_resource.preprocessor.create_text_chunks(data_resource, document_chunks)
-                    self.log_agent.print_and_log(f'Total document chunks after final check: {len(document_chunks)}')
+                    text_chunks, document_chunks = data_source.preprocessor.create_text_chunks(data_source, document_chunks)
+                    self.log.print_and_log(f'Total document chunks after final check: {len(document_chunks)}')
                     
                     # If there are changes or new docs, delete existing local files and write new files
                     if not has_changes:
-                        self.log_agent.print_and_log(f'Skipping data_resource: no new data found for {data_resource.resource_name}')
+                        self.log.print_and_log(f'Skipping data_source: no new data found for {data_source.data_source_name}')
                         break
-                    self.log_agent.print_and_log(f'Found {len(new_or_changed_chunks)} new or changed documents')
+                    self.log.print_and_log(f'Found {len(new_or_changed_chunks)} new or changed documents')
 
                     # Get count of vectors in index matching the "resource" metadata field
-                    index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
-                    existing_resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
-                    self.log_agent.print_and_log(f"Existing vector count for {data_resource.resource_name}: {existing_resource_vector_count}")
+                    index_resource_stats = data_source.vectorstore.describe_index_stats(filter={'data_source_name': data_source.data_source_name})
+                    existing_resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_source.data_source_name, {}).get('vector_count', 0)
+                    self.log.print_and_log(f"Existing vector count for {data_source.data_source_name}: {existing_resource_vector_count}")
                     
-                    self.log_agent.print_and_log(f'Pre-change index stats: {self.vectorstore.describe_index_stats()}\n')
+                    self.log.print_and_log(f'Pre-change index stats: {self.vectorstore.describe_index_stats()}\n')
                     
                     # If the "resource" already has vectors delete the existing vectors before upserting new vectors
                     # We have to delete all because the difficulty in specifying specific documents in pinecone
                     if existing_resource_vector_count != 0:
-                        cleared_resource_vector_count = self.clear_resource_name(data_resource).get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
-                        self.log_agent.print_and_log(f'Removing pre-existing vectors. New count: {cleared_resource_vector_count} (should be 0)')
+                        cleared_resource_vector_count = self.clear_data_source(data_source).get('namespaces', {}).get(data_source.data_source_name, {}).get('vector_count', 0)
+                        self.log.print_and_log(f'Removing pre-existing vectors. New count: {cleared_resource_vector_count} (should be 0)')
                         
                     # Get dense_embeddings
-                    dense_embeddings = data_resource.embedding_retriever.embed_documents(text_chunks)
+                    dense_embeddings = data_source.embedding_retriever.embed_documents(text_chunks)
 
                     # Get sparse_embeddings
                     # Pretrain "corpus"
-                    data_resource.bm25_encoder.fit(text_chunks)
-                    sparse_embeddings = data_resource.bm25_encoder.encode_documents(text_chunks)
-                    self.log_agent.print_and_log(f'Embeddings created. Dense: {len(dense_embeddings)} Sparse: {len(sparse_embeddings)}')
+                    data_source.bm25_encoder.fit(text_chunks)
+                    sparse_embeddings = data_source.bm25_encoder.encode_documents(text_chunks)
+                    self.log.print_and_log(f'Embeddings created. Dense: {len(dense_embeddings)} Sparse: {len(sparse_embeddings)}')
                     
                     # Get total count of vectors in index namespace and create new vectors with an id of index_vector_count + 1
-                    index_stats = data_resource.vectorstore.describe_index_stats()
-                    index_vector_count = index_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
+                    index_stats = data_source.vectorstore.describe_index_stats()
+                    index_vector_count = index_stats.get('namespaces', {}).get(data_source.data_source_name, {}).get('vector_count', 0)
                     if index_vector_count != 0:
                         index_vector_count += 1
                         
@@ -157,91 +144,91 @@ class IndexService:
                         index_vector_count += 1
                         vectors_to_upsert.append(prepared_vector)
 
-                    self.log_agent.print_and_log(f'Upserting {len(vectors_to_upsert)} vectors')
-                    data_resource.vectorstore.upsert(
+                    self.log.print_and_log(f'Upserting {len(vectors_to_upsert)} vectors')
+                    data_source.vectorstore.upsert(
                         vectors=vectors_to_upsert,               
-                        namespace=data_resource.namespace,
-                        batch_size=self.agent_config.vectorstore_upsert_batch_size,
+                        namespace=data_source.moniker_name,
+                        batch_size=self.config.index_vectorstore_upsert_batch_size,
                         show_progress=True                 
                     )
                     
-                    index_resource_stats = data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
-                    self.log_agent.print_and_log(f'Post-upsert index stats: {index_resource_stats}\n')
-                    new_resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_resource.namespace, {}).get('vector_count', 0)
-                    self.log_agent.print_and_log(f'Indexing complete for: {data_resource.resource_name}\nPrevious vector count: {existing_resource_vector_count}\nNew vector count: {new_resource_vector_count}\n')
+                    index_resource_stats = data_source.vectorstore.describe_index_stats(filter={'data_source_name': data_source.data_source_name})
+                    self.log.print_and_log(f'Post-upsert index stats: {index_resource_stats}\n')
+                    new_resource_vector_count = index_resource_stats.get('namespaces', {}).get(data_source.data_source_name, {}).get('vector_count', 0)
+                    self.log.print_and_log(f'Indexing complete for: {data_source.data_source_name}\nPrevious vector count: {existing_resource_vector_count}\nNew vector count: {new_resource_vector_count}\n')
                     
-                    data_resource.preprocessor.write_chunks(data_resource, document_chunks)
+                    data_source.preprocessor.write_chunks(data_source, document_chunks)
                     
                     # If completed successfully, break the retry loop
                     break
                 
                 except Exception as e:
                     error_info = traceback.format_exc()
-                    self.log_agent.print_and_log(f"An error occurred: {e}\n{error_info}")
+                    self.log.print_and_log(f"An error occurred: {e}\n{error_info}")
                     if i < retry_count - 1:  # i is zero indexed
                         continue  # this will start the next iteration of loop thus retrying your code block
                     else:
                         raise  # if exception in the last retry then raise it.
     
-        self.log_agent.print_and_log(f'Final index stats: {self.vectorstore.describe_index_stats()}')
+        self.log.print_and_log(f'Final index stats: {self.vectorstore.describe_index_stats()}')
         
     def delete_index(self):
         
-        res = self.document_sources_resources[0].vectorstore.describe_index_stats()
-        self.log_agent.print_and_log(res)
-        res = pinecone.delete_index(self.agent_config.vectorstore_index)
-        self.log_agent.print_and_log(res)
-        res = self.document_sources_resources[0].vectorstore.describe_index_stats()
-        self.log_agent.print_and_log(res)
+        res = self.enabled_data_sources[0].vectorstore.describe_index_stats()
+        self.log.print_and_log(res)
+        res = pinecone.delete_index(self.deployment.index_name)
+        self.log.print_and_log(res)
+        res = self.enabled_data_sources[0].vectorstore.describe_index_stats()
+        self.log.print_and_log(res)
         
         return res
 
     def clear_index(self):
-        for data_source in self.document_sources_resources:
+        for data_source in self.enabled_data_sources:
             stats = data_source.vectorstore.describe_index_stats()
-            self.log_agent.print_and_log(stats)
+            self.log.print_and_log(stats)
             for key in stats['namespaces']:
                 data_source.vectorstore.delete(deleteAll='true', namespace=key)
             stats = data_source.vectorstore.describe_index_stats()
-            self.log_agent.print_and_log(stats)
+            self.log.print_and_log(stats)
     
     def clear_namespace(self, namespace):
-        stats =  self.document_sources_resources[0].vectorstore.describe_index_stats()
-        self.log_agent.print_and_log(stats)
-        self.log_agent.print_and_log(f'Clearing namespace: {namespace}')
-        self.document_sources_resources[0].vectorstore.delete(deleteAll='true', namespace=namespace)
-        stats =  self.document_sources_resources[0].vectorstore.describe_index_stats()
-        self.log_agent.print_and_log(stats)
+        stats =  self.enabled_data_sources[0].vectorstore.describe_index_stats()
+        self.log.print_and_log(stats)
+        self.log.print_and_log(f'Clearing namespace: {namespace}')
+        self.enabled_data_sources[0].vectorstore.delete(deleteAll='true', namespace=namespace)
+        stats =  self.enabled_data_sources[0].vectorstore.describe_index_stats()
+        self.log.print_and_log(stats)
     
-    def clear_resource_name(self, data_resource):
-        data_resource.vectorstore.delete(
-            namespace=data_resource.namespace,
+    def clear_data_source(self, data_source):
+        data_source.vectorstore.delete(
+            namespace=data_source.data_source_name,
             delete_all=False, 
-            filter={'resource_name': data_resource.resource_name}
+            filter={'data_source_name': data_source.data_source_name}
         )
-        return data_resource.vectorstore.describe_index_stats(filter={'resource_name': data_resource.resource_name})
+        return data_source.vectorstore.describe_index_stats(filter={'data_source_name': data_source.data_source_name})
         
     def create_index(self):
         metadata_config = {
-            "indexed": self.agent_config.indexed_metadata
+            "indexed": self.config.indexed_metadata
         }
         # Prepare log message
         log_message = (
             f"Creating new index with the following configuration:\n"
-            f" - Index Name: {self.agent_config.vectorstore_index}\n"
-            f" - Dimension: {self.agent_config.vectorstore_dimension}\n"
-            f" - Metric: {self.agent_config.vectorstore_metric}\n"
-            f" - Pod Type: {self.agent_config.vectorstore_pod_type}\n"
+            f" - Index Name: {self.deployment.index_name}\n"
+            f" - Dimension: {self.config.vectorstore_dimension}\n"
+            f" - Metric: {self.config.vectorstore_metric}\n"
+            f" - Pod Type: {self.config.vectorstore_pod_type}\n"
             f" - Metadata Config: {metadata_config}"
         )
         # Log the message
-        self.log_agent.print_and_log(log_message)
+        self.log.print_and_log(log_message)
         
         response = pinecone.create_index(
-            name=self.agent_config.vectorstore_index, 
-            dimension=self.agent_config.vectorstore_dimension, 
-            metric=self.agent_config.vectorstore_metric,
-            pod_type=self.agent_config.vectorstore_pod_type,
+            name=self.deployment.index_name, 
+            dimension=self.config.vectorstore_dimension, 
+            metric=self.config.vectorstore_metric,
+            pod_type=self.config.vectorstore_pod_type,
             metadata_config=metadata_config
             )
         
@@ -258,50 +245,39 @@ class DataSourceConfig:
     
     ### DataSourceConfig loads all configs for all datasources ###
     
-    def __init__(self, index_agent: IndexAgent, namespace, resource_name, resource_content):
+    def __init__(self, index_agent: IndexService, moniker_name, data_domain_name, domain_description, data_source_name, source):
         
         self.index_agent = index_agent
-        self.agent_config = self.index_agent.agent_config
-        self.log_agent = self.index_agent.log_agent
+        self.vectorstore = index_agent.vectorstore
+        self.config = index_agent.config
+        self.log = index_agent.log
+        self.tiktoken_len = index_agent.tiktoken_len
         
-        self.tiktoken_len = self.index_agent.tiktoken_len
-        
-        self.index_name = index_agent.agent_config.vectorstore_index
-        self.indexed_metadata = index_agent.agent_config.indexed_metadata
-        
-        self.output_folder = f'index/{namespace}/{resource_name}'
         
         # From document_sources.yaml
-        self.'namespace': str = namespace
-        self.resource_name: str = resource_name
-        self.filter_url: str = resource_content.get('filter_url')
-        self.enabled: bool = resource_content.get('enabled')
-        self.load_all_paths: bool = resource_content.get('load_all_paths')
-        self.target_url: str = resource_content.get('target_url')
-        self.target_type: str = resource_content.get('target_type')
-        self.doc_type: str = resource_content.get('doc_type')
-        self.api_url_format: str = resource_content.get('api_url_format')
+        self.moniker_name: str = moniker_name
+        self.data_domain_name: str = data_domain_name
+        self.domain_description: str = domain_description
+        self.data_source_name: str = data_source_name
+        self.filter_url: str = source.get('filter_url')
+        self.update_enabled: bool = source.get('update_enabled')
+        self.load_all_paths: bool = source.get('load_all_paths')
+        self.target_url: str = source.get('target_url')
+        self.target_type: str = source.get('target_type')
+        self.doc_type: str = source.get('doc_type')
+        self.api_url_format: str = source.get('api_url_format')
 
         # Check if any value is None
         attributes = [
-            self.namespace,
-            self.resource_name, 
-            self.index_name, 
-            self.enabled,
-            self.target_url, 
-            self.target_type, 
+            self.data_domain_name,
+            self.data_source_name,
+            self.update_enabled,
+            self.target_url,
+            self.target_type,
             self.doc_type
             ]
         if not all(attr is not None and attr != "" for attr in attributes):
             raise ValueError("Some required fields are missing or have no value.")
-   
-        pinecone.init(
-            api_key=self.agent_config.pinecone_api_key, 
-            environment=self.agent_config.vectorstore_environment
-        )
-        
-        # Initialize vectorstore index
-        self.vectorstore = pinecone.Index(self.index_name)
         
         match self.target_type:
             
@@ -364,11 +340,11 @@ class DataSourceConfig:
                 raise ValueError("Invalid target type: should be text, html, or code.")
             
         self.embedding_retriever = OpenAIEmbeddings(
-            model=self.agent_config.embedding_model,
-            embedding_ctx_length=self.agent_config.embedding_max_chunk_size,
-            openai_api_key=self.agent_config.openai_api_key,
-            chunk_size=self.agent_config.embedding_batch_size,
-            request_timeout=self.agent_config.openai_timeout_seconds
+            model=self.config.index_embedding_model,
+            embedding_ctx_length=self.config.index_embedding_max_chunk_size,
+            openai_api_key=self.index_agent.deployment.openai_api_key,
+            chunk_size=self.config.index_embedding_batch_size,
+            request_timeout=self.config.index_openai_timeout_seconds
         )
 
         self.bm25_encoder = BM25Encoder()
@@ -380,11 +356,10 @@ class CustomPreProcessor:
     def __init__(self, data_source_config: DataSourceConfig):
         
         self.index_agent = data_source_config.index_agent
-        self.agent_config = data_source_config.agent_config
-        self.log_agent = data_source_config.log_agent
+        self.config = data_source_config.index_agent.config
         self.data_source_config = data_source_config
         
-        self.tiktoken_encoding_model = self.agent_config.tiktoken_encoding_model
+        self.tiktoken_encoding_model = self.config.index_tiktoken_encoding_model
         
         self.tiktoken_len = self.index_agent.tiktoken_len
 
@@ -393,9 +368,9 @@ class CustomPreProcessor:
 
         self.text_splitter = BalancedRecursiveCharacterTextSplitter.from_tiktoken_encoder(
             model_name=self.tiktoken_encoding_model,
-            goal_length=self.agent_config.text_splitter_goal_length,
-            max_length=self.agent_config.text_splitter_max_length,
-            chunk_overlap=self.agent_config.text_splitter_chunk_overlap
+            goal_length=self.config.index_text_splitter_goal_length,
+            max_length=self.config.index_text_splitter_max_length,
+            chunk_overlap=self.config.index_text_splitter_chunk_overlap
         )
 
     def run(self, documents: Union[Document, List[Document]]) -> List[Document]:
@@ -410,17 +385,17 @@ class CustomPreProcessor:
                 _, tail = os.path.split(parsed_url.path)
                 # Strip anything with "." like ".html"
                 root, _ = os.path.splitext(tail)
-                doc.metadata['title'] = f'{self.data_source_config.resource_name}: {root}'
+                doc.metadata['title'] = f'{self.data_source_config.data_source_name}: {root}'
             
             # Remove bad chars and extra whitespace chars
             doc.page_content = self.process_text(doc.page_content)
             doc.metadata['title'] = self.process_text(doc.metadata['title'])
             
-            self.data_source_config.log_agent.print_and_log(doc.metadata['title'])
+            # self.data_source_config.log_agent.print_and_log(doc.metadata['title'])
             
             # Skip if too small
-            if self.tiktoken_len(doc.page_content) < self.data_source_config.index_agent.agent_config.preprocessor_min_length:
-                self.data_source_config.index_agent.log_agent.print_and_log(f'page too small: {self.tiktoken_len(doc.page_content)}')
+            if self.tiktoken_len(doc.page_content) < self.data_source_config.config.index_preprocessor_min_length:
+                # self.data_source_config.index_agent.log_agent.print_and_log(f'page too small: {self.tiktoken_len(doc.page_content)}')
                 continue
             
             # Split into chunks
@@ -430,17 +405,17 @@ class CustomPreProcessor:
                 processed_document_chunks.append(document_chunk)
                 processed_text_chunks.append(text_chunk.lower())
         
-        self.log_agent.print_and_log(f'Total docs: {len(documents)}')
-        self.log_agent.print_and_log(f'Total chunks: {len(processed_document_chunks)}')
+        # self.log.print_and_log(f'Total docs: {len(documents)}')
+        # self.log.print_and_log(f'Total chunks: {len(processed_document_chunks)}')
         if not processed_document_chunks:
             return
         token_counts = [
             self.tiktoken_len(chunk) for chunk in processed_text_chunks
         ]
-        self.log_agent.print_and_log(f'Min: {min(token_counts)}')
-        self.log_agent.print_and_log(f'Avg: {int(sum(token_counts) / len(token_counts))}')
-        self.log_agent.print_and_log(f'Max: {max(token_counts)}')
-        self.log_agent.print_and_log(f'Total tokens: {int(sum(token_counts))}')
+        # self.log.print_and_log(f'Min: {min(token_counts)}')
+        # self.log.print_and_log(f'Avg: {int(sum(token_counts) / len(token_counts))}')
+        # self.log.print_and_log(f'Max: {max(token_counts)}')
+        # self.log.print_and_log(f'Total tokens: {int(sum(token_counts))}')
 
         return processed_document_chunks
     
@@ -475,7 +450,8 @@ class CustomPreProcessor:
                     "content": text_chunk, 
                     "url": page.metadata['source'].strip(), 
                     "title": page.metadata['title'],
-                    "resource_name": self.data_source_config.resource_name,
+                    "data_domain_name": self.data_source_config.data_domain_name,
+                    "data_source_name": self.data_source_config.data_source_name,
                     "target_type": self.data_source_config.target_type,
                     "doc_type": self.data_source_config.doc_type
                     }
@@ -484,9 +460,9 @@ class CustomPreProcessor:
 
         return document_chunk, text_chunk
     
-    def compare_chunks(self, data_resource, document_chunks):
+    def compare_chunks(self, data_source, document_chunks):
         
-        folder_path = f'index/outputs/{data_resource.namespace}/{data_resource.resource_name}'
+        folder_path = f'{self.index_agent.index_dir}/{data_source.moniker_name}/{data_source.data_domain_name}/{data_source.data_source_name}'
         # Create the directory if it does not exist
         os.makedirs(folder_path, exist_ok=True)
         existing_files = os.listdir(folder_path)
@@ -499,7 +475,7 @@ class CustomPreProcessor:
             sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
             text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
             # Skip overly long chunks
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+            if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
             # Check if we've seen this title before, if not initialize to 0
             if sanitized_title not in title_counter:
@@ -520,7 +496,7 @@ class CustomPreProcessor:
                 
         return has_changes, new_or_changed_chunks
 
-    def create_text_chunks(self, data_resource, document_chunks):
+    def create_text_chunks(self, data_source, document_chunks):
         
         checked_document_chunks = []
         checked_text_chunks = []
@@ -535,16 +511,16 @@ class CustomPreProcessor:
             title_counter[sanitized_title] += 1
             text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
             # Skip overly long chunks
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+            if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
             checked_document_chunks.append(document_chunk)
             checked_text_chunks.append(text_chunk.lower())
             
         return checked_text_chunks, checked_document_chunks
     
-    def write_chunks(self, data_resource, document_chunks):
+    def write_chunks(self, data_source, document_chunks):
          
-        folder_path = f'index/outputs/{data_resource.namespace}/{data_resource.resource_name}'
+        folder_path = f'{self.index_agent.index_dir}/{data_source.moniker_name}/{data_source.data_domain_name}/{data_source.data_source_name}'
         # Clear the folder first
         shutil.rmtree(folder_path)
         os.makedirs(folder_path, exist_ok=True)
@@ -554,7 +530,7 @@ class CustomPreProcessor:
             sanitized_title = re.sub(r'\W+', '_', document_chunk['title'])
             text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
             # Skip overly long chunks
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+            if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
             # Check if we've seen this title before, if not initialize to 0
             if sanitized_title not in title_counter:
@@ -587,8 +563,7 @@ class OpenAPILoader:
     def __init__(self, data_source_config: DataSourceConfig):
         
         self.index_agent = data_source_config.index_agent
-        self.agent_config = data_source_config.agent_config
-        self.log_agent = data_source_config.log_agent
+        self.config = data_source_config
         self.data_source_config = data_source_config
     
     def load(self):
@@ -608,10 +583,10 @@ class OpenAPILoader:
                 elif filename.endswith('.json'):
                     file_extension = '.json'
                 else:
-                    self.data_source_config.index_agent.log_agent.print_and_log(f"Unsupported file format: {filename}")
+                    # self.data_source_config.index_agent.log_agent.print_and_log(f"Unsupported file format: {filename}")
                     continue
             elif not filename.endswith(file_extension):
-                self.data_source_config.index_agent.log_agent.print_and_log(f"Inconsistent file formats in directory: {filename}")
+                # self.data_source_config.index_agent.log_agent.print_and_log(f"Inconsistent file formats in directory: {filename}")
                 continue
             file_path = os.path.join(self.data_source_config.target_url, filename)
             with open(file_path, 'r') as file:

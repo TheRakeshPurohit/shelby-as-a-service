@@ -18,10 +18,10 @@ class ShelbyAgent:
 
         self.instance = instance
         self.enabled_data_domains = instance.moniker_enabled_data_domains
-        self.index_env = DeploymentInstance.index_env
-        self.index_name = DeploymentInstance.index_name
-        self.openai_api_key = DeploymentInstance.openai_api_key
-        self.pinecone_api_key = DeploymentInstance.pinecone_api_key
+        self.index_env = instance.index_env
+        self.index_name = instance.index_name
+        self.openai_api_key = instance.openai_api_key
+        self.pinecone_api_key = instance.pinecone_api_key
         self.config = instance.discord_config['ShelbyConfig']
         self.action_agent = ActionAgent(self)
         self.rag_agent = CEQAgent(self)
@@ -155,11 +155,11 @@ class ActionAgent:
         if domain_key == 0:
             return 0
         # Otherwise return string with the namespace of the domain in the vectorstore
-        domain = list(self.shelby_agent.enabled_data_domains.keys())[domain_key - 1]  # We subtract 1 because list indices start at 0
+        data_domain_name = list(self.shelby_agent.enabled_data_domains.keys())[domain_key - 1]  # We subtract 1 because list indices start at 0
 
         self.shelby_agent.log.print_and_log(f"{self.shelby_agent.config.ceq_data_domain_constraints_llm_model} chose to fetch context docs from {domain} data domain.")
         
-        return domain
+        return data_domain_name
 
 class CEQAgent:
     ### QueryAgent answers questions ###
@@ -180,7 +180,7 @@ class CEQAgent:
             domain = self.shelby_agent.enabled_data_domain[0]
             
         else:
-            domain = self.shelby_agent.action_agent.data_domain_decision(query)
+            data_domain_name = self.shelby_agent.action_agent.data_domain_decision(query)
             
         # If no domain found message is sent to sprite
         if domain == 0:
@@ -189,7 +189,7 @@ class CEQAgent:
             self.shelby_agent.log_service.print_and_log(self.shelby_agent.config.ceq_data_domain_none_found_message)
             response = self.shelby_agent.config.ceq_data_domain_none_found_message
             
-        return domain, response
+        return data_domain_name, response
             
     def keyword_generator(self, query):
 
@@ -232,17 +232,34 @@ class CEQAgent:
 
         return dense_embedding, sparse_embedding
 
-    def query_vectorstore(self, dense_embedding, sparse_embedding):
+    def query_vectorstore(self, dense_embedding, sparse_embedding, data_domain_name=None):
 
         pinecone.init(api_key=self.shelby_agent.pinecone_api_key, environment=self.shelby_agent.index_env)
         index = pinecone.Index(self.shelby_agent.index_name)
 
+        if data_domain_name is not None:
+            soft_filter = {
+                "doc_type": {"$eq": "soft"},
+                "data_domain_name": {"eq": f"{data_domain_name}"}
+                }
+        else:
+            soft_filter = {"doc_type": {"$eq": "soft"}}
+            
+        if data_domain_name is not None:
+            hard_filter = {
+                "doc_type": {"$eq": "hard"},
+                "data_domain_name": {"eq": f"{data_domain_name}"}
+                }
+        else:
+            hard_filter = {"doc_type": {"$eq": "hard"}}
+            
+        
         soft_query_response = index.query(
             top_k=self.shelby_agent.config.ceq_docs_to_retrieve,
             include_values=False,
             namespace=self.shelby_agent.instance.moniker_name,
             include_metadata=True,
-            filter={"doc_type": {"$eq": "soft"}},
+            filter=soft_filter,
             vector=dense_embedding,
             sparse_vector=sparse_embedding
         )
@@ -251,7 +268,7 @@ class CEQAgent:
             include_values=False,
             namespace=self.shelby_agent.instance.moniker_name,
             include_metadata=True,
-            filter={"doc_type": {"$eq": "hard"}},
+            filter=hard_filter,
             vector=dense_embedding,
             sparse_vector=sparse_embedding
         )
@@ -534,8 +551,9 @@ class CEQAgent:
 
     def run_context_enriched_query(self, query):
 
+        data_domain_name = None
         if self.shelby_agent.config.ceq_data_domain_constraints_enabled:
-            data_domain, response = self.select_data_domain(query)
+            data_domain_name, response = self.select_data_domain(query)
             if response is not None:
                 return response
         
@@ -548,7 +566,7 @@ class CEQAgent:
         dense_embedding, sparse_embedding = self.get_query_embeddings(query)
         self.shelby_agent.log.print_and_log("Sparse and dense embeddings retrieved")
 
-        returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding)
+        returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, data_domain_name)
         if not returned_documents:
             pass
             self.shelby_agent.log.print_and_log("No supporting documents found!")

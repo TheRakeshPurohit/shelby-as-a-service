@@ -2,15 +2,13 @@ import os, shutil
 import json, yaml
 import string, re
 from urllib.parse import urlparse
-from .log_service import LogService
 
 class OpenAPIMinifierService:
     
     def __init__(self, data_source_config):
         
         self.index_agent = data_source_config.index_agent
-        self.agent_config = data_source_config.index_agent.agent_config
-        self.log_agent = data_source_config.index_agent.log_agent
+        self.config = data_source_config.index_agent.config
         self.data_source_config = data_source_config
         
         self.api_url_format = data_source_config.api_url_format
@@ -77,13 +75,13 @@ class OpenAPIMinifierService:
     
     def create_full_spec(self, open_api_specs):
         
-        folder_path = f'index/outputs/{self.data_source_config.namespace}/open_api_spec/full_spec'
+        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/full_spec'
         # Ensure output directory exists
         os.makedirs(folder_path, exist_ok=True)
         shutil.rmtree(folder_path)
         os.makedirs(folder_path, exist_ok=True)
         # Define output file path
-        output_file_path = os.path.join(folder_path, f'{self.data_source_config.namespace}_open_api_spec.json')
+        output_file_path = os.path.join(folder_path, f'{self.data_source_config.data_domain_name}_open_api_spec.json')
         
         merged_open_api_spec = None
         
@@ -119,7 +117,7 @@ class OpenAPIMinifierService:
         # server_url = urlparse(server_url)
         
         minified_endpoints = []
-        with open(os.path.join(self.agent_config.prompt_template_path, 'open_api_minifier_agent_endpoint_prompt_template.yaml'), 'r') as yaml_file:
+        with open(os.path.join(self.index_agent.prompt_template_path, 'open_api_minifier_agent_endpoint_prompt_template.yaml'), 'r') as yaml_file:
             # Load the YAML data and print the result
             yaml_content = yaml.safe_load(yaml_file)
             
@@ -357,7 +355,8 @@ class OpenAPIMinifierService:
             endpoint['tag_summary'] = tag_summary
             endpoint['tag_number'] = tag_number
             
-            endpoint['resource_name'] = self.data_source_config.resource_name
+            endpoint['data_domain_name'] = self.data_source_config.data_domain_name
+            endpoint['data_source_name'] = self.data_source_config.data_source_name
             endpoint['target_type'] = self.data_source_config.target_type
             endpoint['doc_type'] = self.data_source_config.doc_type
             
@@ -447,16 +446,15 @@ class OpenAPIMinifierService:
 
     def create_key_point_guide(self, minified_endpoints):
         
-        with open(os.path.join(self.agent_config.prompt_template_path, 'open_api_minifier_agent_keypoint_prompt_template.yaml'), 'r') as yaml_file:
+        with open(os.path.join(self.index_agent.prompt_template_path, 'open_api_minifier_agent_keypoint_prompt_template.yaml'), 'r') as yaml_file:
             # Load the YAML data and print the result
             yaml_content = yaml.safe_load(yaml_file)
         prompt_template = yaml_content.get('prompt_template')
-        
-        folder_path = f'index/outputs/{self.data_source_config.namespace}/open_api_spec/keypoint'
+        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/keypoint'
         # Ensure output directory exists
         os.makedirs(folder_path, exist_ok=True)
         # Define output file path
-        output_file_path = os.path.join(folder_path, f'{self.data_source_config.namespace}_keypoint_guide_file.txt')
+        output_file_path = f"{folder_path}/keypoint_guide_file.txt"
 
         output_string = f'{prompt_template}\n'
         current_tag_number = ''
@@ -483,13 +481,13 @@ class OpenAPIMinifierService:
 
         output_string += f'{tag_string}\n'
 
-        self.log_agent.print_and_log(f'keypoint file token count: {self.tiktoken_len(output_string)}')
+        # self.log_agent.print_and_log(f'keypoint file token count: {self.tiktoken_len(output_string)}')
         # Write sorted info_strings to the output file
         with open(output_file_path, 'w') as output_file:
                 output_file.write(output_string)
     
-    def compare_chunks(self, data_resource, document_chunks):
-        folder_path = f'index/outputs/{data_resource.namespace}/open_api_spec/endpoints'
+    def compare_chunks(self, data_source, document_chunks):
+        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/endpoints'
         # Create the directory if it does not exist
         os.makedirs(folder_path, exist_ok=True)
         existing_files = os.listdir(folder_path)
@@ -499,7 +497,7 @@ class OpenAPIMinifierService:
         for document_chunk in document_chunks:
             text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
             # Skip overly long chunks
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+            if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
             file_name = document_chunk['title']
             if file_name not in existing_files:
@@ -515,32 +513,32 @@ class OpenAPIMinifierService:
                 
         return has_changes, new_or_changed_chunks
 
-    def create_text_chunks(self, data_resource, document_chunks):
+    def create_text_chunks(self, data_source, document_chunks):
 
         checked_document_chunks = []
         checked_text_chunks = []
         for document_chunk in document_chunks:
             text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
             # If chunk too big
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+            if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
             checked_document_chunks.append(document_chunk)
             checked_text_chunks.append(text_chunk.lower())
             
         return checked_text_chunks, checked_document_chunks
     
-    def write_chunks(self, data_resource, document_chunks):
+    def write_chunks(self, data_source, document_chunks):
          
-        folder_path = f'index/outputs/{data_resource.namespace}/open_api_spec/endpoints'
+        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/endpoints'
         # Clear the folder first
         shutil.rmtree(folder_path)
         os.makedirs(folder_path, exist_ok=True)
         for document_chunk in document_chunks:
             text_chunk = f"{document_chunk['content']} title: {document_chunk['title']}"
             # Skip overly long chunks
-            if self.tiktoken_len(text_chunk) > self.agent_config.text_splitter_max_length:
+            if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
             file_name = document_chunk['title']
-            file_path = os.path.join(folder_path, file_name)
+            file_path = f"{folder_path}/{file_name}.txt"
             with open(file_path, 'w') as f:
                 json.dump(document_chunk, f, indent=4)

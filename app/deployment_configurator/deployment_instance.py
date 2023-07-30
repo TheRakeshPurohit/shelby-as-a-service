@@ -3,14 +3,14 @@ from dataclasses import dataclass, field
 from typing import Optional
 from dotenv import load_dotenv
 from .shared_tools import ConfigSharedTools
-from .data_classes import DiscordConfig, ShelbyConfig
+from .data_classes import DiscordConfig, ShelbyConfig, IndexConfig
 
 class DeploymentInstance:
     # Initialized with deployment_name as an arg
     deployment_name: str = None
     enabled_moniker_names: list = []
     monikers: dict = {}
-    
+
     # Variables here are only populated to workflow
     DEVOPS_VARIABLES_ = [
         "docker_username",
@@ -46,19 +46,21 @@ class DeploymentInstance:
     }
     
     @classmethod
-    def load_and_check_deployment(cls, deployment_name):
+    def load_and_check_deployment(cls, deployment_name, run_index_management=False):
 
         cls.deployment_name = deployment_name
         # Confirm env is loaded for deployment names
         DeploymentInstance.load_deployment_name()
         
-        # Get and and load monikers
-        cls.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_list(f'{cls.deployment_name}_enabled_moniker_names')
-
-        for moniker_name in cls.enabled_moniker_names:
-            moniker = MonikerInstance(moniker_name=moniker_name)
-            moniker.load_and_check_moniker()
-            cls.monikers[moniker_name] = moniker
+        if run_index_management == True:
+            cls.index_config = MonikerInstance.load_moniker_services(cls, IndexConfig)
+        else:
+            # Get and and load monikers
+            cls.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_list(f'{cls.deployment_name}_enabled_moniker_names')
+            for moniker_name in cls.enabled_moniker_names:
+                moniker = MonikerInstance(moniker_name=moniker_name)
+                moniker.load_and_check_moniker()
+                cls.monikers[moniker_name] = moniker
 
         ConfigSharedTools.check_class_required_vars(cls)
     
@@ -115,7 +117,8 @@ class MonikerInstance(DeploymentInstance):
     
     def load_moniker_services(self, sprite):
         deployment = DeploymentInstance.deployment_name
-        moniker = self.moniker_name
+        moniker = getattr(self, 'moniker_name', None)
+
         sprite_name = sprite.__name__
         
         # Outputs sprite_config which contains all requried data classes for sprite
@@ -123,9 +126,10 @@ class MonikerInstance(DeploymentInstance):
         # Load vars for moniker and deployment from env
         sprite_classes = []
         # Builds list of sprite and sprite's services to iterate
-        for class_name in sprite.SPRITE_REQS_:
-            sprite_classes.append(sprite)
-            sprite_classes.append(self.CLASSES_[class_name])
+        if getattr(sprite, 'SPRITE_REQS_', None):
+            for class_name in sprite.SPRITE_REQS_:
+                sprite_classes.append(self.CLASSES_[class_name])
+        sprite_classes.append(sprite)
             
         for ClassConfig in sprite_classes:
             class_config = ClassConfig()
@@ -141,9 +145,11 @@ class MonikerInstance(DeploymentInstance):
                 if moniker_env_value is not None:
                     setattr(class_config, var, moniker_env_value)
                     continue
+                elif deployment_env_value is not None:
+                    setattr(class_config, var, deployment_env_value)
+                    continue
                 # Else we default to class default settings
-                setattr(class_config, var, deployment_env_value)
-            
+       
             # Special rules
             for var in class_config.DEPLOYMENT_REQUIRED_VARIABLES_:
                 env_var_name = f"{self.deployment_name}_{var}"
