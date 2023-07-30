@@ -56,7 +56,7 @@ class DeploymentInstance:
         # Confirm env is loaded for deployment names
         DeploymentInstance.load_deployment_name()
         
-        if run_index_management == True:
+        if run_index_management:
             cls.index_config = MonikerInstance.load_moniker_services(cls, IndexConfig)
         else:
             # Get and and load monikers
