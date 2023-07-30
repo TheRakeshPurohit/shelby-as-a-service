@@ -107,10 +107,13 @@ class MonikerInstance(DeploymentInstance):
     ]
     
     def load_and_check_moniker(self):
-       
+        
+        
         self.moniker_enabled = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled')
         self.moniker_enabled_sprite_names = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_sprite_names')
         self.moniker_enabled_data_domains = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_data_domains')
+        
+        f"deployments/{self.deployment_name}/index/index_description.yaml"
         
         # Load variables that are defined specifically for the moniker's sprites
         for sprite_name in self.moniker_enabled_sprite_names:
