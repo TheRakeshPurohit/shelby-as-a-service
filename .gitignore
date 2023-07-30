@@ -1,8 +1,11 @@
 .env
+*.env
 shelby-as-a-service.code-workspace
 installed_packages.txt
 logs/
 .vscode/
 **/__pycache__/
-outputs/
+deployments/old
+deployments/*/index
+
 langchain/

@@ -1,0 +1,5 @@
+# This file will define the deployment.env file. If you want to update it later and add monikers, I suggest doing so manually here
+deployment_name: test
+monikers:
+  - moniker_name: shelby # Monikers are a name for people, clubs, chat rooms, businesses, and other organizations of people
+
