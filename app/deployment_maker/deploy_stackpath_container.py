@@ -72,12 +72,10 @@ config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry
 config["payload"]["workload"]["name"] = deployment_vars["WORKLOAD_NAME"].lower()
 config["payload"]["workload"]["slug"] = deployment_vars["WORKLOAD_SLUG"].lower()
 
-new_env = {}
 for var, val in deployment_vars.items():
-    new_env[var] = {"value": val}
-
-config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"] = new_env
-
+    config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+        {var: {"value": val}}
+    )
 
 url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'
 headers = {
