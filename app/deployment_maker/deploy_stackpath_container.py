@@ -72,6 +72,9 @@ config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry
 config["payload"]["workload"]["name"] = deployment_vars["WORKLOAD_NAME"].lower()
 config["payload"]["workload"]["slug"] = deployment_vars["WORKLOAD_SLUG"].lower()
 
+if "env" not in config["payload"]["workload"]["spec"]["containers"]["webserver"]:
+    config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"] = {}
+
 for var, val in deployment_vars.items():
     config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
         {var: {"value": val}}
