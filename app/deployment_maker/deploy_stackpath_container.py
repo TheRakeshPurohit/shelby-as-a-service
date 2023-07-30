@@ -14,9 +14,6 @@ deployment_vars = os.environ.get('DEPLOYMENT_VARS')
 deployment_vars = json.loads(deployment_vars)
 deployment_name = deployment_vars['DEPLOYMENT_NAME']
 
-# load_dotenv("deployments/test/test_deployment.env")
-# deployment_name = 'test'
-
 headers = {"accept": "application/json", "content-type": "application/json"}
 payload = {
     "grant_type": "client_credentials",
@@ -87,7 +84,7 @@ for var, val in deployment_vars.items():
         config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
             {var: {"value": val}}
         )
-
+print(config)
 url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'
 headers = {
     "accept": "application/json",
