@@ -30,11 +30,12 @@ bearer_token = json.loads(response.text)["access_token"]
 
 # get stack id
 
-url = f"https://gateway.stackpath.com/stack/v1/stacks/{os.environ.get('STACKPATH_STACK_ID')}"
-
+url = f"https://gateway.stackpath.com/stack/v1/stacks/{os.environ.get('TEST_STACKPATH_STACK_ID')}"
+print(url)
 headers = {"accept": "application/json", "authorization": f"Bearer {bearer_token}"}
 
 response = requests.get(url, headers=headers)
+print(response)
 stack_id = json.loads(response.text)["id"]
 
 
@@ -55,7 +56,7 @@ if response.status_code == 200:
                 print("workload deleted")
                 
 # Load configuration from JSON file
-with open("app/deployment/sp-2_container_request_template.json") as f:
+with open("app/deployment_maker/sp-2_container_request_template.json") as f:
     config = json.load(f)
 
 # Add env vars to the environment variables of the container

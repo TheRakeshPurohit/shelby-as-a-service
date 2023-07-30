@@ -123,7 +123,7 @@ class MonikerInstance(DeploymentInstance):
             for data_domain_name, domain in moniker['data_domains'].items():
                 if data_domain_name in self.moniker_enabled_data_domains:
                     domain_description = domain['description']
-                    enabled_data_domains['data_domain_name'] = domain_description
+                    enabled_data_domains[data_domain_name] = domain_description
         self.moniker_enabled_data_domains = enabled_data_domains
         
         # Load variables that are defined specifically for the moniker's sprites
