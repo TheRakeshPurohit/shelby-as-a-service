@@ -3,20 +3,24 @@
 import requests
 import os
 import json
+import yaml
 import sys
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-url = "https://gateway.stackpath.com/identity/v1/oauth2/token"
 
-deployment_vars = os.environ.get('DEPLOYMENT_VARS')
+load_dotenv("deployments/test/test_deployment.env")
+# Load the YAML file
+with open('.github/workflows/test_deployment.yaml', 'r') as file:
+    data = yaml.safe_load(file)
+
+deployment_vars = data['jobs']['docker']['env']['DEPLOYMENT_VARS']
 deployment_vars = json.loads(deployment_vars)
 deployment_name = deployment_vars['DEPLOYMENT_NAME']
 
-# load_dotenv("deployments/test/test_deployment.env")
-# deployment_name = 'test'
 
+url = "https://gateway.stackpath.com/identity/v1/oauth2/token"
 headers = {"accept": "application/json", "content-type": "application/json"}
 payload = {
     "grant_type": "client_credentials",
@@ -27,8 +31,8 @@ response = requests.post(url, json=payload, headers=headers)
 bearer_token = json.loads(response.text)["access_token"]
 
 # get stack id
-
-url = f'https://gateway.stackpath.com/stack/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}'
+stackpath_stack_id = os.environ.get(f"{deployment_name.upper()}_STACKPATH_STACK_ID")
+url = f'https://gateway.stackpath.com/stack/v1/stacks/{stackpath_stack_id}'
 headers = {"accept": "application/json", "authorization": f"Bearer {bearer_token}"}
 
 response = requests.get(url, headers=headers)
@@ -36,7 +40,7 @@ stack_id = json.loads(response.text)["id"]
 
 
 # Get existing workloads
-url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads"
+url = f'https://gateway.stackpath.com/stack/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}'
 
 response = requests.get(url, headers=headers)
 
@@ -68,7 +72,7 @@ config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry
 ] = deployment_vars["DOCKER_USERNAME"]
 config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
     "password"
-] = os.environ.get("DOCKER_TOKEN")
+] = os.environ.get("TEST_DOCKER_TOKEN")
 
 config["payload"]["workload"]["name"] = deployment_vars["WORKLOAD_NAME"].lower()
 config["payload"]["workload"]["slug"] = deployment_vars["WORKLOAD_SLUG"].lower()
@@ -77,9 +81,15 @@ if "env" not in config["payload"]["workload"]["spec"]["containers"]["webserver"]
     config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"] = {}
 
 for var, val in deployment_vars.items():
-    config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
-        {var: {"value": val}}
-    )
+    if isinstance(val, str):
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"value": val}}
+        )
+    else:
+        val = f"'{val}'"
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"value": val}}
+        )
 
 url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'
 headers = {

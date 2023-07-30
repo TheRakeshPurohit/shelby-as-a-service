@@ -1,10 +1,8 @@
 # region
-import os, asyncio
-from concurrent.futures import ThreadPoolExecutor
+import os
 import traceback
 import json, yaml, re
 import openai, pinecone, tiktoken
-from typing import Optional
 from langchain.embeddings import OpenAIEmbeddings
 from deployment_configurator.deployment_instance import DeploymentInstance, MonikerInstance
 from services.pinecone_io_pinecone_text.sparse import BM25Encoder
