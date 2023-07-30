@@ -63,7 +63,7 @@ class ShelbyConfig:
     # QueryAgent
     ceq_data_domain_constraints_enabled: bool = False
     ceq_data_domain_constraints_llm_model: str = "gpt-4"
-    ceq_data_domain_none_found_message: str = "Query not related to any supported data domains (aka topics). Supported data domains are:\n"
+    ceq_data_domain_none_found_message: str = "Query not related to any supported data domains (aka topics). Supported data domains are:"
     ceq_keyword_generator_enabled: bool = False
     ceq_keyword_generator_llm_model: str = "gpt-4"
     ceq_doc_relevancy_check_enabled: bool = False

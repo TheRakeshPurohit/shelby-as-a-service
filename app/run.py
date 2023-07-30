@@ -39,9 +39,15 @@ def run_index_management(deployment_name):
 def run_container_deployment(deployment_name):
     deployment = DeploymentInstance()
     deployment.load_and_check_deployment(deployment_name)
-    for moniker in deployment.monikers:
-        for sprite in moniker.moniker_enabled_sprite_names:
-            run_sprite(sprite)
+    for _, moniker_instance in deployment.monikers.items():
+        for sprite in moniker_instance.moniker_enabled_sprite_names: 
+            match sprite:
+                case "discord":
+                    DiscordSprite(deployment).run_discord_sprite()
+                case "slack":
+                    SlackSprite().run_slack_sprite()
+                case _:
+                    print(f"oops no {sprite} of that name")
 
 def run_local_deployment(deployment_name):
     deployment = DeploymentInstance()
@@ -83,11 +89,11 @@ if __name__ == "__main__":
 
     # Manually create args for testing
     # test_args = ["--local_deployment", "test"]
-    test_args = ["--index_management", "test"]
+    # test_args = ["--index_management", "test"]
 
     # test_args = ['--create_template', 'test']
     # test_args = ['--update_config', 'test']
-    # test_args = ['--build_workflow', 'test']
+    test_args = ['--build_workflow', 'test']
 
     args = parser.parse_args(test_args)
 

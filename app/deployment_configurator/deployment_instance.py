@@ -10,9 +10,12 @@ class DeploymentInstance:
     deployment_name: str = None
     enabled_moniker_names: list = []
     monikers: dict = {}
+    used_sprites: set = set()
+    used_services: set = set()
 
     # Variables here are only populated to workflow
     DEVOPS_VARIABLES_ = [
+        "docker_registry",
         "docker_username",
         "docker_repo",
         "docker_token",
@@ -66,6 +69,7 @@ class DeploymentInstance:
     
     @classmethod
     def load_deployment_name(cls):
+        print(cls.deployment_name)
         if cls.deployment_name is None or cls.deployment_name == "":
             raise ValueError(
                 "No deployment arg specified."
@@ -73,6 +77,7 @@ class DeploymentInstance:
         # Initial check to ensure the deployment config is correct
         path = f"deployments/{cls.deployment_name}/{cls.deployment_name}_deployment.env"
         if os.path.exists(path):
+            print(path)
             # For local deployment and config check
             load_dotenv(path)
         else:
@@ -129,24 +134,32 @@ class MonikerInstance(DeploymentInstance):
         if getattr(sprite, 'SPRITE_REQS_', None):
             for class_name in sprite.SPRITE_REQS_:
                 sprite_classes.append(self.CLASSES_[class_name])
+                DeploymentInstance.used_services.add(self.CLASSES_[class_name])
         sprite_classes.append(sprite)
+        DeploymentInstance.used_sprites.add(sprite)
             
         for ClassConfig in sprite_classes:
             class_config = ClassConfig()
+            class_name = class_config.__class__.__name__
             deployment_env_vars = {}
             for var in list(vars(class_config).keys()):
                 if var.startswith("_") and callable(getattr(class_config, var)):
                     continue
-                moniker_env_var_name = f"{deployment}_{moniker}_{sprite_name}_{var}"
-                moniker_env_value = ConfigSharedTools.get_and_convert_env_var(moniker_env_var_name)
-                deployment_env_var_name = f"{deployment}_{sprite_name}_{var.upper()}"
-                deployment_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_env_var_name)
+                moniker_env_var = f"{deployment}_{moniker}_{sprite_name}_{var}"
+                moniker_env_value = ConfigSharedTools.get_and_convert_env_var(moniker_env_var)
+                deployment_overrides_env_var = f"{deployment}_{sprite_name}_{var}"
+                deployment_overrides_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_overrides_env_var)
+                deployment_defaults_env_var = f"{deployment}_{class_name}_{var}"
+                deployment_defaults_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_defaults_env_var)
                 # First we try to set class_config variable with moniker variable and then deployment variable
                 if moniker_env_value is not None:
                     setattr(class_config, var, moniker_env_value)
                     continue
-                elif deployment_env_value is not None:
-                    setattr(class_config, var, deployment_env_value)
+                elif deployment_overrides_env_value is not None:
+                    setattr(class_config, var, deployment_overrides_env_value)
+                    continue
+                elif deployment_defaults_env_value is not None:
+                    setattr(class_config, var, deployment_defaults_env_value)
                     continue
                 # Else we default to class default settings
        

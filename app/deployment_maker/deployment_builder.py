@@ -95,7 +95,7 @@ class EnvConfigCreator(DeploymentInstance):
     def iterate_deployment_class(self):
         used_vars = []
         self.env_list.append("\n### Deployment Level Variables ###\n")
-        self.env_list.append("\t\t# Required here #")
+        self.env_list.append("\t\t# User input required here #")
         for var in DeploymentInstance.DEPLOYMENT_REQUIRED_VARIABLES_:
             env_var_name = f"{self.deployment_name}_{var}"
             check_env = self.only_add_env_vars(env_var_name)
@@ -116,7 +116,7 @@ class EnvConfigCreator(DeploymentInstance):
                     self.env_list.append(f"\t\t{check_env}")
                     used_vars.append(var)
                     
-        self.env_list.append("\n\t\t# Recommended #")
+        self.env_list.append("\n\t\t# Required default sprite settings - user input recommended #")
         for sprite in AllSpritesAndServices.all_sprites:
             for var, val in vars(sprite).items():
                 if not (
@@ -128,14 +128,27 @@ class EnvConfigCreator(DeploymentInstance):
                     env_var_name = f"{self.deployment_name}_{sprite.__name__}_{var}"
                     check_env = self.add_env_or_class_vars(env_var_name, val)
                     self.env_list.append(f"\t\t{check_env}")
-                    used_vars.append(var)
+
+        self.env_list.append("\n\t\t# Required default service settings - user input optional #")
+        for service in AllSpritesAndServices.all_services:
+                class_name = service.__name__
+                for var, val in vars(service).items():
+                    if not (
+                        var.startswith("_")
+                        or var.endswith("_")
+                        or callable(getattr(service, var))
+                        or var in used_vars
+                    ):
+                        env_var_name = f"{self.deployment_name}_{class_name}_{var}"
+                        check_env = self.add_env_or_class_vars(env_var_name, val)
+                        self.env_list.append(f"\t\t{check_env}")
                 
-        self.env_list.append("\n\t\t# Optional #")
+        self.env_list.append("\n\t\t# Optional overrides - overrides defaults for specific sprites #")
         for sprite in AllSpritesAndServices.all_sprites:
             for var in sprite.SPRITE_REQS_:
                 for class_name in sprite.SPRITE_REQS_:
-                    service = self.CLASSES_[class_name]
-                    for var, val in vars(service).items():
+                    service = DeploymentInstance.CLASSES_[class_name]
+                    for var, _ in vars(service).items():
                         if not (
                             var.startswith("_")
                             or var.endswith("_")
@@ -143,16 +156,15 @@ class EnvConfigCreator(DeploymentInstance):
                             or var in used_vars
                         ):
                             env_var_name = f"{self.deployment_name}_{sprite.__name__}_{var}"
-                            check_env = self.add_env_or_class_vars(env_var_name, val)
+                            check_env = self.only_add_env_vars(env_var_name)
                             self.env_list.append(f"\t\t{check_env}")
-                            used_vars.append(var)
-        
+                        
     def generate_moniker_level(self, moniker_name):
         used_vars = []
         self.env_list.append(
             f"\n### {moniker_name.upper()} Level Variables ###\n"
         )
-        self.env_list.append("\t\t# Required here #")
+        self.env_list.append("\t\t# User input required here #")
         for var in MonikerInstance.MONIKER_REQUIRED_VARIABLES_:
             env_var_name = f"{self.deployment_name}_{moniker_name}_{var}"
             check_env = self.only_add_env_vars(env_var_name)
@@ -173,7 +185,7 @@ class EnvConfigCreator(DeploymentInstance):
                     self.env_list.append(f"\t\t{check_env}")
                     used_vars.append(var)
                     
-        self.env_list.append("\n\t\t# Optional - Overrides deployment Level variables #")
+        self.env_list.append("\n\t\t# Optional overrides - overrides defaults for specific sprites #")
         for sprite in AllSpritesAndServices.all_sprites:
             for var, _ in vars(sprite).items():
                 if not (
@@ -187,10 +199,9 @@ class EnvConfigCreator(DeploymentInstance):
                     self.env_list.append(f"\t\t{check_env}")
                     used_vars.append(var)
         
-        for sprite in AllSpritesAndServices.all_sprites:
             for var in sprite.SPRITE_REQS_:
                 for class_name in sprite.SPRITE_REQS_:
-                    service = self.CLASSES_[class_name]
+                    service = DeploymentInstance.CLASSES_[class_name]
                     for var, _ in vars(service).items():
                         if not (
                             var.startswith("_")
@@ -231,32 +242,189 @@ class WorkflowBuilder(DeploymentInstance):
     def __init__(self, deployment_name):
 
         self.deployment_name = deployment_name
-        self.env_list = []
+        self.deployment = DeploymentInstance()
+        self.deployment.load_and_check_deployment(deployment_name)
+    
         self.secrets_list = []
+        self.deployment_vars = {}
 
         self.dir_path = f"deployments/{self.deployment_name}"
         self.file_path = f"{self.dir_path}/{self.deployment_name}_deployment.env"
         try:
-            self.existing_env_vars = self.load_existing_env_file(self.file_path)
+            self.existing_env_vars = ConfigSharedTools.load_existing_env_file(self.file_path)
         except Exception as error:
             print(f"Error: requires deployment.env and deployment_config.yaml {error}")
             raise
-        self.enabled_moniker_names = BaseClass.get_and_convert_env_list(f'{self.deployment_name}_enabled_moniker_names')
-        # self.docker_server: str = f'{self.docker_registry}/{self.docker_username}/{self.docker_repo}'
-        # self.docker_image_path: str = f'{self.docker_username}/{self.docker_repo}:{deployment_settings["deployment_name"]}-latest'
-        # self.github_action_workflow_name: str = f'deploy-{deployment_settings["deployment_name"]}'
-        # self.workload_name: str = f'{deployment_settings["deployment_name"]}-workload'
-        # self.workload_slug: str = f'{deployment_settings["deployment_name"]}-slug'
+        self.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_enabled_moniker_names')
         
+        self.github_action_workflow_name: str = f'deploy-{self.deployment_name}'
+        self.docker_registry: str = None
+        self.docker_username: str = None
+        self.docker_image_path: str = None
+        
+        self.docker_repo: str = None
+
+    
     def build_workflow(self):
         
         self.generate_dockerfile()
         self.generate_pip_requirements()
-        self.populate_variables()
-        self.generate_actions_workflow()
-        # self.generate_local_env_file(self.local_env_list, local_secrets_list)
+        self.generate_secrets()
+        self.generate_devops_requirements()
+        self.get_deployment_requirements()
+        self.get_deployment_defaults()
+        self.get_monikers()
         
-
+        self.generate_actions_workflow()
+    
+    def is_secret(self, var):
+        if var in DeploymentInstance.SECRET_VARIABLES_:
+            return True
+        return False
+    
+    def generate_secrets(self):
+        self.secrets_list = []
+        for secret in DeploymentInstance.SECRET_VARIABLES_:
+            secret_name = f"{self.deployment_name.upper()}_{secret.upper()}"
+            self.secrets_list.append(f"{secret_name}:  ${{{{ secrets.{secret_name} }}}}")   
+                                                 
+    def generate_devops_requirements(self):  
+        self.deployment_vars[f"DEPLOYMENT_NAME"] = self.deployment_name
+        for var in DeploymentInstance.DEVOPS_VARIABLES_:
+            if self.is_secret(var):
+                continue
+            env_var_name = f"{self.deployment_name}_{var}"
+            env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
+            self.deployment_vars[f"{var.upper()}"] = f"{env_value}"
+            setattr(self, var, env_value)
+                    
+        # For container deployment
+        self.docker_image_path: str = f"{self.docker_username}/{self.docker_repo}:{self.deployment_name}-latest"
+        self.deployment_vars[f"DOCKER_IMAGE_PATH"] = self.docker_image_path
+        self.deployment_vars[f"DOCKER_USERNAME"] = self.docker_username
+        
+        
+        self.deployment_vars[f"DOCKER_SERVER"] = f"{self.docker_registry}/{self.docker_username}/{self.docker_repo}"
+        self.deployment_vars[f"WORKLOAD_NAME"] = f"{self.deployment_name}-workload"
+        self.deployment_vars[f"WORKLOAD_SLUG"] = f"{self.deployment_name}-slug"
+    
+    def get_deployment_requirements(self):
+        
+        deployment_name = DeploymentInstance.deployment_name
+        for var in DeploymentInstance.DEPLOYMENT_REQUIRED_VARIABLES_:
+            if self.is_secret(var):
+                continue
+            env_var_name = f"{deployment_name}_{var}"
+            env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
+            self.deployment_vars[f"{env_var_name.upper()}"] = env_value
+        for sprite in DeploymentInstance.used_sprites:
+            sprite_classes = []
+            sprite_classes.append(sprite)
+            if getattr(sprite, 'SPRITE_REQS_', None):
+                for class_name in sprite.SPRITE_REQS_:
+                    sprite_classes.append(DeploymentInstance.CLASSES_[class_name])
+            for ClassConfig in sprite_classes:
+                class_config = ClassConfig()
+                # Special rules
+                for var in class_config.DEPLOYMENT_REQUIRED_VARIABLES_:
+                    if self.is_secret(var):
+                        continue
+                    env_var_name = f"{deployment_name}_{var}"
+                    env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
+                    self.deployment_vars[f"{env_var_name.upper()}"] = env_value
+    
+    def get_deployment_defaults(self):
+        deployment_name = DeploymentInstance.deployment_name
+        # Get sprite defaults
+        for sprite in DeploymentInstance.used_sprites:
+            sprite_name = sprite.__name__
+            for var, val in vars(sprite).items():
+                if var.startswith("_") or callable(getattr(sprite, var)):
+                    continue
+                if self.is_secret(var):
+                    continue
+                deployment_defaults_env_var = f"{deployment_name}_{sprite_name}_{var}"
+                deployment_defaults_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_defaults_env_var)
+                if deployment_defaults_env_value is not None:
+                    self.deployment_vars[f"{deployment_defaults_env_var.upper()}"] = deployment_defaults_env_value
+                else:
+                    self.deployment_vars[f"{deployment_defaults_env_var.upper()}"] = val
+        # Get services defaults
+        for service in DeploymentInstance.used_services:
+            service_name = service.__name__
+            for var, val in vars(service).items():
+                if var.startswith("_") or callable(getattr(service, var)):
+                    continue
+                if self.is_secret(var):
+                    continue
+                deployment_defaults_env_var = f"{deployment_name}_{service_name}_{var}"
+                deployment_defaults_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_defaults_env_var)
+                if deployment_defaults_env_value is not None:
+                    self.deployment_vars[f"{deployment_defaults_env_var.upper()}"] = deployment_defaults_env_value
+                else:
+                    self.deployment_vars[f"{deployment_defaults_env_var.upper()}"] = val
+        # Get default overrides
+        for sprite in DeploymentInstance.used_sprites:
+            sprite_name = sprite.__name__
+            sprite_classes = []
+            if getattr(sprite, 'SPRITE_REQS_', None):
+                for class_name in sprite.SPRITE_REQS_:
+                    sprite_classes.append(DeploymentInstance.CLASSES_[class_name])
+            for ClassConfig in sprite_classes:
+                class_config = ClassConfig()
+                class_name = class_config.__class__.__name__
+                for var, _ in vars(class_config).items():
+                    if var.startswith("_") or callable(getattr(class_config, var)):
+                        continue
+                    if self.is_secret(var):
+                        continue
+                    deployment_defaults_env_var = f"{deployment_name}_{sprite_name}_{var}"
+                    deployment_defaults_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_defaults_env_var)
+                    if deployment_defaults_env_value is not None:
+                        self.deployment_vars[f"{deployment_defaults_env_var.upper()}"] = deployment_defaults_env_value
+    
+    def get_monikers(self):
+        deployment_name = DeploymentInstance.deployment_name
+        for moniker_name, moniker in DeploymentInstance.monikers.items():
+            for var in moniker.MONIKER_REQUIRED_VARIABLES_:
+                if self.is_secret(var):
+                    continue
+                env_var_name = f"{deployment_name}_{moniker_name}_{var}"
+                env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
+                self.deployment_vars[f"{env_var_name.upper()}"] = env_value
+            for sprite in DeploymentInstance.used_sprites:
+                sprite_name = sprite.__name__
+                sprite_classes = []
+                sprite_classes.append(sprite)
+                if getattr(sprite, 'SPRITE_REQS_', None):
+                    for class_name in sprite.SPRITE_REQS_:
+                        sprite_classes.append(DeploymentInstance.CLASSES_[class_name])
+                for ClassConfig in sprite_classes:
+                    class_config = ClassConfig()
+                    class_name = class_config.__class__.__name__
+                    # Special rules
+                    for var in class_config.DEPLOYMENT_REQUIRED_VARIABLES_:
+                        if self.is_secret(var):
+                            continue
+                        env_var_name = f"{deployment_name}_{var}"
+                        env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)     
+                        self.deployment_vars[f"{env_var_name.upper()}"] = env_value
+                    for var in class_config.MONIKER_REQUIRED_VARIABLES_:
+                        if self.is_secret(var):
+                            continue
+                        env_var_name = f"{deployment_name}_{moniker_name}_{class_name}_{var}"
+                        env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
+                        self.deployment_vars[f"{env_var_name.upper()}"] = env_value
+                    for var, _ in vars(class_config).items():
+                        if var.startswith("_") or callable(getattr(class_config, var)):
+                            continue
+                        if self.is_secret(var):
+                            continue
+                        deployment_defaults_env_var = f"{deployment_name}_{moniker_name}_{sprite_name}_{var}"
+                        deployment_defaults_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_defaults_env_var)
+                        if deployment_defaults_env_value is not None:
+                            self.deployment_vars[f"{deployment_defaults_env_var.upper()}"] = deployment_defaults_env_value
+    
     def generate_dockerfile(self):
         dockerfile = f"""\
 # Use an official Python runtime as a parent image
@@ -275,15 +443,15 @@ COPY ./ ./
 RUN pip install --no-cache-dir -r deployments/{self.deployment_name}/requirements.txt
 
 # Run Sprites
-CMD ["/bin/bash", "-c", "python app/run.py --deployment {self.deployment_name}"]
+CMD ["/bin/bash", "-c", "python app/run.py --container_deployment {self.deployment_name}"]
         """
-        with open(f"deployments/{self.deployment_name}//Dockerfile", "w", encoding="utf-8") as f:
+        with open(f"deployments/{self.deployment_name}/Dockerfile", "w", encoding="utf-8") as f:
             f.write(dockerfile)
 
     def generate_pip_requirements(self):
         combined_requirements = set()
         for sprite_name in AllSpritesAndServices.all_sprites:
-            with open(f"app/services/deployment{sprite_name}_requirements.txt") as file:
+            with open(f"app/deployment_maker/{sprite_name.__name__}_requirements.txt", "r", encoding="utf-8") as file:
                 sprite_requirements = set(file.read().splitlines())
             combined_requirements.update(sprite_requirements)
 
@@ -292,32 +460,40 @@ CMD ["/bin/bash", "-c", "python app/run.py --deployment {self.deployment_name}"]
         ) as file:
             file.write("\n".join(combined_requirements))
 
-    def populate_variables(self):
-
+    def populate_strings(self):
+        
         # Make sure to error catch any missing # 
-        self.env_list.append("\n### ### Secrets ### ###\n")
+        self.deployment_vars.append("\n### ### Secrets ### ###\n")
         self.generate_secrets()
         
-        self.env_list.append("\n### Deployment Level Requirements ###\n")
+        self.deployment_vars.append("\n### Deployment Level Requirements ###\n")
+        self.deployment_vars.append("\n### Devops variables only set at deployment level ###\n")
         # iterate_deployment_class
-        self.env_list.append("\n### Deployment Level Variables ###\n")
+        self.deployment_vars.append("\n### default sprite settings ###\n")
+        self.deployment_vars.append("\n### default service settings ###\n")
+        self.deployment_vars.append("\n### overrides defaults for specific sprites ###\n")
         # all deployment level are required
         
-        self.env_list.append(f"\n### {moniker_name} Level Requirements  ###\n")
+        self.deployment_vars.append(f"\n### moniker Level Requirements  ###\n")
         # generate_moniker_level
-        self.env_list.append(f"\n### {moniker_name} Level Overrides ###\n")
+        self.deployment_vars.append(f"\n### overrides defaults for specific spritess ###\n")
 
     def generate_actions_workflow(self):
         # Positioning is required to create correct formatting. Hack work.
-        secrets_string = "\n".join(self.secrets_list)
-        secrets_string = textwrap.indent(secrets_string, " " * 24)
-
-        env_string = "\n".join(self.env_list)
+        secret_string = '### Secrets ###\n'
+        for secret in self.secrets_list:
+            secret_string += f"{secret}\n"
+        secret_string += "# Secrets in the format of 'secrets.NAME' with the 'NAME' portion added to your forked repos secrets. #\n"
+        secret_string = textwrap.indent(secret_string, " " * 24)
+        
+        env_string = f'DEPLOYMENT_VARS: "{self.deployment_vars}"\n'
+        # for env_var_name, env_var in self.deployment_vars.items():
+        #     env_string += f'{env_var_name.upper()}: "{env_var}"\n'
         env_string = textwrap.indent(env_string, " " * 24)
 
         github_actions_script = textwrap.dedent(
             f"""\
-        name: {self.deployment_env.github_action_workflow_name}
+        name: {self.github_action_workflow_name}
 
         on: workflow_dispatch
 
@@ -325,12 +501,8 @@ CMD ["/bin/bash", "-c", "python app/run.py --deployment {self.deployment_name}"]
             docker:
                 runs-on: ubuntu-latest
                 env:
-                        ### Secrets ###
-                        # Secrets in the format of 'secrets.NAME'
-                        # Should be added be added to github secrets as 'NAME'
-                    \n{secrets_string}
+                    \n{secret_string}
                     \n{env_string}
-                    
                 steps:
                     - name: Checkout code
                         uses: actions/checkout@v3
@@ -357,23 +529,23 @@ CMD ["/bin/bash", "-c", "python app/run.py --deployment {self.deployment_name}"]
                     - name: Login to Docker registry
                         uses: docker/login-action@v2 
                         with:
-                            registry: {self.deployment_env.docker_registry}
-                            username: {self.deployment_env.docker_username}
-                            password: ${{{{  secrets.DOCKER_TOKEN }}}}
+                            registry: {self.docker_registry}
+                            username: {self.docker_username}
+                            password: ${{{{  secrets.{self.deployment_name.upper()}_DOCKER_TOKEN }}}}
 
                     - name: Build and push Docker image
                         uses: docker/build-push-action@v4
                         with:
                             context: .
-                            file: app/deployment/{self.deployment_name}/Dockerfile
+                            file: deployments/{self.deployment_name}/Dockerfile
                             push: true
-                            tags: {self.deployment_env.docker_image_path}
+                            tags: {self.docker_image_path}
 
                     - name: Add execute permissions to the script
-                        run: chmod +x deployments/deploy_stackpath_container.py
+                        run: chmod +x app/deployment_maker/deploy_stackpath_container.py
 
                     - name: Run deployment script
-                        run: deployments/deploy_stackpath_container.py
+                        run: app/deployment_maker/deploy_stackpath_container.py
         """
         )
 
@@ -383,73 +555,6 @@ CMD ["/bin/bash", "-c", "python app/run.py --deployment {self.deployment_name}"]
         with open(
             f".github/workflows/{self.deployment_name}_deployment.yaml", "w", encoding="utf-8") as f:
             f.write(github_actions_script)
-
-    def exclude_secrets(self, var):
-        if var in DeploymentInstance.SECRET_VARIABLES_:
-            return None
-        return var
     
-    def generate_secrets(self):
-        self.secrets_list = []
-        for secret in DeploymentInstance.SECRET_VARIABLES_:
-            secret_name = f"{self.deployment_name.upper()}_{secret.upper()}"
-            self.secrets_list.append(
-                f"""{secret_name}: ${{{{ secrets.{secret_name} }}}}"""
-            )
+    
             
-    def generate_deployment_class(self):
-        
-        used_vars = []
-        self.env_list.append("\n### Deployment Level Requirements ###\n")
-        for var in DeploymentInstance.DEPLOYMENT_REQUIRED_VARIABLES_:
-            env_var_name = f"{self.deployment_name}_{var}"
-            check_env = self.only_add_env_vars(env_var_name)
-            self.env_list.append(f"\t\t{check_env}")
-            
-        for sprite in AllSpritesAndServices.all_sprites:
-            for var in sprite.DEPLOYMENT_REQUIRED_VARIABLES_:
-                if var not in used_vars:
-                    env_var_name = f"{self.deployment_name}_{var}"
-                    check_env = self.only_add_env_vars(env_var_name)
-                    self.env_list.append(f"\t\t{check_env}")
-                    used_vars.append(var)
-                    
-        for service in AllSpritesAndServices.all_services:
-            for var in service.DEPLOYMENT_REQUIRED_VARIABLES_:
-                if var not in used_vars:
-                    env_var_name = f"{self.deployment_name}_{var}"
-                    check_env = self.only_add_env_vars(env_var_name)
-                    self.env_list.append(f"\t\t{check_env}")
-                    used_vars.append(var)
-                    
-        self.env_list.append("\n\t\t# Deployment Level Sprites #")
-        for sprite in AllSpritesAndServices.all_sprites:
-            for var, val in vars(sprite).items():
-                if not (
-                    var.startswith("_")
-                    or var.endswith("_")
-                    or callable(getattr(sprite, var))
-                    or var in used_vars
-                ):
-                    env_var_name = f"{self.deployment_name}_{sprite.__name__}_{var}"
-                    check_env = self.add_env_or_class_vars(env_var_name, val)
-                    self.env_list.append(f"\t\t{check_env}")
-                    used_vars.append(var)
-                
-        self.env_list.append("\n\t\t# Deployment Level Optional #")
-        for sprite in AllSpritesAndServices.all_sprites:
-            for var in sprite.SPRITE_REQS_:
-                for class_name in sprite.SPRITE_REQS_:
-                    service = self.CLASSES_[class_name]
-                    for var, val in vars(service).items():
-                        if not (
-                            var.startswith("_")
-                            or var.endswith("_")
-                            or callable(getattr(service, var))
-                            or var in used_vars
-                        ):
-                            env_var_name = f"{self.deployment_name}_{sprite.__name__}_{var}"
-                            check_env = self.add_env_or_class_vars(env_var_name, val)
-                            self.env_list.append(f"\t\t{check_env}")
-                            used_vars.append(var)
-        

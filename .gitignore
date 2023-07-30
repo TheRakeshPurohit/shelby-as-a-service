@@ -5,5 +5,7 @@ installed_packages.txt
 logs/
 .vscode/
 **/__pycache__/
-deployments/
+deployments/old
+deployments/*/index
+
 langchain/
