@@ -4,14 +4,17 @@ import requests
 import os
 import json
 import sys
+from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 url = "https://gateway.stackpath.com/identity/v1/oauth2/token"
 
-deployment_vars = os.environ.get('DEPLOYMENT_VARS')
-deployment_vars = json.loads(deployment_vars)
-deployment_name = deployment_vars['DEPLOYMENT_NAME']
+# deployment_vars = os.environ.get('DEPLOYMENT_VARS')
+# deployment_vars = json.loads(deployment_vars)
+# deployment_name = deployment_vars['DEPLOYMENT_NAME']
+load_dotenv("deployments/test/test_deployment.env")
+deployment_name = 'test'
 
 headers = {"accept": "application/json", "content-type": "application/json"}
 payload = {
@@ -19,7 +22,9 @@ payload = {
     "client_id": os.environ.get(f"{deployment_name.upper()}_STACKPATH_CLIENT_ID"),
     "client_secret": os.environ.get(f"{deployment_name.upper()}_STACKPATH_API_CLIENT_SECRET"),
 }
+print(payload)
 response = requests.post(url, json=payload, headers=headers)
+print(response)
 bearer_token = json.loads(response.text)["access_token"]
 
 # get stack id
