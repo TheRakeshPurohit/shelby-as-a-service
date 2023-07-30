@@ -265,7 +265,6 @@ class WorkflowBuilder(DeploymentInstance):
         
         self.docker_repo: str = None
 
-    
     def build_workflow(self):
         
         self.generate_dockerfile()

@@ -28,7 +28,7 @@ print(response)
 bearer_token = json.loads(response.text)["access_token"]
 
 # get stack id
-url = f"https://gateway.stackpath.com/stack/v1/stacks/{os.environ.get('STACKPATH_STACK_ID')}"
+url = f"https://gateway.stackpath.com/stack/v1/stacks/{os.environ.get(f'{deployment_name.upper()}_STACKPATH_STACK_ID')}"
 
 headers = {"accept": "application/json", "authorization": f"Bearer {bearer_token}"}
 
