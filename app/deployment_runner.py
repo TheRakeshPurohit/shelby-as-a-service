@@ -46,6 +46,7 @@ def run_local_deployment(deployment_name):
                     print(f"oops no {sprite} of that name")
 
 if __name__ == "__main__":
+    print(f"Starting deployment with deployment_runner.py")
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(

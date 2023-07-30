@@ -15,7 +15,7 @@ from services.shelby_agent import ShelbyAgent
 class DiscordSprite(DeploymentInstance):
     def __init__(self, deployment):
         self.log = Logger(DeploymentInstance.deployment_name, 'discord_sprite', f'discord_sprite.md', level='INFO')
-
+        self.log.print_and_log("Starting DiscordSprite.")
         self.deployment = deployment
         
         self.intents = discord.Intents.default()
@@ -225,7 +225,12 @@ class DiscordSprite(DeploymentInstance):
         return None
     
     def run_discord_sprite(self):
-        self.bot.run(self.deployment.discord_bot_token)
+        try:
+            self.bot.run(self.deployment.discord_bot_token)
+        except Exception as error:
+            # Logs error and sends error to sprite
+            print(f"An error occurred in DiscordSprite run_discord_sprite(): {error}\n")
+            raise
     
     async def run_request(self, shelby_agent, request):
         # Required to run multiple requests at a time in async

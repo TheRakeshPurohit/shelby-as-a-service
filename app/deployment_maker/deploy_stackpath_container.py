@@ -90,6 +90,17 @@ for var, val in deployment_vars.items():
         config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
             {var: {"value": val}}
         )
+for var in deployment_vars['SECRETS_TO_DEPLOY']:
+    val = os.environ.get(f"{var.upper()}")
+    if isinstance(val, str):
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"secretValue": val}}
+        )
+    else:
+        val = f"'{val}'"
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"secretValue": val}}
+        )
 print(config)
 url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'
 headers = {

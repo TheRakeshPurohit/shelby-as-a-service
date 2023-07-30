@@ -247,6 +247,7 @@ class WorkflowBuilder(DeploymentInstance):
         self.deployment.load_and_check_deployment(deployment_name)
     
         self.secrets_list = []
+        self.secrets_to_deploy = []
         self.deployment_vars = {}
 
         self.dir_path = f"deployments/{self.deployment_name}"
@@ -286,8 +287,10 @@ class WorkflowBuilder(DeploymentInstance):
         self.secrets_list = []
         for secret in DeploymentInstance.SECRET_VARIABLES_:
             secret_name = f"{self.deployment_name.upper()}_{secret.upper()}"
+            self.secrets_to_deploy.append(secret_name)
             self.secrets_list.append(f"{secret_name}:  ${{{{ secrets.{secret_name} }}}}")   
-                                                 
+        self.deployment_vars['SECRETS_TO_DEPLOY'] = self.secrets_to_deploy
+        
     def generate_devops_requirements(self):  
         self.deployment_vars[f"DEPLOYMENT_NAME"] = self.deployment_name
         for var in DeploymentInstance.DEVOPS_VARIABLES_:
