@@ -10,11 +10,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 url = "https://gateway.stackpath.com/identity/v1/oauth2/token"
 
-# deployment_vars = os.environ.get('DEPLOYMENT_VARS')
-# deployment_vars = json.loads(deployment_vars)
-# deployment_name = deployment_vars['DEPLOYMENT_NAME']
-load_dotenv("deployments/test/test_deployment.env")
-deployment_name = 'test'
+deployment_vars = os.environ.get('DEPLOYMENT_VARS')
+deployment_vars = json.loads(deployment_vars)
+deployment_name = deployment_vars['DEPLOYMENT_NAME']
+
+# load_dotenv("deployments/test/test_deployment.env")
+# deployment_name = 'test'
 
 headers = {"accept": "application/json", "content-type": "application/json"}
 payload = {

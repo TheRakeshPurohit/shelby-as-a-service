@@ -93,10 +93,10 @@ if __name__ == "__main__":
 
     # test_args = ['--create_template', 'test']
     # test_args = ['--update_config', 'test']
-    test_args = ['--build_workflow', 'test']
+    # test_args = ['--build_workflow', 'test']
 
-    args = parser.parse_args(test_args)
+    # args = parser.parse_args(test_args)
 
-    # args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args(sys.argv[1:])
 
     main(args)

@@ -96,7 +96,7 @@ class MonikerInstance(DeploymentInstance):
     moniker_name: str = field(default=None)
     moniker_enabled: bool = field(default=None)
     moniker_enabled_sprite_names: list = field(default_factory=list)
-    moniker_enabled_data_domains: list = field(default_factory=list)
+    moniker_enabled_data_domains: dict = field(default_factory=dict)
     discord_config: Optional[dict] = field(default_factory=dict)
     
     # Adds as 'required' to deployment.env and workflow
