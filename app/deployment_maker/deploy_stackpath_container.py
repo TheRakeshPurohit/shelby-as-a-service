@@ -25,8 +25,7 @@ bearer_token = json.loads(response.text)["access_token"]
 if response.status_code == 200 and bearer_token:
     print("Got bearer token.")
 else:
-    print("Did not get bearer token.")
-    raise
+    raise ValueError("Did not get workloads.")
 
 url = f'https://gateway.stackpath.com/stack/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}'
 headers = {"accept": "application/json", "authorization": f"Bearer {bearer_token}"}
@@ -36,8 +35,7 @@ stack_id = json.loads(response.text)["id"]
 if response.status_code == 200 and stack_id:
     print(f"Got stack_id: {stack_id}")
 else:
-    print("Did not get stack_id.")
-    raise
+    raise ValueError("Did not get workloads.")
 
 # Get existing workloads
 # And delete an existing workload with the same name as the one we're trying to deploy
@@ -48,11 +46,10 @@ workloads = workloads.get("results")
 if response.status_code == 200 and workloads:
     print(f"Got workloads: {len(workloads)}")
 else:
-    print("Did not get workloads.")
-    raise
+    raise ValueError("Did not get workloads.")
 for workload in workloads:
     print(f'Existing workload name: {workload["name"]}')
-    if workload["name"] == os.environ.get("WORKLOAD_NAME").lower():
+    if workload["name"] == deployment_vars["WORKLOAD_NAME"].lower():
         workload_id = workload["id"]
         url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads/{workload_id}"
         response = requests.delete(url, headers=headers)
