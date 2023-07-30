@@ -43,6 +43,7 @@ response = requests.get(url, headers=headers)
 # And delete an existing workload with the same name as the one we're trying to deploy
 if response.status_code == 200:
     workloads = response.json()
+    print(workloads)
     if workloads.get("results") is not None:
         for workload in workloads.get("results"):
             if workload["name"] == os.environ.get("WORKLOAD_NAME"):
@@ -68,7 +69,7 @@ config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry
 ] = deployment_vars["DOCKER_USERNAME"]
 config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
     "password"
-] = os.environ.get("DOCKER_TOKEN")
+] = os.environ.get(f"{deployment_name.upper()}_DOCKER_TOKEN")
 
 config["payload"]["workload"]["name"] = deployment_vars["WORKLOAD_NAME"].lower()
 config["payload"]["workload"]["slug"] = deployment_vars["WORKLOAD_SLUG"].lower()
