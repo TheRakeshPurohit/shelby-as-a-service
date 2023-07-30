@@ -23,19 +23,15 @@ payload = {
     "client_id": os.environ.get(f"{deployment_name.upper()}_STACKPATH_CLIENT_ID"),
     "client_secret": os.environ.get(f"{deployment_name.upper()}_STACKPATH_API_CLIENT_SECRET"),
 }
-print(payload)
 response = requests.post(url, json=payload, headers=headers)
-print(response)
 bearer_token = json.loads(response.text)["access_token"]
 
 # get stack id
 
-url = f"https://gateway.stackpath.com/stack/v1/stacks/{os.environ.get('STACKPATH_STACK_ID')}"
-print(url)
+url = f'https://gateway.stackpath.com/stack/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}'
 headers = {"accept": "application/json", "authorization": f"Bearer {bearer_token}"}
 
 response = requests.get(url, headers=headers)
-print(response)
 stack_id = json.loads(response.text)["id"]
 
 
@@ -56,25 +52,25 @@ if response.status_code == 200:
                 print("workload deleted")
                 
 # Load configuration from JSON file
-with open("app/deployment_maker/sp-2_container_request_template.json") as f:
+with open("app/deployment_maker/sp-2_container_request_template.json", "r", encoding="utf-8") as f:
     config = json.load(f)
 
 # Add env vars to the environment variables of the container
 config["payload"]["workload"]["spec"]["containers"]["webserver"][
     "image"
-] = os.environ.get("DOCKER_IMAGE_PATH")
+] = deployment_vars["DOCKER_IMAGE_PATH"]
 config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
     "server"
-] = os.environ.get("DOCKER_SERVER")
+] = deployment_vars["DOCKER_SERVER"]
 config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
     "username"
-] = os.environ.get("DOCKER_USERNAME")
+] = deployment_vars["DOCKER_USERNAME"]
 config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
     "password"
 ] = os.environ.get("DOCKER_TOKEN")
 
-config["payload"]["workload"]["name"] = os.environ.get("WORKLOAD_NAME").lower()
-config["payload"]["workload"]["slug"] = os.environ.get("WORKLOAD_SLUG").lower()
+config["payload"]["workload"]["name"] = deployment_vars["WORKLOAD_NAME"].lower()
+config["payload"]["workload"]["slug"] = deployment_vars["WORKLOAD_SLUG"].lower()
 
 new_env = {}
 for var, val in deployment_vars.items():
@@ -83,7 +79,7 @@ for var, val in deployment_vars.items():
 config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"] = new_env
 
 
-url = f"https://gateway.stackpath.com/workload/v1/stacks/{os.environ.get('STACKPATH_STACK_ID')}/workloads"
+url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'
 headers = {
     "accept": "application/json",
     "content-type": "application/json",
@@ -94,6 +90,6 @@ payload = config["payload"]
 # Make the API call
 response = requests.post(url, json=payload, headers=headers)
 if response.status_code == 200:
-        f"{os.environ.get('WORKLOAD_NAME').lower()} created : {response.text}"
+        print(f'{deployment_vars["WORKLOAD_NAME"].lower()} created : {response.text}')
 else:
-        f"Something went wrong creating the workload: {response.text}"
+        print(f"Something went wrong creating the workload: {response.text}")
