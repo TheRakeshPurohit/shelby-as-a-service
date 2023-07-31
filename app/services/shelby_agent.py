@@ -19,7 +19,7 @@ class ShelbyAgent:
         self.config = instance.discord_config['ShelbyConfig']
         self.action_agent = ActionAgent(self)
         self.rag_agent = CEQAgent(self)
-
+        
     def request_thread(self, request):
         try:
             # ActionAgent determines the workflow
@@ -40,9 +40,9 @@ class ShelbyAgent:
 
             return response
 
-        except Exception as e:
+        except Exception as error:
             # Logs error and sends error to sprite
-            error_message = f"An error occurred while processing request: {e}\n"
+            error_message = f"An error occurred while processing request: {error}\n"
             error_message += "Traceback (most recent call last):\n"
             error_message += traceback.format_exc()
 
@@ -93,6 +93,7 @@ class ActionAgent:
         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(actions) + 1)}
 
         response = openai.ChatCompletion.create(
+            api_key=DeploymentInstance.openai_api_key,
             model=self.shelby_agent.config.action_llm_model,
             messages=prompt,
             max_tokens=1,
@@ -134,6 +135,7 @@ class ActionAgent:
         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(self.shelby_agent.enabled_data_domains) + 1)}
 
         response = openai.ChatCompletion.create(
+            api_key=DeploymentInstance.openai_api_key,
             model=self.shelby_agent.config.ceq_data_domain_constraints_llm_model,
             messages=prompt_template,
             max_tokens=1,
@@ -197,6 +199,7 @@ class CEQAgent:
                 role['content'] = query  # Replace the 'content' with 'prompt_message'
 
         response = openai.ChatCompletion.create(
+            api_key=DeploymentInstance.openai_api_key,
             model=self.shelby_agent.config.ceq_keyword_generator_llm_model,
             messages=prompt_template,
             max_tokens=25
@@ -213,8 +216,9 @@ class CEQAgent:
     def get_query_embeddings(self, query):
 
         embedding_retriever = OpenAIEmbeddings(
-            model=self.shelby_agent.config.ceq_embedding_model,
+            # Note that this is openai_api_key and not api_key
             openai_api_key=DeploymentInstance.openai_api_key,
+            model=self.shelby_agent.config.ceq_embedding_model,
             request_timeout=self.shelby_agent.config.openai_timeout_seconds
         )
         dense_embedding = embedding_retriever.embed_query(query)
@@ -318,6 +322,7 @@ class CEQAgent:
                 role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
 
         response = openai.ChatCompletion.create(
+            api_key=DeploymentInstance.openai_api_key,
             model=self.shelby_agent.config.ceq_doc_relevancy_check_llm_model,
             messages=prompt_template,
             max_tokens=10,
@@ -479,7 +484,7 @@ class CEQAgent:
     def ceq_main_prompt_llm(self, prompt):
 
         response = openai.ChatCompletion.create(
-            openai_api_key=DeploymentInstance.openai_api_key,
+            api_key=DeploymentInstance.openai_api_key,
             model=self.shelby_agent.config.ceq_main_prompt_llm_model,
             messages=prompt,
             max_tokens=self.shelby_agent.config.ceq_max_response_tokens
