@@ -18,7 +18,7 @@ class ShelbyAgent:
         self.enabled_data_domains = instance.moniker_enabled_data_domains
         self.config = instance.discord_config['ShelbyConfig']
         self.action_agent = ActionAgent(self)
-        self.rag_agent = CEQAgent(self)
+        self.ceq_agent = CEQAgent(self)
         
     def request_thread(self, request):
         try:
@@ -28,7 +28,7 @@ class ShelbyAgent:
             workflow = 1
             match workflow:
                 case 1:
-                    response = self.rag_agent.run_context_enriched_query(request)
+                    response = self.ceq_agent.run_context_enriched_query(request)
                 # case 2:
                 #     # Run APIAgent
                 #     response = self.API_agent.run_API_agent(request)
@@ -173,8 +173,8 @@ class CEQAgent:
             return 
         elif len(self.shelby_agent.enabled_data_domains) == 1:
             # If only one topic, then we skip the ActionAgent topic decision.
-            data_domain_name = self.shelby_agent.enabled_data_domains[0]
-            
+            for key, _ in self.shelby_agent.enabled_data_domains.items():
+                data_domain_name = key
         else:
             data_domain_name = self.shelby_agent.action_agent.data_domain_decision(query)
             

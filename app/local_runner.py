@@ -89,8 +89,8 @@ if __name__ == "__main__":
     )
 
     # Manually create args for testing
-    # test_args = ["--local_deployment", "test"]
-    test_args = ["--index_management", "tatum"]
+    test_args = ["--local_deployment", "tatum"]
+    # test_args = ["--index_management", "tatum"]
 
     # test_args = ['--create_template', 'tatum']
     # test_args = ['--update_config', 'tatum']
