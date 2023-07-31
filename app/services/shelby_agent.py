@@ -479,7 +479,7 @@ class CEQAgent:
     def ceq_main_prompt_llm(self, prompt):
 
         response = openai.ChatCompletion.create(
-            api_key=DeploymentInstance.openai_api_key,
+            openai_api_key=DeploymentInstance.openai_api_key,
             model=self.shelby_agent.config.ceq_main_prompt_llm_model,
             messages=prompt,
             max_tokens=self.shelby_agent.config.ceq_max_response_tokens
@@ -544,7 +544,6 @@ class CEQAgent:
         return answer_obj
 
     def run_context_enriched_query(self, query):
-
         data_domain_name = None
         if self.shelby_agent.config.ceq_data_domain_constraints_enabled:
             data_domain_name, response = self.select_data_domain(query)
