@@ -177,14 +177,13 @@ class MonikerInstance(DeploymentInstance):
                     continue
                 # Else we default to class default settings
        
-            # Special rules
+            # Appends to deployment class
             for var in class_config.DEPLOYMENT_REQUIRED_VARIABLES_:
                 env_var_name = f"{self.deployment_name}_{var}"
                 env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
-                deployment_env_vars[var] = env_value
-            # Appends to deployment class
-            for var, val in deployment_env_vars.items():
-                setattr(DeploymentInstance, var, val)
+                if env_value is None:
+                    raise ValueError(f"{var} is None as {env_var_name} during loading of deployment!")
+                setattr(DeploymentInstance, var, env_value)
             for var in class_config.MONIKER_REQUIRED_VARIABLES_:
                 env_var_name = f"{self.deployment_name}_{moniker}_{sprite_name}_{var}"
                 env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)

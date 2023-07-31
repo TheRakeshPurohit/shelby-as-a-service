@@ -16,10 +16,6 @@ class ShelbyAgent:
 
         self.instance = instance
         self.enabled_data_domains = instance.moniker_enabled_data_domains
-        self.index_env = instance.index_env
-        self.index_name = instance.index_name
-        self.openai_api_key = instance.openai_api_key
-        self.pinecone_api_key = instance.pinecone_api_key
         self.config = instance.discord_config['ShelbyConfig']
         self.action_agent = ActionAgent(self)
         self.rag_agent = CEQAgent(self)
@@ -218,7 +214,7 @@ class CEQAgent:
 
         embedding_retriever = OpenAIEmbeddings(
             model=self.shelby_agent.config.ceq_embedding_model,
-            openai_api_key=self.shelby_agent.openai_api_key,
+            openai_api_key=DeploymentInstance.openai_api_key,
             request_timeout=self.shelby_agent.config.openai_timeout_seconds
         )
         dense_embedding = embedding_retriever.embed_query(query)
@@ -232,8 +228,8 @@ class CEQAgent:
 
     def query_vectorstore(self, dense_embedding, sparse_embedding, data_domain_name=None):
 
-        pinecone.init(api_key=self.shelby_agent.pinecone_api_key, environment=self.shelby_agent.index_env)
-        index = pinecone.Index(self.shelby_agent.index_name)
+        pinecone.init(api_key=DeploymentInstance.pinecone_api_key, environment=DeploymentInstance.index_env)
+        index = pinecone.Index(DeploymentInstance.index_name)
 
         if data_domain_name is not None:
             soft_filter = {
@@ -483,7 +479,7 @@ class CEQAgent:
     def ceq_main_prompt_llm(self, prompt):
 
         response = openai.ChatCompletion.create(
-            api_key=self.shelby_agent.openai_api_key,
+            api_key=DeploymentInstance.openai_api_key,
             model=self.shelby_agent.config.ceq_main_prompt_llm_model,
             messages=prompt,
             max_tokens=self.shelby_agent.config.ceq_max_response_tokens
