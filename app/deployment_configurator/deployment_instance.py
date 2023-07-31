@@ -155,7 +155,6 @@ class MonikerInstance(DeploymentInstance):
         for ClassConfig in sprite_classes:
             class_config = ClassConfig()
             class_name = class_config.__class__.__name__
-            deployment_env_vars = {}
             for var in list(vars(class_config).keys()):
                 if var.startswith("_") and callable(getattr(class_config, var)):
                     continue
