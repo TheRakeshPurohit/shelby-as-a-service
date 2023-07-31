@@ -24,7 +24,6 @@ class DiscordSprite(DeploymentInstance):
             command_prefix=commands.when_mentioned_or("!"), intents=self.intents
         )
 
-
         @self.bot.event
         async def on_guild_join(guild):
             # Checks the guild server ID in the list of monikers, and returns none if it can't find it
