@@ -99,7 +99,7 @@ for var, val in deployment_vars.items():
         )
     else:
         # Have to wrap non-str items in qoutes to push to env. we destructure them when loading.
-        val = f"'{val}'"
+        val = f'{val}'
         config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
             {var: {"value": val}}
         )
@@ -107,14 +107,13 @@ for var in deployment_vars['SECRETS_TO_DEPLOY']:
     val = os.environ.get(f"{var.upper()}")
     if isinstance(val, str):
         config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
-            # {var: {"secretValue": val}}
-            {var: {"value": val}}
+            {var: {"secretValue": val}}
         )
     else:
-        # val = f"'{val}'"
+        val = f'{val}'
         config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
-            # {var: {"secretValue": val}}
-            {var: {"value": val}}
+            {var: {"secretValue": val}}
+
         )
 
 url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'

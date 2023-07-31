@@ -153,7 +153,7 @@ class ActionAgent:
         # Otherwise return string with the namespace of the domain in the vectorstore
         data_domain_name = list(self.shelby_agent.enabled_data_domains.keys())[domain_key - 1]  # We subtract 1 because list indices start at 0
 
-        self.shelby_agent.log.print_and_log(f"{self.shelby_agent.config.ceq_data_domain_constraints_llm_model} chose to fetch context docs from {domain} data domain.")
+        self.shelby_agent.log.print_and_log(f"{self.shelby_agent.config.ceq_data_domain_constraints_llm_model} chose to fetch context docs from {data_domain_name} data domain.")
         
         return data_domain_name
 
