@@ -384,7 +384,7 @@ class CEQAgent:
         for i, document in enumerate(sorted_documents, start=1):
             token_count = _tiktoken_len(document['content'])
             if token_count > self.shelby_agent.config.ceq_docs_max_total_tokens:
-                sorted_documents.pop(idx)
+                sorted_documents.pop(i - 1)
                 continue
             document['token_count'] = token_count
             document['doc_num'] = i

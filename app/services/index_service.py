@@ -377,7 +377,7 @@ class CustomPreProcessor:
         processed_document_chunks = []
         processed_text_chunks = []
         
-        for doc in documents:
+        for i, doc in enumerate(documents):
             # If no doc title use the url and the resource type
             if not doc.metadata.get('title'):
                 parsed_url = urlparse(doc.metadata.get('loc'))
@@ -390,11 +390,11 @@ class CustomPreProcessor:
             doc.page_content = self.process_text(doc.page_content)
             doc.metadata['title'] = self.process_text(doc.metadata['title'])
             
-            # self.data_source_config.log_agent.print_and_log(doc.metadata['title'])
+            self.index_agent.log.print_and_log(f"Doc number: {i}\n Title: {doc.metadata['title']}")
             
             # Skip if too small
             if self.tiktoken_len(doc.page_content) < self.data_source_config.config.index_preprocessor_min_length:
-                # self.data_source_config.index_agent.log_agent.print_and_log(f'page too small: {self.tiktoken_len(doc.page_content)}')
+                self.index_agent.log.print_and_log(f'page too small: {self.tiktoken_len(doc.page_content)}')
                 continue
             
             # Split into chunks
@@ -404,17 +404,17 @@ class CustomPreProcessor:
                 processed_document_chunks.append(document_chunk)
                 processed_text_chunks.append(text_chunk.lower())
         
-        # self.log.print_and_log(f'Total docs: {len(documents)}')
-        # self.log.print_and_log(f'Total chunks: {len(processed_document_chunks)}')
+        self.index_agent.log.print_and_log(f'Total docs: {len(documents)}')
+        self.index_agent.log.print_and_log(f'Total chunks: {len(processed_document_chunks)}')
         if not processed_document_chunks:
             return
         token_counts = [
             self.tiktoken_len(chunk) for chunk in processed_text_chunks
         ]
-        # self.log.print_and_log(f'Min: {min(token_counts)}')
-        # self.log.print_and_log(f'Avg: {int(sum(token_counts) / len(token_counts))}')
-        # self.log.print_and_log(f'Max: {max(token_counts)}')
-        # self.log.print_and_log(f'Total tokens: {int(sum(token_counts))}')
+        self.index_agent.log.print_and_log(f'Min: {min(token_counts)}')
+        self.index_agent.log.print_and_log(f'Avg: {int(sum(token_counts) / len(token_counts))}')
+        self.index_agent.log.print_and_log(f'Max: {max(token_counts)}')
+        self.index_agent.log.print_and_log(f'Total tokens: {int(sum(token_counts))}')
 
         return processed_document_chunks
     

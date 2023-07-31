@@ -153,10 +153,10 @@ class IndexConfig:
     index_vectorstore_upsert_batch_size: int = 20
     index_vectorstore_metric: str = "dotproduct"
     index_vectorstore_pod_type: str = "p1"
-    index_preprocessor_min_length: int = 100
+    index_preprocessor_min_length: int = 150
     index_text_splitter_goal_length: int = 1500
     index_text_splitter_max_length: int = 2000
-    index_text_splitter_chunk_overlap: int = 200
+    index_text_splitter_chunk_overlap: int = 300
     index_openai_timeout_seconds: float = 180.0
     index_indexed_metadata: List[str] = field(default_factory=lambda: ["data_domain_name", "data_source_name", "doc_type", "target_type"]) 
     # Adds as 'required' to deployment.env and workflow
