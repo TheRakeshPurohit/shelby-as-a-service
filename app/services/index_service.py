@@ -45,8 +45,9 @@ class IndexService:
             indexes = pinecone.list_indexes()
             if self.deployment.index_name not in indexes:
                 # create new index
-                response = self.create_index()
-                self.log.print_and_log(f"Created index: {response}")
+                self.create_index()
+                indexes = pinecone.list_indexes()
+                self.log.print_and_log(f"Created index: {indexes}")
             self.vectorstore = pinecone.Index(self.deployment.index_name)
  
             ### Adds sources from yaml config file to queue ###
@@ -210,30 +211,28 @@ class IndexService:
         
     def create_index(self):
         metadata_config = {
-            "indexed": self.config.indexed_metadata
+            "indexed": self.config.index_indexed_metadata
         }
         # Prepare log message
         log_message = (
             f"Creating new index with the following configuration:\n"
             f" - Index Name: {self.deployment.index_name}\n"
-            f" - Dimension: {self.config.vectorstore_dimension}\n"
-            f" - Metric: {self.config.vectorstore_metric}\n"
-            f" - Pod Type: {self.config.vectorstore_pod_type}\n"
+            f" - Dimension: {self.config.index_vectorstore_dimension}\n"
+            f" - Metric: {self.config.index_vectorstore_metric}\n"
+            f" - Pod Type: {self.config.index_vectorstore_pod_type}\n"
             f" - Metadata Config: {metadata_config}"
         )
         # Log the message
         self.log.print_and_log(log_message)
         
-        response = pinecone.create_index(
+        pinecone.create_index(
             name=self.deployment.index_name, 
-            dimension=self.config.vectorstore_dimension, 
-            metric=self.config.vectorstore_metric,
-            pod_type=self.config.vectorstore_pod_type,
+            dimension=self.config.index_vectorstore_dimension, 
+            metric=self.config.index_vectorstore_metric,
+            pod_type=self.config.index_vectorstore_pod_type,
             metadata_config=metadata_config
             )
         
-        return response
-    
     def tiktoken_len(self, text):
         tokens = self.tokenizer.encode(
             text,

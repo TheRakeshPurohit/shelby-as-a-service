@@ -125,6 +125,9 @@ The gulf between 'hello world' and something useful is what shelby-as-a-service 
 <!-- GETTING STARTED -->
 ## Getting Started
 
+# Out of date!
+I made some huge changes this weekend, and ran out of time to update the documentation. In theory, everything works. Except maybe not. By the end of the week I should have the documentation updated to reflect the changes.
+
 This will be covered in three steps:
 
 1. Installation -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/INSTALLATION.md

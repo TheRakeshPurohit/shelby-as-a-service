@@ -173,13 +173,13 @@ class CEQAgent:
             return 
         elif len(self.shelby_agent.enabled_data_domains) == 1:
             # If only one topic, then we skip the ActionAgent topic decision.
-            domain = self.shelby_agent.enabled_data_domain[0]
+            data_domain_name = self.shelby_agent.enabled_data_domain[0]
             
         else:
             data_domain_name = self.shelby_agent.action_agent.data_domain_decision(query)
             
         # If no domain found message is sent to sprite
-        if domain == 0:
+        if data_domain_name == 0:
             for key, value in self.shelby_agent.enabled_data_domains.items():
                 self.shelby_agent.config.ceq_data_domain_none_found_message += f"{key}: {value}\n"
             self.shelby_agent.log_service.print_and_log(self.shelby_agent.config.ceq_data_domain_none_found_message)
@@ -189,7 +189,7 @@ class CEQAgent:
             
     def keyword_generator(self, query):
 
-        with open(os.path.join('app/prompt_templates/', 'ceq_keyword_generator.yaml.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join('app/prompt_templates/', 'ceq_keyword_generator.yaml'), 'r', encoding="utf-8") as stream:
             # Load the YAML data and print the result
             prompt_template = yaml.safe_load(stream)
 
@@ -238,7 +238,7 @@ class CEQAgent:
         if data_domain_name is not None:
             soft_filter = {
                 "doc_type": {"$eq": "soft"},
-                "data_domain_name": {"eq": f"{data_domain_name}"}
+                "data_domain_name": {"$eq": f"{data_domain_name}"}
                 }
         else:
             soft_filter = {"doc_type": {"$eq": "soft"}}
@@ -246,7 +246,7 @@ class CEQAgent:
         if data_domain_name is not None:
             hard_filter = {
                 "doc_type": {"$eq": "hard"},
-                "data_domain_name": {"eq": f"{data_domain_name}"}
+                "data_domain_name": {"$eq": f"{data_domain_name}"}
                 }
         else:
             hard_filter = {"doc_type": {"$eq": "hard"}}

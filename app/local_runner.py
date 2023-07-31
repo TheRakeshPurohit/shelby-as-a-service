@@ -34,6 +34,7 @@ def run_index_management(deployment_name):
     deployment = DeploymentInstance()
     deployment.load_and_check_deployment(deployment_name, run_index_management=True)
     IndexService(deployment).ingest_docs()
+    # IndexService(deployment).clear_index()
 
             
 def run_container_deployment(deployment_name):
@@ -89,11 +90,11 @@ if __name__ == "__main__":
 
     # Manually create args for testing
     # test_args = ["--local_deployment", "test"]
-    # test_args = ["--index_management", "test"]
+    test_args = ["--index_management", "test"]
 
     # test_args = ['--create_template', 'test']
     # test_args = ['--update_config', 'test']
-    test_args = ['--build_workflow', 'test']
+    # test_args = ['--build_workflow', 'test']
 
     args = parser.parse_args(test_args)
 

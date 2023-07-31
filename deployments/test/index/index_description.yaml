@@ -1,6 +1,6 @@
 index_name: "shelby-as-a-service"
 monikers:
-  "personal":
+  "test":
     data_domains:
       "deepgram":
         description: "Advanced AI services including, speech-to-text, translation, and sentiment analysis."
@@ -20,20 +20,20 @@ monikers:
       "tatum":
         description: "Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API."
         sources:
-          "docs.tatum.com":
-            update_enabled: False
+          "docs.tatum.io":
+            update_enabled: True
             load_all_paths: True
-            target_url: "https://docs.tatum.com"
+            target_url: "https://docs.tatum.io/"
             target_type: "gitbook"
             doc_type: "soft"
-          "docs.tatum.io":
-            update_enabled: False
+          "docs-v3.tatum.io":
+            update_enabled: True
             load_all_paths: True
-            target_url: "https://docs.tatum.io"
+            target_url: "https://docs-v3.tatum.io/"
             target_type: "gitbook"
             doc_type: "soft"
           "api.tatum.io":
-            update_enabled: False
+            update_enabled: True
             target_url: "deployments/test/index/inputs/input_open_api_specs/tatum"
             target_type: "open_api_spec"
             doc_type: "hard"
@@ -42,7 +42,7 @@ monikers:
         description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
         sources:
           "stackpath.dev/docs":
-            update_enabled: False
+            update_enabled: True
             target_url: "https://stackpath.dev/docs"
             target_type: "generic"
             doc_type: "soft"
