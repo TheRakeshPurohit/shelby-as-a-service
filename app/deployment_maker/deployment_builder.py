@@ -257,7 +257,7 @@ class WorkflowBuilder(DeploymentInstance):
         except Exception as error:
             print(f"Error: requires deployment.env and deployment_config.yaml {error}")
             raise
-        self.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_enabled_moniker_names')
+        self.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_enabled_moniker_names')
         
         self.github_action_workflow_name: str = f'deploy-{self.deployment_name}'
         self.docker_registry: str = None

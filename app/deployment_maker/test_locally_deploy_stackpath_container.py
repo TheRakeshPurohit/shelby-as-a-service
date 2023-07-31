@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+# May need to implement some changes from main script. I won't be updating this.
 
 load_dotenv("deployments/test/test_deployment.env")
 # Load the YAML file
@@ -97,9 +98,21 @@ for var, val in deployment_vars.items():
             {var: {"value": val}}
         )
     else:
+        # Have to wrap non-str items in qoutes to push to env. we destructure them when loading.
         val = f"'{val}'"
         config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
             {var: {"value": val}}
+        )
+for var in deployment_vars['SECRETS_TO_DEPLOY']:
+    val = os.environ.get(f"{var.upper()}")
+    if isinstance(val, str):
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"secretValue": val}}
+        )
+    else:
+        val = f"'{val}'"
+        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+            {var: {"secretValue": val}}
         )
 
 url = f'https://gateway.stackpath.com/workload/v1/stacks/{deployment_vars["STACKPATH_STACK_ID"]}/workloads'

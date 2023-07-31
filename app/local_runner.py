@@ -88,12 +88,12 @@ if __name__ == "__main__":
     )
 
     # Manually create args for testing
-    # test_args = ["--local_deployment", "test"]
+    test_args = ["--local_deployment", "test"]
     # test_args = ["--index_management", "test"]
 
     # test_args = ['--create_template', 'test']
     # test_args = ['--update_config', 'test']
-    test_args = ['--build_workflow', 'test']
+    # test_args = ['--build_workflow', 'test']
 
     args = parser.parse_args(test_args)
 

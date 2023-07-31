@@ -16,10 +16,6 @@ class ConfigSharedTools:
                 env_value = ConfigSharedTools.parse_env_variable(env_value)
                 if env_value is None:
                     continue
-                if isinstance(env_value, str):
-                    env_value = ConfigSharedTools.check_str_for_list(env_value)
-                if env_value is None:
-                    continue
                 env_vars[env_var] = env_value
         return env_vars
     
@@ -29,16 +25,19 @@ class ConfigSharedTools:
         env_value = ConfigSharedTools.parse_env_variable(env_value)
         if env_value is None:
             return None
-        if isinstance(env_value, str):
-            env_value = ConfigSharedTools.check_str_for_list(env_value)
-        if env_value is None:
-            return None
         return env_value
     
     @staticmethod
     def parse_env_variable(env_var):
         if env_var is None:
             return None
+        if isinstance(env_var, str):
+            env_var = env_var.strip()
+            if env_var.startswith("'") and env_var.endswith("'"):
+                env_var = env_var[1:-1]
+                return ConfigSharedTools.parse_list(env_var)
+            elif env_var.startswith('"') and env_var.endswith('"'):
+                env_var = env_var[1:-1]
         try:
             # check for integer
             env_var = int(env_var)
@@ -55,13 +54,16 @@ class ConfigSharedTools:
                     return True
                 if env_var.lower() in ("no", "false", "f", "n"):
                     return False
+        env_var = ConfigSharedTools.parse_list(env_var)
         # Otherwise it's a a string
         return env_var
-    
+       
     @staticmethod
-    def check_str_for_list(env_var):
+    def parse_list(env_var):
         try:
             maybe_list = ast.literal_eval(env_var)
+            if not isinstance(maybe_list, list):
+                return env_var
             env_var_list = []
             for split in maybe_list:
                 env_var_list.append(ConfigSharedTools.parse_env_variable(split))
@@ -69,25 +71,6 @@ class ConfigSharedTools:
         except (ValueError, SyntaxError):
             # If a ValueError or SyntaxError is raised, return the original string value
             return env_var
-        
-    @staticmethod
-    def get_and_convert_env_list(env_var_name):
-        # For getting a list from the env
-        env_value = os.getenv(env_var_name.upper())
-        return ConfigSharedTools.parse_list(env_value)
-       
-    @staticmethod
-    def parse_list(env_var):
-        # When you know it's a list
-        try:
-            maybe_list = ast.literal_eval(env_var)
-            env_var_list = []
-            for split in maybe_list:
-                env_var_list.append(ConfigSharedTools.parse_env_variable(split))
-            return env_var_list
-        except (ValueError, SyntaxError):
-            # If a ValueError or SyntaxError is raised, return the original string value
-            return [env_var]
     
     @staticmethod
     def check_class_required_vars(instance):

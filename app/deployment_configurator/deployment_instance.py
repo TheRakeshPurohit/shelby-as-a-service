@@ -60,7 +60,7 @@ class DeploymentInstance:
             cls.index_config = MonikerInstance.load_moniker_services(cls, IndexConfig)
         else:
             # Get and and load monikers
-            cls.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_list(f'{cls.deployment_name}_enabled_moniker_names')
+            cls.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_var(f'{cls.deployment_name}_enabled_moniker_names')
             for moniker_name in cls.enabled_moniker_names:
                 moniker = MonikerInstance(moniker_name=moniker_name)
                 moniker.load_and_check_moniker()
@@ -111,8 +111,8 @@ class MonikerInstance(DeploymentInstance):
         
         
         self.moniker_enabled = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled')
-        self.moniker_enabled_sprite_names = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_sprite_names')
-        self.moniker_enabled_data_domains = ConfigSharedTools.get_and_convert_env_list(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_data_domains')
+        self.moniker_enabled_sprite_names = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_sprite_names')
+        self.moniker_enabled_data_domains = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_data_domains')
         
         with open(f"deployments/{self.deployment_name}/index/index_description.yaml", 'r', encoding="utf-8") as stream:
                     index_description_file = yaml.safe_load(stream)
