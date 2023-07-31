@@ -173,7 +173,7 @@ class CEQAgent:
             return 
         elif len(self.shelby_agent.enabled_data_domains) == 1:
             # If only one topic, then we skip the ActionAgent topic decision.
-            data_domain_name = self.shelby_agent.enabled_data_domain[0]
+            data_domain_name = self.shelby_agent.enabled_data_domains[0]
             
         else:
             data_domain_name = self.shelby_agent.action_agent.data_domain_decision(query)
