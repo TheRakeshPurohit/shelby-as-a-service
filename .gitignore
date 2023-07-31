@@ -6,5 +6,5 @@ logs/
 .vscode/
 **/__pycache__/
 deployments/old
-deployments/*/index
+deployments/*/index/*/*
 langchain/

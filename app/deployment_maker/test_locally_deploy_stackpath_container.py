@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 # May need to implement some changes from main script. I won't be updating this.
 
-load_dotenv("deployments/test/test_deployment.env")
+load_dotenv("deployments/tatum/tatum_deployment.env")
 # Load the YAML file
-with open('.github/workflows/test_deployment.yaml', 'r') as file:
+with open('.github/workflows/tatum_deployment.yaml', 'r') as file:
     data = yaml.safe_load(file)
 
 deployment_vars = data['jobs']['docker']['env']['DEPLOYMENT_VARS']
@@ -84,7 +84,7 @@ config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry
 ] = deployment_vars["DOCKER_USERNAME"]
 config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
     "password"
-] = os.environ.get("TEST_DOCKER_TOKEN")
+] = os.environ.get("TATUM_DOCKER_TOKEN")
 
 config["payload"]["workload"]["name"] = deployment_vars["WORKLOAD_NAME"].lower()
 config["payload"]["workload"]["slug"] = deployment_vars["WORKLOAD_SLUG"].lower()
