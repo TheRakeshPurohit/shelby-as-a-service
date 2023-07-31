@@ -54,7 +54,7 @@ url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads"
 response = requests.get(url, headers=headers)
 workloads = response.json()
 workloads = workloads.get("results")
-if response.status_code == 200 and workloads:
+if response.status_code == 200:
     print(f"Got workloads: {len(workloads)}")
 else:
     raise ValueError("Did not get workloads.")

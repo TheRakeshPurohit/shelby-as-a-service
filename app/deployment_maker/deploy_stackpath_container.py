@@ -35,7 +35,7 @@ stack_id = json.loads(response.text)["id"]
 if response.status_code == 200 and stack_id:
     print(f"Got stack_id: {stack_id}")
 else:
-    raise ValueError("Did not get workloads.")
+    raise ValueError("Did not get stack_id.")
 
 # Get existing workloads
 # And delete an existing workload with the same name as the one we're trying to deploy
@@ -43,7 +43,7 @@ url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_id}/workloads"
 response = requests.get(url, headers=headers)
 workloads = response.json()
 workloads = workloads.get("results")
-if response.status_code == 200 and workloads:
+if response.status_code == 200:
     print(f"Got workloads: {len(workloads)}")
 else:
     raise ValueError("Did not get workloads.")
