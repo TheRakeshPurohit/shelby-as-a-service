@@ -7,7 +7,7 @@ import json
 import discord
 from discord.ext import commands
 from services.log_service import Logger
-from deployment_configurator.deployment_instance import DeploymentInstance
+from app.services.deployment_service import DeploymentInstance
 from services.shelby_agent import ShelbyAgent
 # endregion
 

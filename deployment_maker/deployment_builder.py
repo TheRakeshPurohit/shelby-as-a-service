@@ -4,9 +4,9 @@ import traceback
 import yaml
 import json
 from ruamel.yaml import YAML
-from deployment_configurator.deployment_instance import DeploymentInstance, MonikerInstance
-from deployment_configurator.shared_tools import ConfigSharedTools 
-from deployment_configurator.data_classes import AllSpritesAndServices, DiscordConfig, ShelbyConfig
+from models.deployment_instance import DeploymentInstance, MonikerInstance
+from models.shared_tools import ConfigSharedTools 
+from models.data_classes import AllSpritesAndServices, DiscordConfig, ShelbyConfig
 
 class ConfigTemplateCreator(DeploymentInstance):
     def __init__(self, deployment_name):

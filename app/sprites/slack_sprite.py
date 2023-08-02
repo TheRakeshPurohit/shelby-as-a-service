@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from services.log_service import Logger
-from deployment_configurator.deployment_instance import DeploymentInstance
+from app.services.deployment_service import DeploymentInstance
 from services.shelby_agent import ShelbyAgent
 # endregion
 

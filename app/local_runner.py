@@ -3,7 +3,7 @@ import os
 import argparse
 import traceback
 
-from deployment_configurator.deployment_instance import DeploymentInstance
+from app.services.deployment_service import DeploymentInstance
 from sprites.discord_sprite import DiscordSprite
 from services.index_service import IndexService
 from deployment_maker.deployment_builder import ConfigTemplateCreator, EnvConfigCreator, WorkflowBuilder

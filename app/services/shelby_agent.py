@@ -4,7 +4,7 @@ import traceback
 import json, yaml, re
 import openai, pinecone, tiktoken
 from langchain.embeddings import OpenAIEmbeddings
-from deployment_configurator.deployment_instance import DeploymentInstance, MonikerInstance
+from app.services.deployment_service import DeploymentInstance, MonikerInstance
 from services.pinecone_io_pinecone_text.sparse import BM25Encoder
 from services.log_service import Logger
 # endregion

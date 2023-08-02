@@ -1,10 +1,61 @@
-
 from dataclasses import dataclass, field
 from typing import List
-from .shared_tools import ConfigSharedTools
 
 @dataclass
-class DiscordConfig:
+class DeploymentModel:
+    # Initialized with deployment_name as an arg
+    deployment_name: str = None
+    enabled_moniker_names: list = []
+    monikers: dict = {}
+    used_sprites: set = set()
+    used_services: set = set()
+
+    # Variables here are only populated to workflow
+    DEVOPS_VARIABLES_ = [
+        "docker_registry",
+        "docker_username",
+        "docker_repo",
+        "docker_token",
+        "stackpath_stack_id",
+        "stackpath_client_id",
+        "stackpath_api_client_secret"
+    ]
+    
+    # Adds as 'required' to deployment.env and workflow
+    DEPLOYMENT_REQUIRED_VARIABLES_: list = [
+        "enabled_moniker_names"
+    ]
+    
+    # Variables here will be excluded from workflow
+    # All potential secrets need to be added here
+    SECRET_VARIABLES_ = [
+        "docker_token",
+        "stackpath_client_id",
+        "stackpath_api_client_secret",
+        "openai_api_key",
+        "pinecone_api_key",
+        "discord_bot_token",
+        "slack_bot_token",
+        "slack_app_token"
+    ]
+    
+@dataclass
+class MonikerModel:
+    moniker_name: str = field(default=None)
+    moniker_enabled: bool = field(default=None)
+    moniker_enabled_sprite_names: list = field(default_factory=list)
+    moniker_enabled_data_domains: dict = field(default_factory=dict)
+    discord_config: Optional[dict] = field(default_factory=dict)
+    
+    # Adds as 'required' to deployment.env and workflow
+    MONIKER_REQUIRED_VARIABLES_ = [
+        "moniker_enabled",
+        "moniker_enabled_sprite_names",
+        "moniker_enabled_data_domains"
+    ]
+    
+@dataclass
+class DiscordModel:
     ### These will all be set by file ###
     discord_manual_requests_enabled: bool = True 
     discord_auto_response_enabled: bool = False
@@ -28,11 +79,11 @@ class DiscordConfig:
         "discord_all_channels_excluded_channels"
     ]
     SPRITE_REQS_ = [
-        "ShelbyConfig"
+        "ShelbyModel"
     ]
 
-    def check_parse_config(self):
-        # Special rules for discord config
+    def check_parse_model(self):
+        # Special rules for discord Model
         
         if self.discord_manual_requests_enabled is False and self.discord_auto_response_enabled is False:
             raise ValueError(
@@ -53,9 +104,10 @@ class DiscordConfig:
                     continue
                 required_vars.append(var)
             
-        ConfigSharedTools.check_required_vars_list(self, required_vars)
-        
-class SlackConfig:
+        ModelSharedTools.check_required_vars_list(self, required_vars)
+
+@dataclass
+class SlackModel:
     ### These will all be set by file ###
     slack_welcome_message: str = 'ima tell you about the {}.'
     slack_short_message: str = '<@{}>, brevity is the soul of wit, but not of good queries. Please provide more details in your request.'
@@ -74,11 +126,11 @@ class SlackConfig:
         "discord_all_channels_excluded_channels"
     ]
     SPRITE_REQS_ = [
-        "ShelbyConfig"
+        "ShelbyModel"
     ]
 
-    def check_parse_config(self):
-        # Special rules for discord config
+    def check_parse_model(self):
+        # Special rules for discord Model
         
         if self.discord_manual_requests_enabled is False and self.discord_auto_response_enabled is False:
             raise ValueError(
@@ -99,10 +151,10 @@ class SlackConfig:
                     continue
                 required_vars.append(var)
             
-        ConfigSharedTools.check_required_vars_list(self, required_vars)
+        ModelSharedTools.check_required_vars_list(self, required_vars)
 
 @dataclass
-class ShelbyConfig:
+class ShelbyModel:
     ### These will all be set by file ###
     # _llm_model: str = 'gpt-3.5-turbo'
     action_llm_model: str = "gpt-4"
@@ -138,13 +190,13 @@ class ShelbyConfig:
     MONIKER_REQUIRED_VARIABLES_ = [
     ]
  
-    def check_parse_config(self):
+    def check_parse_model(self):
 
-        ConfigSharedTools.check_class_required_vars(self)
+        ModelSharedTools.check_class_required_vars(self)
 
 @dataclass
-class IndexConfig:
-    ### IndexAgent loads configs and data sources ###
+class IndexModel:
+    ### IndexAgent loads Models and data sources ###
     index_embedding_model: str = "text-embedding-ada-002"
     index_tiktoken_encoding_model: str = "text-embedding-ada-002"
     index_embedding_max_chunk_size: int = 8191
@@ -169,17 +221,17 @@ class IndexConfig:
     MONIKER_REQUIRED_VARIABLES_ = [
     ]
  
-    def check_parse_config(self):
+    def check_parse_model(self):
 
-        ConfigSharedTools.check_class_required_vars(self)
+        ModelSharedTools.check_class_required_vars(self)
         
 @dataclass
 class AllSpritesAndServices:
     all_sprites = [
-        DiscordConfig,
-        SlackConfig
+        DiscordModel,
+        SlackModel
         ]
     all_services = [
-        ShelbyConfig
+        ShelbyModel
         ]
     

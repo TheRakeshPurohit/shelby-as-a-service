@@ -3,51 +3,49 @@ from dataclasses import dataclass, field
 from typing import Optional
 import yaml
 from dotenv import load_dotenv
-from .shared_tools import ConfigSharedTools
-from .data_classes import DiscordConfig, ShelbyConfig, IndexConfig
+from models.shared_tools import ConfigSharedTools
+from app.models.models import DiscordModel, ShelbyModel, IndexModel
 
-class DeploymentInstance:
-    # Initialized with deployment_name as an arg
-    deployment_name: str = None
-    enabled_moniker_names: list = []
-    monikers: dict = {}
-    used_sprites: set = set()
-    used_services: set = set()
+class SingletonMeta(type):
+    _instances = {}
 
-    # Variables here are only populated to workflow
-    DEVOPS_VARIABLES_ = [
-        "docker_registry",
-        "docker_username",
-        "docker_repo",
-        "docker_token",
-        "stackpath_stack_id",
-        "stackpath_client_id",
-        "stackpath_api_client_secret"
-    ]
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+class DeploymentInstance(metaclass=SingletonMeta):
+    def __init__(self, config_module=None):
+        self.config = config_module
     
-    # Adds as 'required' to deployment.env and workflow
-    DEPLOYMENT_REQUIRED_VARIABLES_: list = [
-        "enabled_moniker_names"
-    ]
-    
-    # Variables here will be excluded from workflow
-    # All potential secrets need to be added here
-    SECRET_VARIABLES_ = [
-        "docker_token",
-        "stackpath_client_id",
-        "stackpath_api_client_secret",
-        "openai_api_key",
-        "pinecone_api_key",
-        "discord_bot_token",
-        "slack_bot_token",
-        "slack_app_token"
-    ]
-    
-    # Avoids circular imports by having class reqs as strings
-    CLASSES_ = {
-    'ShelbyConfig': ShelbyConfig,
-    'DiscordConfig': DiscordConfig
-    }
+### We're going to load our deployments/*template*/deployment_config.py first
+### then load DeploymentModel to deploymentinstance
+### then overrite deploymentModel with deployment_config.py using helper function
+### We'll get a list of monikers and create the instances for them
+### As we create the instances for them, we'll create a set of required sprites
+### We'll create an instance of each monikers required service config as a child of the moniker
+### Once deployment, monikers, services are created we launch sprites
+
+### And then we're going to iterate by moniker to init
+        # Extract default settings from DiscordModel
+### Example from GPT
+        self.discord_settings = DiscordModel.__dict__.copy()
+
+        # Check if custom settings are provided in the config_module
+        if self.config and hasattr(self.config, 'MonikerConfigs'):
+            moniker_configs = self.config.MonikerConfigs
+
+            # Iterate over each moniker's settings and apply them
+            for moniker_name, moniker_settings in moniker_configs.__dict__.items():
+                if isinstance(moniker_settings, type) and issubclass(moniker_settings, DiscordConfig):
+                    self._update_discord_settings(moniker_settings.DiscordModel)
+
+    def _update_discord_settings(self, new_settings):
+        # Update settings with the new values
+        for key, value in new_settings.__dict__.items():
+            if key in self.discord_settings:
+                self.discord_settings[key] = value
+
     
     @classmethod
     def load_and_check_deployment(cls, deployment_name, run_index_management=False):
@@ -57,7 +55,7 @@ class DeploymentInstance:
         DeploymentInstance.load_deployment_name()
         
         if run_index_management:
-            cls.index_config = MonikerInstance.load_moniker_services(cls, IndexConfig)
+            cls.index_config = MonikerInstance.load_moniker_services(cls, IndexModel)
         else:
             # Get and and load monikers
             cls.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_var(f'{cls.deployment_name}_enabled_moniker_names')
@@ -94,19 +92,6 @@ class DeploymentInstance:
 @dataclass
 class MonikerInstance(DeploymentInstance):
     
-    moniker_name: str = field(default=None)
-    moniker_enabled: bool = field(default=None)
-    moniker_enabled_sprite_names: list = field(default_factory=list)
-    moniker_enabled_data_domains: dict = field(default_factory=dict)
-    discord_config: Optional[dict] = field(default_factory=dict)
-    
-    # Adds as 'required' to deployment.env and workflow
-    MONIKER_REQUIRED_VARIABLES_ = [
-        "moniker_enabled",
-        "moniker_enabled_sprite_names",
-        "moniker_enabled_data_domains"
-    ]
-    
     def load_and_check_moniker(self):
         
         
@@ -130,7 +115,7 @@ class MonikerInstance(DeploymentInstance):
         for sprite_name in self.moniker_enabled_sprite_names:
             match sprite_name:
                 case 'discord':
-                    self.discord_config = self.load_moniker_services(DiscordConfig)
+                    self.discord_config = self.load_moniker_services(DiscordModel)
                     
         ConfigSharedTools.check_class_required_vars(self)
     
