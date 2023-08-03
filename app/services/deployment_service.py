@@ -1,10 +1,9 @@
 import os
-from dataclasses import dataclass, field
-from typing import Optional
+import inspect
 import yaml
 from dotenv import load_dotenv
-from models.shared_tools import ConfigSharedTools
-from app.models.models import DiscordModel, ShelbyModel, IndexModel
+from sprites.discord_sprite import DiscordSprite
+# from sprites.slack_sprite import SlackSprite
 
 class SingletonMeta(type):
     _instances = {}
@@ -14,167 +13,116 @@ class SingletonMeta(type):
             cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
+
 class DeploymentInstance(metaclass=SingletonMeta):
-    def __init__(self, config_module=None):
-        self.config = config_module
-    
-### We're going to load our deployments/*template*/deployment_config.py first
-### then load DeploymentModel to deploymentinstance
-### then overrite deploymentModel with deployment_config.py using helper function
-### We'll get a list of monikers and create the instances for them
-### As we create the instances for them, we'll create a set of required sprites
-### We'll create an instance of each monikers required service config as a child of the moniker
-### Once deployment, monikers, services are created we launch sprites
-
-### And then we're going to iterate by moniker to init
-        # Extract default settings from DiscordModel
-### Example from GPT
-        self.discord_settings = DiscordModel.__dict__.copy()
-
-        # Check if custom settings are provided in the config_module
-        if self.config and hasattr(self.config, 'MonikerConfigs'):
-            moniker_configs = self.config.MonikerConfigs
-
-            # Iterate over each moniker's settings and apply them
-            for moniker_name, moniker_settings in moniker_configs.__dict__.items():
-                if isinstance(moniker_settings, type) and issubclass(moniker_settings, DiscordConfig):
-                    self._update_discord_settings(moniker_settings.DiscordModel)
-
-    def _update_discord_settings(self, new_settings):
-        # Update settings with the new values
-        for key, value in new_settings.__dict__.items():
-            if key in self.discord_settings:
-                self.discord_settings[key] = value
-
-    
-    @classmethod
-    def load_and_check_deployment(cls, deployment_name, run_index_management=False):
-
-        cls.deployment_name = deployment_name
-        # Confirm env is loaded for deployment names
-        DeploymentInstance.load_deployment_name()
-        
-        if run_index_management:
-            cls.index_config = MonikerInstance.load_moniker_services(cls, IndexModel)
-        else:
-            # Get and and load monikers
-            cls.enabled_moniker_names = ConfigSharedTools.get_and_convert_env_var(f'{cls.deployment_name}_enabled_moniker_names')
-            for moniker_name in cls.enabled_moniker_names:
-                moniker = MonikerInstance(moniker_name=moniker_name)
-                moniker.load_and_check_moniker()
-                cls.monikers[moniker_name] = moniker
-
-        ConfigSharedTools.check_class_required_vars(cls)
-    
-    @classmethod
-    def load_deployment_name(cls):
-        print(cls.deployment_name)
-        if cls.deployment_name is None or cls.deployment_name == "":
-            raise ValueError(
-                "No deployment arg specified."
-            )
-        # Initial check to ensure the deployment config is correct
-        path = f"deployments/{cls.deployment_name}/{cls.deployment_name}_deployment.env"
-        if os.path.exists(path):
-            print(path)
-            # For local deployment and config check
-            load_dotenv(path)
-        else:
-            # For container deployment
-            load_dotenv()
-        deployment_name = os.getenv("DEPLOYMENT_NAME")
-        if cls.deployment_name != deployment_name:
-            raise ValueError(
-                "No deployment found in env."
-            )
-        ConfigSharedTools.deployment_name = cls.deployment_name
-      
-@dataclass
-class MonikerInstance(DeploymentInstance):
-    
-    def load_and_check_moniker(self):
-        
-        
-        self.moniker_enabled = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled')
-        self.moniker_enabled_sprite_names = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_sprite_names')
-        self.moniker_enabled_data_domains = ConfigSharedTools.get_and_convert_env_var(f'{self.deployment_name}_{self.moniker_name}_moniker_enabled_data_domains')
-        
-        with open(f"deployments/{self.deployment_name}/index/index_description.yaml", 'r', encoding="utf-8") as stream:
-                    index_description_file = yaml.safe_load(stream)
+    def __init__(self, config):
+        ### Deployment
+        self.deployment_name: str = config.DeploymentConfig.deployment_name
+        self.used_sprites = set()
+        self.secrets = {}
+        load_dotenv(f"app/deployments/{self.deployment_name}/.env")
+        ### Monikers
+        self.monikers = {}
+        self.load_index()
+        for moniker_name in config.DeploymentConfig.MonikerConfigs.__dict__:
+            if not moniker_name.startswith("_"):
+                moniker = getattr(config.DeploymentConfig.MonikerConfigs, moniker_name)
+                if moniker.enabled:
+                    self.monikers[moniker_name] = MonikerInstance(self, moniker)
                     
-        enabled_data_domains = {}
-        # Iterate over each source aka namespace
-        for _, moniker in index_description_file['monikers'].items():
-            for data_domain_name, domain in moniker['data_domains'].items():
-                if data_domain_name in self.moniker_enabled_data_domains:
-                    domain_description = domain['description']
-                    enabled_data_domains[data_domain_name] = domain_description
-        self.moniker_enabled_data_domains = enabled_data_domains
-        
-        # Load variables that are defined specifically for the moniker's sprites
-        for sprite_name in self.moniker_enabled_sprite_names:
-            match sprite_name:
-                case 'discord':
-                    self.discord_config = self.load_moniker_services(DiscordModel)
-                    
-        ConfigSharedTools.check_class_required_vars(self)
-    
-    def load_moniker_services(self, sprite):
-        deployment = DeploymentInstance.deployment_name
-        moniker = getattr(self, 'moniker_name', None)
+        print("loaded")
+        for sprite in self.used_sprites:
+            sprite(self).run_sprite()
+        print("runnin'")
 
-        sprite_name = sprite.__name__
+    def load_index(self):
         
-        # Outputs sprite_config which contains all requried data classes for sprite
-        sprite_config = {}
-        # Load vars for moniker and deployment from env
-        sprite_classes = []
-        # Builds list of sprite and sprite's services to iterate
-        if getattr(sprite, 'SPRITE_REQS_', None):
-            for class_name in sprite.SPRITE_REQS_:
-                sprite_classes.append(self.CLASSES_[class_name])
-                DeploymentInstance.used_services.add(self.CLASSES_[class_name])
-        sprite_classes.append(sprite)
-        DeploymentInstance.used_sprites.add(sprite)
+        with open(
+            f"app/deployments/{self.deployment_name}/index_description.yaml",
+            "r",
+            encoding="utf-8",
+        ) as stream:
+            self.index_description_file = yaml.safe_load(stream)
+
+        self.index_data_domains = {}
+        # Iterate over each domain in the yaml file
+        for domain in self.index_description_file["data_domains"]:
+            self.index_data_domains[domain['name']] = domain['description']
             
-        for ClassConfig in sprite_classes:
-            class_config = ClassConfig()
-            class_name = class_config.__class__.__name__
-            for var in list(vars(class_config).keys()):
-                if var.startswith("_") and callable(getattr(class_config, var)):
-                    continue
-                moniker_env_var = f"{deployment}_{moniker}_{sprite_name}_{var}"
-                moniker_env_value = ConfigSharedTools.get_and_convert_env_var(moniker_env_var)
-                deployment_overrides_env_var = f"{deployment}_{sprite_name}_{var}"
-                deployment_overrides_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_overrides_env_var)
-                deployment_defaults_env_var = f"{deployment}_{class_name}_{var}"
-                deployment_defaults_env_value = ConfigSharedTools.get_and_convert_env_var(deployment_defaults_env_var)
-                # First we try to set class_config variable with moniker variable and then deployment variable
-                if moniker_env_value is not None:
-                    setattr(class_config, var, moniker_env_value)
-                    continue
-                elif deployment_overrides_env_value is not None:
-                    setattr(class_config, var, deployment_overrides_env_value)
-                    continue
-                elif deployment_defaults_env_value is not None:
-                    setattr(class_config, var, deployment_defaults_env_value)
-                    continue
-                # Else we default to class default settings
-       
-            # Appends to deployment class
-            for var in class_config.DEPLOYMENT_REQUIRED_VARIABLES_:
-                env_var_name = f"{self.deployment_name}_{var}"
-                env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
-                if env_value is None:
-                    raise ValueError(f"{var} is None as {env_var_name} during loading of deployment!")
-                setattr(DeploymentInstance, var, env_value)
-            for var in class_config.MONIKER_REQUIRED_VARIABLES_:
-                env_var_name = f"{self.deployment_name}_{moniker}_{sprite_name}_{var}"
-                env_value = ConfigSharedTools.get_and_convert_env_var(env_var_name)
-                setattr(class_config, var, env_value)
-                    
-            class_config.check_parse_config()
-            sprite_config[f"{class_config.__class__.__name__}"] = class_config
-    
+        self.index_name: str = self.index_description_file["index_name"]
+        self.index_env: str = self.index_description_file["index_env"]
+
+class MonikerInstance:
+    ### We'll create an instance of each monikers required service config as a child of the moniker
+    def __init__(self, deployment_instance, config):
+        self.deployment_instance = deployment_instance
+        self.enabled: bool = config.enabled
+        self.moniker_data_domains: dict = {}
+        for domain in deployment_instance.index_description_file["data_domains"]:
+            if domain['name'] in config.enabled_data_domains:
+                self.moniker_data_domains[domain['name']] = domain['description']
+                
+        # Get enabled sprites
+        self.sprites: dict = {}
+        for config_name, sprite_config in config.__dict__.items():
+            if inspect.isclass(sprite_config):
+                if sprite_config.enabled:
+                    sprite_model = self.load_sprite(sprite_config)
+                    sprite_name = self.match_sprite(config_name).__name__
+                    self.sprites[sprite_name] = sprite_model
+                    deployment_instance.used_sprites.add(self.match_sprite(config_name))
+                    for secret in sprite_config.model._SECRETS:
+                        deployment_instance.secrets[secret] = os.environ.get(f'{deployment_instance.deployment_name.upper()}_{secret.upper()}')
+                        
+    def load_sprite(self, config):
+        sprite_config = {}
+        sprite_model = config.model()
+        # Load all var names from SpriteConfig
+        config_class_fields = set(
+            k
+            for k, v in config.__dict__.items()
+            if not k.startswith("_") and not callable(v)
+        )
+        sprite_model_fields = set(
+            k
+            for k, v in sprite_model.__dict__.items()
+            if not k.startswith("_") and not callable(v)
+        )
+
+        # Accumulate all var names from required_services
+        service_model_fields = set()
+        for service_model in sprite_model.required_services:
+            service_model_fields.update(
+                k
+                for k, v in service_model.__dict__.items()
+                if not k.startswith("_") and not callable(v)
+            )
+
+        # Now go through each field in the combined set of fields
+        for field in sprite_model_fields.union(
+            config_class_fields, service_model_fields
+        ):
+            # If the attribute is in SpriteConfig, get the value from there
+            if field in config_class_fields and getattr(config, field):
+                sprite_config[field] = getattr(config, field)
+            # Else get the value from the sprite_model
+            elif field in sprite_model_fields and getattr(sprite_model, field):
+                sprite_config[field] = getattr(sprite_model, field)
+            # Else get the value from service_model
+            elif field in service_model_fields:
+                for service_model in sprite_model.required_services:
+                    if hasattr(service_model, field):
+                        sprite_config[field] = getattr(service_model, field)
+                        break
+
         return sprite_config
-    
+
+    def match_sprite(self, sprite_name):
+        match sprite_name:
+            case 'DiscordConfig':
+                return DiscordSprite
+            # case 'SlackConfig':
+            #     return SlackSprite
+            case _:
+                print("Error loading sprite!")
+            

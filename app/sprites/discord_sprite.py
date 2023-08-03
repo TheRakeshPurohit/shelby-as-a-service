@@ -7,14 +7,13 @@ import json
 import discord
 from discord.ext import commands
 from services.log_service import Logger
-from app.services.deployment_service import DeploymentInstance
 from services.shelby_agent import ShelbyAgent
 # endregion
 
 
-class DiscordSprite(DeploymentInstance):
+class DiscordSprite():
     def __init__(self, deployment):
-        self.log = Logger(DeploymentInstance.deployment_name, 'discord_sprite', f'discord_sprite.md', level='INFO')
+        self.log = Logger(deployment.deployment_name, 'discord_sprite', f'discord_sprite.md', level='INFO')
         self.log.print_and_log("Starting DiscordSprite.")
         self.deployment = deployment
         
@@ -223,9 +222,9 @@ class DiscordSprite(DeploymentInstance):
         # In the future we can say hi in the last channel we spoke in
         return None
     
-    def run_discord_sprite(self):
+    def run_sprite(self):
         try:
-            self.bot.run(self.deployment.discord_bot_token)
+            self.bot.run(self.deployment.secrets.discord_bot_token)
         except Exception as error:
             # Logs error and sends error to sprite
             print(f"An error occurred in DiscordSprite run_discord_sprite(): {error}\n")

@@ -4,15 +4,14 @@ import traceback
 import json, yaml, re
 import openai, pinecone, tiktoken
 from langchain.embeddings import OpenAIEmbeddings
-from app.services.deployment_service import DeploymentInstance, MonikerInstance
 from services.pinecone_io_pinecone_text.sparse import BM25Encoder
 from services.log_service import Logger
 # endregion
 
 class ShelbyAgent:
  
-    def __init__(self, instance: MonikerInstance):
-        self.log = Logger(DeploymentInstance.deployment_name, f"{instance.moniker_name}_shelby_agent", f"{instance.moniker_name}_shelby_agent.md", level="INFO")
+    def __init__(self):
+        self.log = Logger(deployment_name, f"{instance.moniker_name}_shelby_agent", f"{instance.moniker_name}_shelby_agent.md", level="INFO")
 
         self.instance = instance
         self.enabled_data_domains = instance.moniker_enabled_data_domains
