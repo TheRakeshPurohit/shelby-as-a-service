@@ -1,8 +1,8 @@
 import sys
+
 import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
-
 
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group(required=True)
@@ -28,6 +28,10 @@ config_module_path = f"deployments.{deployment_name}.deployment_config"
 config_module = import_module(config_module_path)
 
 deployment_name = DeploymentInstance(config_module)
+
+
+        
+
 
 # deployment_name.load_and_check_deployment(deployment_name)
 # for _, moniker_instance in deployment_name.monikers.items():

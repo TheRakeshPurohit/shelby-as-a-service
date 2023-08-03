@@ -222,14 +222,6 @@ class DiscordSprite():
         # In the future we can say hi in the last channel we spoke in
         return None
     
-    def run_sprite(self):
-        try:
-            self.bot.run(self.deployment.secrets['discord_bot_token'])
-        except Exception as error:
-            # Logs error and sends error to sprite
-            print(f"An error occurred in DiscordSprite run_discord_sprite(): {error}\n")
-            raise
-    
     async def run_request(self, shelby_agent, request):
         # Required to run multiple requests at a time in async
         with ThreadPoolExecutor() as executor:
@@ -238,3 +230,11 @@ class DiscordSprite():
                 executor, shelby_agent.request_thread, request
             )
             return response
+    
+    def run_sprite(self):
+        try:
+            self.bot.run(self.deployment.secrets['discord_bot_token'])
+        except Exception as error:
+            # Logs error and sends error to sprite
+            print(f"An error occurred in DiscordSprite run_discord_sprite(): {error}\n")
+            raise

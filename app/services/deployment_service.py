@@ -1,8 +1,12 @@
 import os
 import inspect
+import threading
+import asyncio
+import concurrent.futures
 import yaml
 from dotenv import load_dotenv
 from sprites.discord_sprite import DiscordSprite
+from sprites.slack_sprite import SlackSprite
 # from sprites.slack_sprite import SlackSprite
 
 class SingletonMeta(type):
@@ -12,7 +16,6 @@ class SingletonMeta(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
-
 
 class DeploymentInstance(metaclass=SingletonMeta):
     def __init__(self, config):
@@ -29,12 +32,11 @@ class DeploymentInstance(metaclass=SingletonMeta):
                 moniker_config = getattr(config.DeploymentConfig.MonikerConfigs, moniker_name)
                 if moniker_config.enabled:
                     self.monikers[moniker_name] = MonikerInstance(self, moniker_config, moniker_name)
-                    
-        print("loaded")
-        for sprite in self.used_sprites:
-            sprite(self).run_sprite()
-        print("runnin'")
 
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for SpriteClass in self.used_sprites:
+                    executor.submit(SpriteClass(self).run_sprite)
+        
     def load_index(self):
         
         with open(
@@ -121,8 +123,8 @@ class MonikerInstance:
         match sprite_name:
             case 'DiscordConfig':
                 return DiscordSprite
-            # case 'SlackConfig':
-            #     return SlackSprite
+            case 'SlackConfig':
+                return SlackSprite
             case _:
                 print("Error loading sprite!")
             

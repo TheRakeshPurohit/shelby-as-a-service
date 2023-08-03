@@ -53,10 +53,10 @@ class DeploymentConfig:
                 api_agent_select_operationID_llm_model: str = None
                 api_agent_create_function_llm_model: str = None
                 api_agent_populate_function_llm_model: str = None
-
             class SlackConfig:
                 model = SlackModel
-                enabled: bool = False
+                enabled: bool = True
+                slack_enabled_teams: list[str] = ["T02RLSL27L5"]
                 slack_welcome_message: str = None
                 slack_short_message: str = None
                 slack_message_start: str = None
@@ -64,12 +64,12 @@ class DeploymentConfig:
                 # action_llm_model: str = 'gpt-3.5-turbo'
                 action_llm_model: str = None
                 # QueryAgent
-                ceq_data_domain_constraints_enabled: bool = None
+                ceq_data_domain_constraints_enabled: bool = True
                 ceq_data_domain_constraints_llm_model: str = None
                 ceq_data_domain_none_found_message: str = None
-                ceq_keyword_generator_enabled: bool = None
+                ceq_keyword_generator_enabled: bool = True
                 ceq_keyword_generator_llm_model: str = None
-                ceq_doc_relevancy_check_enabled: bool = None
+                ceq_doc_relevancy_check_enabled: bool = True
                 ceq_doc_relevancy_check_llm_model: str = None
                 ceq_embedding_model: str = None
                 ceq_tiktoken_encoding_model: str = None

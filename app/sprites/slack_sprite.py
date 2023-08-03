@@ -4,29 +4,24 @@ from concurrent.futures import ThreadPoolExecutor
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from services.log_service import Logger
-from app.services.deployment_service import DeploymentInstance
+
 from services.shelby_agent import ShelbyAgent
 # endregion
 
 
-class SlackSprite(DeploymentInstance):
+class SlackSprite():
 
     def __init__(self, deployment):
-        self.log = Logger(DeploymentInstance.deployment_name, 'slack_sprite', f'slack_sprite.md', level='INFO')
+        self.log = Logger(deployment.deployment_name, 'discord_sprite', f'discord_sprite.md', level='INFO')
         self.log.print_and_log("Starting SlackSprite.")
         self.deployment = deployment
         
         self.bot_user_id = None
-        self.app = AsyncApp(token=self.slack_bot_token)
-        self.handler = AsyncSocketModeHandler(self.app, self.slack_app_token)
-        
-    async def main(self):
-        # Get the bot user ID from auth.test
-        response = await self.app.client.auth_test()
-        self.bot_user_id = response["user_id"]
-        
-        @app.command("/query")
+        self.app = AsyncApp(token=self.deployment.secrets['slack_bot_token'])
+
+        @self.app.command("/query")
         async def query_command(ack, body):
+            await ack()
             user_id = body["user_id"]
             # get channel
             channel = body["channel_id"]
@@ -38,8 +33,11 @@ class SlackSprite(DeploymentInstance):
                     f"Hi <@{user_id}>! Brevity is the soul of wit, but not of good queries. Please provide more details in your request."
                 )
                 return
-
-            await ack()
+            
+            moniker_instance = self.find_moniker_instance(body["team_id"])
+            if moniker_instance is None:
+                self.log.print_and_log(f"Something went wrong loading the team {body['team_id']} for SlackSprite")
+                
             random_animal = await self.get_random_animal()
 
             # intial reply in channel
@@ -55,7 +53,9 @@ class SlackSprite(DeploymentInstance):
             thread_ts = response["ts"]
 
             # run query
+            shelby_agent = ShelbyAgent(moniker_instance, moniker_instance.sprites['SlackSprite'])
             request_response = await self.run_request(shelby_agent, query)
+            del shelby_agent
 
             if isinstance(request_response, dict) and "answer_text" in request_response:
                 parsed_output = self.parse_slack_markdown(request_response)
@@ -78,7 +78,7 @@ class SlackSprite(DeploymentInstance):
                 )
                 # log_agent.print_and_log(f'Error: {request_response})')
 
-        @app.command("/help")
+        @self.app.command("/help")
         async def help_command(ack):
             await ack(
                 "Run queries with the `/query` command.\n"
@@ -88,7 +88,7 @@ class SlackSprite(DeploymentInstance):
                 "• Group DMs including the bot: Initiating `/query` or tagging `@shelby-as-a-service`"
             )
 
-        @app.event("app_mention")
+        @self.app.event("app_mention")
         async def bot_mention(ack, event):
             await ack()
             user_id = event["user"]
@@ -108,7 +108,11 @@ class SlackSprite(DeploymentInstance):
                     unfurl_media=False,
                 )
                 return
-
+            
+            moniker_instance = self.find_moniker_instance(event["team"])
+            if moniker_instance is None:
+                self.log.print_and_log(f"Something went wrong loading the team {event['team']} for SlackSprite")
+                
             random_animal = await self.get_random_animal()
 
             # intial reply in thread
@@ -123,8 +127,10 @@ class SlackSprite(DeploymentInstance):
             )
 
             # run query
+            shelby_agent = ShelbyAgent(moniker_instance, moniker_instance.sprites['SlackSprite'])
             request_response = await self.run_request(shelby_agent, query)
-
+            del shelby_agent
+            
             if isinstance(request_response, dict) and "answer_text" in request_response:
                 parsed_output = self.parse_slack_markdown(request_response)
                 # reply in thread
@@ -145,7 +151,7 @@ class SlackSprite(DeploymentInstance):
                     unfurl_media=False,
                 )
                 # log_agent.print_and_log(f'Error: {request_response})')
-
+    
     def parse_slack_markdown(self, answer_obj):
         # Start with the answer text
         markdown_string = f"{answer_obj['answer_text']}\n\n"
@@ -171,10 +177,18 @@ class SlackSprite(DeploymentInstance):
             animals = file.readlines()
 
         return random.choice(animals).strip().lower()
+    
+    def find_moniker_instance(self, team):
+        if team:
+            for moniker in self.deployment.monikers.values():
+                if 'SlackSprite' in moniker.sprites:
+                    servers = moniker.sprites['SlackSprite'].slack_enabled_teams
+                    if team in servers:
+                        return moniker
 
-    def run_slack_sprite(self):
-        asyncio.run(self.main())
-
+        self.log.print_and_log(f"No matching moniker found for {team}")
+        return None
+        
     async def run_request(self, shelby_agent, request):
         # Required to run multiple requests at a time in async
         with ThreadPoolExecutor() as executor:
@@ -183,4 +197,20 @@ class SlackSprite(DeploymentInstance):
                 executor, shelby_agent.request_thread, request
             )
             return response
-        await self.handler.start_async()
+        
+    def run_sprite(self):
+        # This function will run in a new thread and start the event loop
+        asyncio.run(self.start())
+        
+    async def start(self):
+        try:
+            # Get the bot user ID from auth.test
+            handler = AsyncSocketModeHandler(app=self.app, app_token=self.deployment.secrets['slack_app_token'])
+            response = await self.app.client.auth_test()
+            self.bot_user_id = response["user_id"]
+            await handler.start_async()
+        except Exception as error:
+            # Logs error and sends error to sprite
+            print(f"An error occurred in DiscordSprite run_discord_sprite(): {error}\n")
+            raise
+        
