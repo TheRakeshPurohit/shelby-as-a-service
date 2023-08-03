@@ -274,7 +274,7 @@ class CEQAgent:
         soft_query_response = index.query(
             top_k=self.config.ceq_docs_to_retrieve,
             include_values=False,
-            namespace='tatum',
+            namespace=self.shelby_agent.deployment_name,
             include_metadata=True,
             filter=soft_filter,
             vector=dense_embedding,
@@ -283,7 +283,7 @@ class CEQAgent:
         hard_query_response = index.query(
             top_k=self.config.ceq_docs_to_retrieve,
             include_values=False,
-            namespace='tatum',
+            namespace=self.shelby_agent.deployment_name,
             include_metadata=True,
             filter=hard_filter,
             vector=dense_embedding,

@@ -1,13 +1,12 @@
 import os
 import inspect
-import threading
-import asyncio
 import concurrent.futures
 import yaml
 from dotenv import load_dotenv
 from sprites.discord_sprite import DiscordSprite
 from sprites.slack_sprite import SlackSprite
-# from sprites.slack_sprite import SlackSprite
+from services.index_service import IndexService
+from models.models import IndexModel
 
 class SingletonMeta(type):
     _instances = {}
@@ -18,8 +17,9 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 class DeploymentInstance(metaclass=SingletonMeta):
-    def __init__(self, config):
+    def __init__(self, config, run_index_management=None):
         ### Deployment
+        self.config = config
         self.deployment_name = config.DeploymentConfig.deployment_name
         self.used_sprites = set()
         self.secrets = {}
@@ -32,10 +32,13 @@ class DeploymentInstance(metaclass=SingletonMeta):
                 moniker_config = getattr(config.DeploymentConfig.MonikerConfigs, moniker_name)
                 if moniker_config.enabled:
                     self.monikers[moniker_name] = MonikerInstance(self, moniker_config, moniker_name)
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            for SpriteClass in self.used_sprites:
-                    executor.submit(SpriteClass(self).run_sprite)
+                    
+        if run_index_management:
+            self.index_agent = self.load_index_agent()
+        else:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                for SpriteClass in self.used_sprites:
+                        executor.submit(SpriteClass(self).run_sprite)
         
     def load_index(self):
         
@@ -53,7 +56,14 @@ class DeploymentInstance(metaclass=SingletonMeta):
             
         self.index_name: str = self.index_description_file["index_name"]
         self.index_env: str = self.index_description_file["index_env"]
-
+        
+    def load_index_agent(self):
+        self.index_config = IndexModel()
+        for secret in self.index_config._SECRETS:
+            self.secrets[secret] = os.environ.get(f'{self.deployment_name.upper()}_{secret.upper()}')
+        return IndexService(self)
+        
+        
 class MonikerInstance:
     ### We'll create an instance of each monikers required service config as a child of the moniker
     def __init__(self, deployment_instance, moniker_config, moniker_name):

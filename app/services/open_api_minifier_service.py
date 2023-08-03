@@ -75,7 +75,7 @@ class OpenAPIMinifierService:
     
     def create_full_spec(self, open_api_specs):
         
-        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/full_spec'
+        folder_path = f'{self.index_agent.index_dir}/outputs/{self.data_source_config.data_domain_name}/open_api_spec/full_spec'
         # Ensure output directory exists
         os.makedirs(folder_path, exist_ok=True)
         shutil.rmtree(folder_path)
@@ -362,7 +362,7 @@ class OpenAPIMinifierService:
             
             endpoint['doc_number'] = self.operationID_counter
             
-            title = f"{tag_number}_{endpoint['tag']}_{endpoint['operation_id']}_{self.operationID_counter}.json"
+            title = f"{tag_number}_{endpoint['tag']}_{endpoint['operation_id']}_{self.operationID_counter}"
             
             endpoint['title'] = title
             
@@ -450,7 +450,7 @@ class OpenAPIMinifierService:
             # Load the YAML data and print the result
             yaml_content = yaml.safe_load(yaml_file)
         prompt_template = yaml_content.get('prompt_template')
-        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/keypoint'
+        folder_path = f'{self.index_agent.index_dir}/outputs/{self.data_source_config.data_domain_name}/open_api_spec/keypoint'
         # Ensure output directory exists
         os.makedirs(folder_path, exist_ok=True)
         # Define output file path
@@ -487,7 +487,7 @@ class OpenAPIMinifierService:
                 output_file.write(output_string)
     
     def compare_chunks(self, data_source, document_chunks):
-        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/endpoints'
+        folder_path = f'{self.index_agent.index_dir}/outputs/{self.data_source_config.data_domain_name}/open_api_spec/endpoints'
         # Create the directory if it does not exist
         os.makedirs(folder_path, exist_ok=True)
         existing_files = os.listdir(folder_path)
@@ -499,7 +499,7 @@ class OpenAPIMinifierService:
             # Skip overly long chunks
             if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
-            file_name = document_chunk['title']
+            file_name = f"{document_chunk['title']}.txt"
             if file_name not in existing_files:
                 has_changes = True
                 new_or_changed_chunks.append(document_chunk['title'])
@@ -529,7 +529,7 @@ class OpenAPIMinifierService:
     
     def write_chunks(self, data_source, document_chunks):
          
-        folder_path = f'{self.index_agent.index_dir}/{self.data_source_config.moniker_name}/{self.data_source_config.data_domain_name}/open_api_spec/endpoints'
+        folder_path = f'{self.index_agent.index_dir}/outputs/{self.data_source_config.data_domain_name}/open_api_spec/endpoints'
         # Clear the folder first
         shutil.rmtree(folder_path)
         os.makedirs(folder_path, exist_ok=True)

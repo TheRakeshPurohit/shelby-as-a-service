@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
+
 class SingletonMeta(type):
     _instances = {}
     def __call__(cls, *args, **kwargs):
@@ -125,7 +126,6 @@ class DiscordModel:
     #                 continue
     #             required_vars.append(var)
 
-
 @dataclass
 class SlackModel:
     enabled: bool = None
@@ -168,45 +168,25 @@ class SlackModel:
             
     #     ModelSharedTools.check_required_vars_list(self, required_vars)
 
+class IndexModel:
+    index_env: str = None
+    index_name: str = None
+    index_embedding_model: str = "text-embedding-ada-002"
+    index_tiktoken_encoding_model: str = "text-embedding-ada-002"
+    index_embedding_max_chunk_size: int = 8191
+    index_embedding_batch_size: int = 100
+    index_vectorstore_dimension: int = 1536
+    index_vectorstore_upsert_batch_size: int = 20
+    index_vectorstore_metric: str = "dotproduct"
+    index_vectorstore_pod_type: str = "p1"
+    index_preprocessor_min_length: int = 150
+    index_text_splitter_goal_length: int = 1500
+    index_text_splitter_max_length: int = 2000
+    index_text_splitter_chunk_overlap: int = 300
+    index_openai_timeout_seconds: float = 180.0
+    index_indexed_metadata: List[str] = field(default_factory=lambda: ["data_domain_name", "data_source_name", "doc_type", "target_type"]) 
 
-# @dataclass
-# class IndexModel:
-#     ### IndexAgent loads Models and data sources ###
-#     index_embedding_model: str = "text-embedding-ada-002"
-#     index_tiktoken_encoding_model: str = "text-embedding-ada-002"
-#     index_embedding_max_chunk_size: int = 8191
-#     index_embedding_batch_size: int = 100
-#     index_vectorstore_dimension: int = 1536
-#     index_vectorstore_upsert_batch_size: int = 20
-#     index_vectorstore_metric: str = "dotproduct"
-#     index_vectorstore_pod_type: str = "p1"
-#     index_preprocessor_min_length: int = 150
-#     index_text_splitter_goal_length: int = 1500
-#     index_text_splitter_max_length: int = 2000
-#     index_text_splitter_chunk_overlap: int = 300
-#     index_openai_timeout_seconds: float = 180.0
-#     index_indexed_metadata: List[str] = field(default_factory=lambda: ["data_domain_name", "data_source_name", "doc_type", "target_type"]) 
-#     # Adds as 'required' to deployment.env and workflow
-#     DEPLOYMENT_REQUIRED_VARIABLES_ = [
-#         "index_env",
-#         "index_name",
-#         "openai_api_key",
-#         "pinecone_api_key"
-#     ]
-#     MONIKER_REQUIRED_VARIABLES_ = [
-#     ]
- 
-#     def check_parse_model(self):
-
-#         ModelSharedTools.check_class_required_vars(self)
-        
-# @dataclass
-# class AllSpritesAndServices:
-#     all_sprites = [
-#         DiscordModel,
-#         SlackModel
-#         ]
-#     all_services = [
-#         ShelbyModel
-#         ]
-    
+    _SECRETS = [
+        "openai_api_key",
+        "pinecone_api_key"
+    ]
