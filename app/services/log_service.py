@@ -4,7 +4,7 @@ import traceback
 
 class Logger:
     def __init__(self, deployment_name, logger_name, log_file, level='INFO'):
-        log_dir = f"deployments/{deployment_name}/logs"
+        log_dir = f"app/deployments/{deployment_name}/logs"
         os.makedirs(log_dir, exist_ok=True)
 
         self.logger = logging.getLogger(logger_name)

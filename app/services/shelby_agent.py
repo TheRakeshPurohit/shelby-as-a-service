@@ -10,12 +10,18 @@ from services.log_service import Logger
 
 class ShelbyAgent:
  
-    def __init__(self):
-        self.log = Logger(deployment_name, f"{instance.moniker_name}_shelby_agent", f"{instance.moniker_name}_shelby_agent.md", level="INFO")
-
-        self.instance = instance
-        self.enabled_data_domains = instance.moniker_enabled_data_domains
-        self.config = instance.discord_config['ShelbyConfig']
+    def __init__(self, moniker_instance, config):
+        self.deployment_name = moniker_instance.deployment_instance.deployment_name
+        self.secrets = moniker_instance.deployment_instance.secrets
+        self.moniker_name = moniker_instance.moniker_name
+        self.sprite_name = config.__class__.__name__
+        self.log = Logger(self.deployment_name, f"{self.moniker_name}_{self.sprite_name}_shelby_agent", f"{self.moniker_name}_{self.sprite_name}_shelby_agent.md", level="INFO")
+        
+        self.moniker_instance = moniker_instance
+        self.config = config
+        self.data_domains = moniker_instance.moniker_data_domains
+        self.index_env = moniker_instance.deployment_instance.index_env
+        self.index_name = moniker_instance.deployment_instance.index_name
         self.action_agent = ActionAgent(self)
         self.ceq_agent = CEQAgent(self)
         
@@ -67,6 +73,9 @@ class ActionAgent:
     def __init__(self, shelby_agent):
         
         self.shelby_agent = shelby_agent
+        self.config = shelby_agent.config
+        self.secrets = shelby_agent.secrets
+        self.data_domains = shelby_agent.data_domains
         
     def action_prompt_template(self, query):
 
@@ -92,8 +101,8 @@ class ActionAgent:
         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(actions) + 1)}
 
         response = openai.ChatCompletion.create(
-            api_key=DeploymentInstance.openai_api_key,
-            model=self.shelby_agent.config.action_llm_model,
+            api_key=self.secrets['openai_api_key'],
+            model=self.config.action_llm_model,
             messages=prompt,
             max_tokens=1,
             logit_bias=logit_bias
@@ -116,8 +125,8 @@ class ActionAgent:
             prompt_template = yaml.safe_load(stream)
 
         # Create a list of formatted strings, each with the format "index. key: value"
-        if isinstance(self.shelby_agent.enabled_data_domains, dict):
-            content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.shelby_agent.enabled_data_domains.items())]
+        if isinstance(self.data_domains, dict):
+            content_strs = [f"{index + 1}. {key}: {value}" for index, (key, value) in enumerate(self.data_domains.items())]
 
         # Join the strings together with spaces between them
         topics_str = " ".join(content_strs)
@@ -131,11 +140,11 @@ class ActionAgent:
                 role['content'] = prompt_message
 
         logit_bias_weight = 100
-        logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(self.shelby_agent.enabled_data_domains) + 1)}
+        logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + len(self.data_domains) + 1)}
 
         response = openai.ChatCompletion.create(
-            api_key=DeploymentInstance.openai_api_key,
-            model=self.shelby_agent.config.ceq_data_domain_constraints_llm_model,
+            api_key=self.secrets['openai_api_key'],
+            model=self.config.ceq_data_domain_constraints_llm_model,
             messages=prompt_template,
             max_tokens=1,
             logit_bias=logit_bias
@@ -150,9 +159,9 @@ class ActionAgent:
         if domain_key == 0:
             return 0
         # Otherwise return string with the namespace of the domain in the vectorstore
-        data_domain_name = list(self.shelby_agent.enabled_data_domains.keys())[domain_key - 1]  # We subtract 1 because list indices start at 0
+        data_domain_name = list(self.data_domains.keys())[domain_key - 1]  # We subtract 1 because list indices start at 0
 
-        self.shelby_agent.log.print_and_log(f"{self.shelby_agent.config.ceq_data_domain_constraints_llm_model} chose to fetch context docs from {data_domain_name} data domain.")
+        self.shelby_agent.log.print_and_log(f"{self.config.ceq_data_domain_constraints_llm_model} chose to fetch context docs from {data_domain_name} data domain.")
         
         return data_domain_name
 
@@ -162,27 +171,30 @@ class CEQAgent:
     def __init__(self, shelby_agent):
         
         self.shelby_agent = shelby_agent
+        self.config = shelby_agent.config
+        self.secrets = shelby_agent.secrets
+        self.data_domains = shelby_agent.data_domains
         
     def select_data_domain(self, query):
         
         response = None
         
-        if len(self.shelby_agent.enabled_data_domains) == 0:
-            self.shelby_agent.log.print_and_log(f"Error: no enabled data domains for moniker: {self.shelby_agent.instance.moniker_name}")
+        if len(self.data_domains) == 0:
+            self.shelby_agent.log.print_and_log(f"Error: no enabled data domains for moniker: {self.shelby_agent.moniker_name}")
             return 
-        elif len(self.shelby_agent.enabled_data_domains) == 1:
+        elif len(self.data_domains) == 1:
             # If only one topic, then we skip the ActionAgent topic decision.
-            for key, _ in self.shelby_agent.enabled_data_domains.items():
+            for key, _ in self.data_domains.items():
                 data_domain_name = key
         else:
             data_domain_name = self.shelby_agent.action_agent.data_domain_decision(query)
             
         # If no domain found message is sent to sprite
         if data_domain_name == 0:
-            for key, value in self.shelby_agent.enabled_data_domains.items():
-                self.shelby_agent.config.ceq_data_domain_none_found_message += f"{key}: {value}\n"
-            self.shelby_agent.log_service.print_and_log(self.shelby_agent.config.ceq_data_domain_none_found_message)
-            response = self.shelby_agent.config.ceq_data_domain_none_found_message
+            for key, value in self.data_domains.items():
+                self.config.ceq_data_domain_none_found_message += f"{key}: {value}\n"
+            self.shelby_agent.log_service.print_and_log(self.config.ceq_data_domain_none_found_message)
+            response = self.config.ceq_data_domain_none_found_message
             
         return data_domain_name, response
             
@@ -198,8 +210,8 @@ class CEQAgent:
                 role['content'] = query  # Replace the 'content' with 'prompt_message'
 
         response = openai.ChatCompletion.create(
-            api_key=DeploymentInstance.openai_api_key,
-            model=self.shelby_agent.config.ceq_keyword_generator_llm_model,
+            api_key=self.secrets['openai_api_key'],
+            model=self.config.ceq_keyword_generator_llm_model,
             messages=prompt_template,
             max_tokens=25
         )
@@ -216,9 +228,9 @@ class CEQAgent:
 
         embedding_retriever = OpenAIEmbeddings(
             # Note that this is openai_api_key and not api_key
-            openai_api_key=DeploymentInstance.openai_api_key,
-            model=self.shelby_agent.config.ceq_embedding_model,
-            request_timeout=self.shelby_agent.config.openai_timeout_seconds
+            openai_api_key=self.secrets['openai_api_key'],
+            model=self.config.ceq_embedding_model,
+            request_timeout=self.config.openai_timeout_seconds
         )
         dense_embedding = embedding_retriever.embed_query(query)
 
@@ -231,39 +243,47 @@ class CEQAgent:
 
     def query_vectorstore(self, dense_embedding, sparse_embedding, data_domain_name=None):
 
-        pinecone.init(api_key=DeploymentInstance.pinecone_api_key, environment=DeploymentInstance.index_env)
-        index = pinecone.Index(DeploymentInstance.index_name)
+        pinecone.init(api_key=self.secrets['pinecone_api_key'], environment=self.shelby_agent.index_env)
+        index = pinecone.Index(self.shelby_agent.index_name)
+        
+        if data_domain_name is None:
+            data_domain_names = []
+            for field, _ in self.data_domains.items():
+                data_domain_names.append(field)
 
-        if data_domain_name is not None:
             soft_filter = {
                 "doc_type": {"$eq": "soft"},
-                "data_domain_name": {"$eq": f"{data_domain_name}"}
+                "data_domain_name": {"$in": data_domain_names}
                 }
-        else:
-            soft_filter = {"doc_type": {"$eq": "soft"}}
-            
-        if data_domain_name is not None:
+                
             hard_filter = {
                 "doc_type": {"$eq": "hard"},
-                "data_domain_name": {"$eq": f"{data_domain_name}"}
+                "data_domain_name": {"$in": data_domain_names}
                 }
+                
         else:
-            hard_filter = {"doc_type": {"$eq": "hard"}}
-            
-        
+            soft_filter = {
+                "doc_type": {"$eq": "soft"},
+                "data_domain_name": {"$eq": data_domain_name}
+            }
+            hard_filter = {
+                "doc_type": {"$eq": "hard"},
+                "data_domain_name": {"$eq": data_domain_name}
+            }
+
         soft_query_response = index.query(
-            top_k=self.shelby_agent.config.ceq_docs_to_retrieve,
+            top_k=self.config.ceq_docs_to_retrieve,
             include_values=False,
-            namespace=self.shelby_agent.instance.moniker_name,
+            namespace='tatum',
             include_metadata=True,
             filter=soft_filter,
             vector=dense_embedding,
             sparse_vector=sparse_embedding
         )
         hard_query_response = index.query(
-            top_k=self.shelby_agent.config.ceq_docs_to_retrieve,
+            top_k=self.config.ceq_docs_to_retrieve,
             include_values=False,
-            namespace=self.shelby_agent.instance.moniker_name,
+            namespace='tatum',
             include_metadata=True,
             filter=hard_filter,
             vector=dense_embedding,
@@ -321,8 +341,8 @@ class CEQAgent:
                 role['content'] = prompt_message  # Replace the 'content' with 'prompt_message'
 
         response = openai.ChatCompletion.create(
-            api_key=DeploymentInstance.openai_api_key,
-            model=self.shelby_agent.config.ceq_doc_relevancy_check_llm_model,
+            api_key=self.secrets['openai_api_key'],
+            model=self.config.ceq_doc_relevancy_check_llm_model,
             messages=prompt_template,
             max_tokens=10,
             logit_bias=logit_bias
@@ -354,7 +374,7 @@ class CEQAgent:
     def ceq_parse_documents(self, returned_documents):
 
         def _tiktoken_len(document):
-            tokenizer = tiktoken.encoding_for_model(self.shelby_agent.config.ceq_tiktoken_encoding_model)
+            tokenizer = tiktoken.encoding_for_model(self.config.ceq_tiktoken_encoding_model)
             tokens = tokenizer.encode(
                 document,
                 disallowed_special=()
@@ -362,7 +382,7 @@ class CEQAgent:
             return len(tokens)
 
         def _docs_tiktoken_len(documents):
-            tokenizer = tiktoken.encoding_for_model(self.shelby_agent.config.ceq_tiktoken_encoding_model)
+            tokenizer = tiktoken.encoding_for_model(self.config.ceq_tiktoken_encoding_model)
             token_count = 0
             for document in documents:
                 tokens = 0
@@ -382,7 +402,7 @@ class CEQAgent:
 
         for i, document in enumerate(sorted_documents, start=1):
             token_count = _tiktoken_len(document['content'])
-            if token_count > self.shelby_agent.config.ceq_docs_max_total_tokens:
+            if token_count > self.config.ceq_docs_max_total_tokens:
                 sorted_documents.pop(i - 1)
                 continue
             document['token_count'] = token_count
@@ -393,11 +413,11 @@ class CEQAgent:
         self.shelby_agent.log.print_and_log(f"context docs token count: {embeddings_tokens}")
         iterations = 0
         original_documents_count = len(sorted_documents)
-        while embeddings_tokens > self.shelby_agent.config.ceq_docs_max_total_tokens:
+        while embeddings_tokens > self.config.ceq_docs_max_total_tokens:
             if iterations >= original_documents_count:
                 break
             # Find the index of the document with the highest token_count that exceeds ceq_docs_max_token_length
-            max_token_count_idx = max((idx for idx, document in enumerate(sorted_documents) if document['token_count'] > self.shelby_agent.config.ceq_docs_max_token_length),
+            max_token_count_idx = max((idx for idx, document in enumerate(sorted_documents) if document['token_count'] > self.config.ceq_docs_max_token_length),
                     key=lambda idx: sorted_documents[idx]['token_count'], default=None)
             # If a document was found that meets the conditions, remove it from the list
             if max_token_count_idx is not None:
@@ -434,7 +454,7 @@ class CEQAgent:
             iterations += 1
         self.shelby_agent.log.print_and_log(f"number of context docs now: {len(sorted_documents)}")
         # Same as above but removes based on total count of docs instead of token count.
-        while len(sorted_documents) > self.shelby_agent.config.ceq_docs_max_used:
+        while len(sorted_documents) > self.config.ceq_docs_max_used:
             if soft_count > 1:
                 for idx, document in reversed(list(enumerate(sorted_documents))):
                     if document['doc_type'] == 'soft':
@@ -483,10 +503,10 @@ class CEQAgent:
     def ceq_main_prompt_llm(self, prompt):
 
         response = openai.ChatCompletion.create(
-            api_key=DeploymentInstance.openai_api_key,
-            model=self.shelby_agent.config.ceq_main_prompt_llm_model,
+            api_key=self.secrets['openai_api_key'],
+            model=self.config.ceq_main_prompt_llm_model,
             messages=prompt,
-            max_tokens=self.shelby_agent.config.ceq_max_response_tokens
+            max_tokens=self.config.ceq_max_response_tokens
         )
         prompt_response = self.shelby_agent.check_response(response)
         if not prompt_response:
@@ -511,7 +531,7 @@ class CEQAgent:
             self.shelby_agent.log.print_and_log("No supporting docs.")
             answer_obj = {
                 "answer_text": input_text,
-                "llm": self.shelby_agent.config.ceq_main_prompt_llm_model,
+                "llm": self.config.ceq_main_prompt_llm_model,
                 "documents": []
             }
             return answer_obj
@@ -520,7 +540,7 @@ class CEQAgent:
         # Formatted text has all mutations of documents n replaced with [n]
         answer_obj = {
                 "answer_text": formatted_text,
-                "llm": self.shelby_agent.config.ceq_main_prompt_llm_model,
+                "llm": self.config.ceq_main_prompt_llm_model,
                 "documents": []
         }
 
@@ -549,18 +569,19 @@ class CEQAgent:
 
     def run_context_enriched_query(self, query):
         data_domain_name = None
-        if self.shelby_agent.config.ceq_data_domain_constraints_enabled:
+        if self.config.ceq_data_domain_constraints_enabled:
             data_domain_name, response = self.select_data_domain(query)
             if response is not None:
                 return response
         
         self.shelby_agent.log.print_and_log(f'Running query: {query}')
 
-        if self.shelby_agent.config.ceq_keyword_generator_enabled:
+        if self.config.ceq_keyword_generator_enabled:
             generated_keywords = self.keyword_generator(query)
             self.shelby_agent.log.print_and_log(f"ceq_keyword_generator response: {generated_keywords}")
-
-        dense_embedding, sparse_embedding = self.get_query_embeddings(query)
+            dense_embedding, sparse_embedding = self.get_query_embeddings(generated_keywords)
+        else:
+            dense_embedding, sparse_embedding = self.get_query_embeddings(query)
         self.shelby_agent.log.print_and_log("Sparse and dense embeddings retrieved")
 
         returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, data_domain_name)
@@ -572,7 +593,7 @@ class CEQAgent:
             returned_documents_list.append(returned_doc['url'])
         self.shelby_agent.log.print_and_log(f"{len(returned_documents)} documents returned from vectorstore: {returned_documents_list}")
         
-        if self.shelby_agent.config.ceq_doc_relevancy_check_enabled:
+        if self.config.ceq_doc_relevancy_check_enabled:
             returned_documents = self.doc_relevancy_check(query, returned_documents)
             if not returned_documents:
                 pass
@@ -590,7 +611,7 @@ class CEQAgent:
 
         prompt = self.ceq_main_prompt_template(query, parsed_documents)
 
-        self.shelby_agent.log.print_and_log(f'Sending prompt to LLM')
+        self.shelby_agent.log.print_and_log('Sending prompt to LLM')
         llm_response = self.ceq_main_prompt_llm(prompt)
         # self.shelby_agent.log.print_and_log(f'LLM response: {llm_response}')
 

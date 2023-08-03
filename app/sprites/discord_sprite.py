@@ -116,7 +116,7 @@ class DiscordSprite():
             await thread.send(guild_config.discord_message_start)
             
             moniker_instance = self.find_moniker_instance(message.guild)
-            shelby_agent = ShelbyAgent(moniker_instance)
+            shelby_agent = ShelbyAgent(moniker_instance, guild_config)
             
             request_response = await self.run_request(shelby_agent, request)
             del shelby_agent
@@ -183,10 +183,10 @@ class DiscordSprite():
     async def find_guild_config(self, guild):
         if guild:
             for moniker in self.deployment.monikers.values():
-                if 'discord' in moniker.moniker_enabled_sprite_names:
-                    servers = moniker.discord_config['DiscordConfig'].discord_enabled_servers
+                if 'DiscordSprite' in moniker.sprites:
+                    servers = moniker.sprites['DiscordSprite'].discord_enabled_servers
                     if servers and guild.id in servers:
-                        return moniker.discord_config['DiscordConfig']
+                        return moniker.sprites['DiscordSprite']
   
         self.log.print_and_log(f'Bot left {guild.id} because it was not in the list of approved servers.)')
         await guild.leave()
@@ -194,8 +194,8 @@ class DiscordSprite():
     def find_moniker_instance(self, guild):
         if guild:
             for moniker in self.deployment.monikers.values():
-                if 'discord' in moniker.moniker_enabled_sprite_names:
-                    servers = moniker.discord_config['DiscordConfig'].discord_enabled_servers
+                if 'DiscordSprite' in moniker.sprites:
+                    servers = moniker.sprites['DiscordSprite'].discord_enabled_servers
                     if servers and guild.id in servers:
                         return moniker
 
@@ -224,7 +224,7 @@ class DiscordSprite():
     
     def run_sprite(self):
         try:
-            self.bot.run(self.deployment.secrets.discord_bot_token)
+            self.bot.run(self.deployment.secrets['discord_bot_token'])
         except Exception as error:
             # Logs error and sends error to sprite
             print(f"An error occurred in DiscordSprite run_discord_sprite(): {error}\n")

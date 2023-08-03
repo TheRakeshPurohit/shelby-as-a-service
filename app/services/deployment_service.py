@@ -17,7 +17,7 @@ class SingletonMeta(type):
 class DeploymentInstance(metaclass=SingletonMeta):
     def __init__(self, config):
         ### Deployment
-        self.deployment_name: str = config.DeploymentConfig.deployment_name
+        self.deployment_name = config.DeploymentConfig.deployment_name
         self.used_sprites = set()
         self.secrets = {}
         load_dotenv(f"app/deployments/{self.deployment_name}/.env")
@@ -26,9 +26,9 @@ class DeploymentInstance(metaclass=SingletonMeta):
         self.load_index()
         for moniker_name in config.DeploymentConfig.MonikerConfigs.__dict__:
             if not moniker_name.startswith("_"):
-                moniker = getattr(config.DeploymentConfig.MonikerConfigs, moniker_name)
-                if moniker.enabled:
-                    self.monikers[moniker_name] = MonikerInstance(self, moniker)
+                moniker_config = getattr(config.DeploymentConfig.MonikerConfigs, moniker_name)
+                if moniker_config.enabled:
+                    self.monikers[moniker_name] = MonikerInstance(self, moniker_config, moniker_name)
                     
         print("loaded")
         for sprite in self.used_sprites:
@@ -54,17 +54,18 @@ class DeploymentInstance(metaclass=SingletonMeta):
 
 class MonikerInstance:
     ### We'll create an instance of each monikers required service config as a child of the moniker
-    def __init__(self, deployment_instance, config):
+    def __init__(self, deployment_instance, moniker_config, moniker_name):
+        self.moniker_name = moniker_name
         self.deployment_instance = deployment_instance
-        self.enabled: bool = config.enabled
+        self.enabled: bool = moniker_config.enabled
         self.moniker_data_domains: dict = {}
         for domain in deployment_instance.index_description_file["data_domains"]:
-            if domain['name'] in config.enabled_data_domains:
+            if domain['name'] in moniker_config.enabled_data_domains:
                 self.moniker_data_domains[domain['name']] = domain['description']
                 
         # Get enabled sprites
         self.sprites: dict = {}
-        for config_name, sprite_config in config.__dict__.items():
+        for config_name, sprite_config in moniker_config.__dict__.items():
             if inspect.isclass(sprite_config):
                 if sprite_config.enabled:
                     sprite_model = self.load_sprite(sprite_config)
@@ -75,7 +76,6 @@ class MonikerInstance:
                         deployment_instance.secrets[secret] = os.environ.get(f'{deployment_instance.deployment_name.upper()}_{secret.upper()}')
                         
     def load_sprite(self, config):
-        sprite_config = {}
         sprite_model = config.model()
         # Load all var names from SpriteConfig
         config_class_fields = set(
@@ -104,18 +104,18 @@ class MonikerInstance:
         ):
             # If the attribute is in SpriteConfig, get the value from there
             if field in config_class_fields and getattr(config, field):
-                sprite_config[field] = getattr(config, field)
+                setattr(sprite_model, field, getattr(config, field))
             # Else get the value from the sprite_model
             elif field in sprite_model_fields and getattr(sprite_model, field):
-                sprite_config[field] = getattr(sprite_model, field)
+                continue  # The value is already in sprite_model
             # Else get the value from service_model
             elif field in service_model_fields:
                 for service_model in sprite_model.required_services:
                     if hasattr(service_model, field):
-                        sprite_config[field] = getattr(service_model, field)
+                        setattr(sprite_model, field, getattr(service_model, field))
                         break
 
-        return sprite_config
+        return sprite_model
 
     def match_sprite(self, sprite_name):
         match sprite_name:
