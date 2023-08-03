@@ -84,13 +84,22 @@
 
 ## Production-ready LLM Agents. Just add API keys
 
-[![Discord Screen Shot][discord-screenshot]](documentation/discord-example.png)
-[![Slack Screen Shot][slack-screenshot]](documentation/slack-example.png)
+<div style="text-align: center;">
+    <img src="documentation/discord-example.png" alt="Discord Screen Shot" style="width: 40%; display: inline-block;">
+    <img src="documentation/slack-example.png" alt="Slack Screen Shot" style="width: 40%; display: inline-block;">
+</div>
+
+
 
 ### Features
 
-The gulf between 'hello world' and something useful is what shelby-as-a-service (SaaS) solves. 
+# Out of date!
+I made some huge changes this weekend, and ran out of time to update the documentation. Everything works except the deployment maker script and obviously the documentation is out of date. 
 
+By the end of the week (2023/08/06) I should have everything back in order documentation updated to reflect the changes.
+# Out of date!
+
+The gulf between 'hello world' and something useful is what shelby-as-a-service (SaaS) solves. 
 * Easy:
   * Configuration requires only API keys.
   * Step-by-step guides.
@@ -104,8 +113,8 @@ The gulf between 'hello world' and something useful is what shelby-as-a-service 
     * Superior document pre-processing with BalancedRecursiveCharacterTextSplitter and thoughtful parsing.
 * Pre-configured Slack and Discord bots (lets call them 'Sprites' for this project).
 * Tweaking not required, but all the knobs are at your disposal in the configuration folder.
-  * All configuration variables are stored and loaded through  shelby_agent_config.py
-  * All data sources are added through template_document_sources.yaml
+  * All configuration variables are stored and loaded through app/deployments/<your_deployment_name>/deployment_config.py
+  * All data sources are managed through app/deployments/<your_deployment_name>/index_description.yaml
   * All prompts are easily accessbile through prompt_template folder
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -125,16 +134,12 @@ The gulf between 'hello world' and something useful is what shelby-as-a-service 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-# Out of date!
-I made some huge changes this weekend, and ran out of time to update the documentation. In theory, everything works. Except maybe not. By the end of the week I should have the documentation updated to reflect the changes.
-
-This will be covered in three steps:
-
-1. Installation -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/INSTALLATION.md
-2. Configuration -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/CONFIGURATION.md
-3. Deploying for
-   1. Discord -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/DEPLOYING_FOR_DISCORD.md
-   2. Slack -> https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/DEPLOYING_FOR_SLACK.md
+### Step-by-step guide
+1. [Install Shelby-as-a-service](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/installation.md)
+2. [Configure your deployment](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/configuration.md)
+3. Special steps for:
+   1. [Discord](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/deploying_to_discord.md)
+   2. [Slack](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/deploying_to_slack.md)
 
 ### Prerequisites
 
@@ -149,7 +154,9 @@ Free:
 
 Paid:
 * OpenAI API (GPT-3.5 is tenable) -> https://platform.openai.com/overview
-* Stackpath (I will add other compute providers if requested.) -> https://www.stackpath.com/
+* Compute providers:
+  * Stackpath -> https://www.stackpath.com/
+  * More providers TBD
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

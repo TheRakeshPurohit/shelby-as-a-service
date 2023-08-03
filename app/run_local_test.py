@@ -2,6 +2,7 @@ import sys
 import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
+from deployments.deployment_maker.make import DeploymentMaker
 
 def main():
     """
@@ -30,12 +31,17 @@ def main():
         "--run",
         help="Run deployment from specified deployment name.",
     )
+    group.add_argument(
+        "--make_deployment",
+        help="Run deployment from specified deployment name.",
+    )
 
     # check if any arguments were provided
     if len(sys.argv) == 1:
         ### Add deployment name here if you're too lazy to use the CLI ###
-        # test_args = ["--index_management", "template"]
-        test_args = ["--run", "template"]
+        test_args = ["--make_deployment", "personal"]
+        # test_args = ["--index_management", "personal"]
+        # test_args = ["--run", "personal"]
         args = parser.parse_args(test_args)
     else:
         # arguments were provided, parse them
@@ -47,6 +53,9 @@ def main():
     elif args.run:
         deployment_name = args.run
         run_index_management=None
+    elif args.make_deployment:
+        deployment_name = args.make_deployment
+        DeploymentMaker(deployment_name)
         
     config_module_path = f"deployments.{deployment_name}.deployment_config"
     config_module = import_module(config_module_path)

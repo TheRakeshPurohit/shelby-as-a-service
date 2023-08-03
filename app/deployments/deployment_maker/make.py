@@ -4,9 +4,16 @@ import traceback
 import yaml
 import json
 from ruamel.yaml import YAML
-from models.deployment_instance import DeploymentInstance, MonikerInstance
-from models.shared_tools import ConfigSharedTools 
-from models.data_classes import AllSpritesAndServices, DiscordConfig, ShelbyConfig
+
+class DeploymentMaker:
+    def __init__(self, deployment_name):
+        self.deployment_name = deployment_name
+        
+    # paths
+    # 1 - nothing exists
+    # create folder, config.py, index_description
+    # 2 - create workflow
+    # create workflow, reqs.txt, dockerfile
 
 class ConfigTemplateCreator(DeploymentInstance):
     def __init__(self, deployment_name):
