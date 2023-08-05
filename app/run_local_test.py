@@ -2,7 +2,7 @@ import sys
 import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
-from deployments.deployment_maker.make import DeploymentMaker
+from deployment_maker.make import DeploymentMaker
 
 def main():
     """
@@ -47,30 +47,31 @@ def main():
         # arguments were provided, parse them
         args = parser.parse_args()
 
-    if args.index_management:
-        deployment_name = args.index_management
-        run_index_management=True
-    elif args.run:
-        deployment_name = args.run
-        run_index_management=None
-    elif args.make_deployment:
-        deployment_name = args.make_deployment
-        DeploymentMaker(deployment_name)
+    if args.index_management or args.run:
+        if args.index_management:
+            deployment_name = args.index_management
+            run_index_management=True
+        elif args.run:
+            deployment_name = args.run
+            run_index_management=None
+
+        config_module_path = f"deployments.{deployment_name}.deployment_config"
+        config_module = import_module(config_module_path)
+        deployment = DeploymentInstance(config_module, run_index_management)
         
-    config_module_path = f"deployments.{deployment_name}.deployment_config"
-    config_module = import_module(config_module_path)
-    deployment = DeploymentInstance(config_module, run_index_management)
+        ### Right now we don't have index_agent set up for anything but manual input ###
 
-
-    ### Right now we don't have index_agent set up for anything but manual input ###
-
-    # Add documents to the vectorstore based on what's enabled in index_description.yaml
-    deployment.index_agent.ingest_docs()
-    
-    # Clears all documents in your vectorstore based on the deployment name (namespace)
-    # deployment.index_agent.clear_deplyoment()
-    
-    # Removes all documents across all deployments
-    # deployment.index_agent.clear_index()
-
+        # Add documents to the vectorstore based on what's enabled in index_description.yaml
+        deployment.index_agent.ingest_docs()
+        
+        # Clears all documents in your vectorstore based on the deployment name (namespace)
+        # deployment.index_agent.clear_deplyoment()
+        
+        # Removes all documents across all deployments
+        # deployment.index_agent.clear_index()
+            
+            
+    if args.make_deployment:
+        DeploymentMaker(args.make_deployment)
+        
 main()
