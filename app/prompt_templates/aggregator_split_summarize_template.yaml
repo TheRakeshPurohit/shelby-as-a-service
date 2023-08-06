@@ -1,0 +1,13 @@
+  - 
+    role: system
+    content: | 
+      Summarize each story in 4-5 sentences. Focus on novel info. 
+      Retain mentions of proper nouns.
+      Number the stories by [number] notation.
+      ONLY RETURN STORIES RELATED TO PROVIDED KEYWORDS!!!
+      If none are related, return '0'.
+  -   
+    role: user
+    content: 
+
+      

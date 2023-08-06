@@ -354,8 +354,7 @@ class CustomPreProcessor:
         
         self.tiktoken_len = self.index_agent.tiktoken_len
 
-        # Defines which chars can be kept; Alpha-numeric chars, punctionation, and whitespaces.
-        self.printable = string.printable
+        
 
         self.text_splitter = BalancedRecursiveCharacterTextSplitter.from_tiktoken_encoder(
             model_name=self.tiktoken_encoding_model,
@@ -379,8 +378,8 @@ class CustomPreProcessor:
                 doc.metadata['title'] = f'{self.data_source_config.data_source_name}: {root}'
             
             # Remove bad chars and extra whitespace chars
-            doc.page_content = self.process_text(doc.page_content)
-            doc.metadata['title'] = self.process_text(doc.metadata['title'])
+            doc.page_content = self.strip_excess_whitespace(doc.page_content)
+            doc.metadata['title'] = self.strip_excess_whitespace(doc.metadata['title'])
             
             self.index_agent.log.print_and_log(f"Doc number: {i}\n Title: {doc.metadata['title']}")
             
@@ -410,10 +409,11 @@ class CustomPreProcessor:
 
         return processed_document_chunks
     
-    def process_text(self, text):
+    def strip_excess_whitespace(self, text):
         
+        # Defines which chars can be kept; Alpha-numeric chars, punctionation, and whitespaces.
         # Remove bad chars
-        text = re.sub(f'[^{re.escape(self.printable)}]', '', text)
+        text = re.sub(f'[^{re.escape(string.printable)}]', '', text)
         # Reduces any sequential occurrences of a specific whitespace (' \t\n\r\v\f') to just two of those specific whitespaces
         # Create a dictionary to map each whitespace character to its escape sequence (if needed)
         whitespace_characters = {
@@ -432,6 +432,15 @@ class CustomPreProcessor:
             
         text = text.strip()
         
+        return text
+    
+    def remove_all_white_space_except_space(self, text):
+        # Remove all whitespace characters (like \n, \r, \t, \f, \v) except space (' ')
+        text = re.sub(r'[\n\r\t\f\v]+', '', text)
+        # Remove any extra spaces
+        text = re.sub(r' +', ' ', text)
+        # Remove leading and trailing spaces
+        text = text.strip()
         return text
                     
     def append_metadata(self, text_chunk, page):

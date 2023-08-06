@@ -8,3 +8,4 @@ logs/
 app/deployments/old
 app/deployments/*/index/*/*
 langchain/
+content_aggregator/

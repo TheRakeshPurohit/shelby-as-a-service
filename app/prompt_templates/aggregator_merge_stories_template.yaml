@@ -1,0 +1,10 @@
+  - 
+    role: system
+    content: | 
+      If these two news stories are directly related, return '1'.
+      Otherwise, return '0'.
+  -   
+    role: user
+    content: 
+
+      
