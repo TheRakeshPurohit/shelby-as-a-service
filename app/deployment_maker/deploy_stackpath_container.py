@@ -2,6 +2,7 @@ import os
 import requests
 import json
 import sys
+import time
 from importlib import import_module
 
 def main(deployment_name):
@@ -64,7 +65,8 @@ def main(deployment_name):
             response = requests.delete(url, headers=headers)
             if response.status_code == 204:
                 print("workload deleted")
-
+                time.sleep(5)
+                
     # Load configuration from JSON file
     with open(
         "app/deployment_maker/sp-2_container_request_template.json", "r", encoding="utf-8"
