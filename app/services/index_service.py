@@ -62,6 +62,7 @@ class IndexService:
                         continue
                     self.enabled_data_sources.append(data_source)
                     self.log.print_and_log(f'Will index: {data_source_name}')
+                    
                 
     def ingest_docs(self):
         

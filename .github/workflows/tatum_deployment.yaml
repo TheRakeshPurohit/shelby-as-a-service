@@ -1,0 +1,67 @@
+name: tatum-deployment
+
+on: workflow_dispatch
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    env:
+
+        ### Secrets ###
+        TATUM_DISCORD_BOT_TOKEN:  ${{ secrets.TATUM_DISCORD_BOT_TOKEN }}
+        TATUM_SLACK_APP_TOKEN:  ${{ secrets.TATUM_SLACK_APP_TOKEN }}
+        TATUM_STACKPATH_API_CLIENT_SECRET:  ${{ secrets.TATUM_STACKPATH_API_CLIENT_SECRET }}
+        TATUM_OPENAI_API_KEY:  ${{ secrets.TATUM_OPENAI_API_KEY }}
+        TATUM_SLACK_BOT_TOKEN:  ${{ secrets.TATUM_SLACK_BOT_TOKEN }}
+        TATUM_STACKPATH_STACK_SLUG:  ${{ secrets.TATUM_STACKPATH_STACK_SLUG }}
+        TATUM_DOCKER_TOKEN:  ${{ secrets.TATUM_DOCKER_TOKEN }}
+        TATUM_PINECONE_API_KEY:  ${{ secrets.TATUM_PINECONE_API_KEY }}
+        TATUM_STACKPATH_CLIENT_ID:  ${{ secrets.TATUM_STACKPATH_CLIENT_ID }}
+        # Secrets in the format of 'secrets.NAME' with the 'NAME' portion added to your forked repos secrets. #
+
+        REQUIRED_SECRETS: DISCORD_BOT_TOKEN;SLACK_APP_TOKEN;STACKPATH_API_CLIENT_SECRET;OPENAI_API_KEY;SLACK_BOT_TOKEN;STACKPATH_STACK_SLUG;DOCKER_TOKEN;PINECONE_API_KEY;STACKPATH_CLIENT_ID;
+        DEPLOYMENT_NAME: tatum
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: ~/.cache/pip 
+          key: ${{ runner.os }}-pip-${{  hashFiles('**app/deployments/tatum/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f app/deployments/tatum/requirements.txt ]; then pip install -r app/deployments/tatum/requirements.txt; fi
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v2 
+        with:
+          registry: docker.io
+          username: shelbyjenkins
+          password: ${{ secrets.TATUM_DOCKER_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: app/deployments/tatum/Dockerfile
+          push: true
+          tags: shelbyjenkins/shelby-as-a-service:tatum-latest
+
+      - name: Add execute permissions to the script
+        run: chmod +x app/app.py
+
+      - name: Run deployment script
+        run: python app/app.py --deploy_container tatum

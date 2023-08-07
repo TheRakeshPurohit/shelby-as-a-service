@@ -5,7 +5,9 @@ installed_packages.txt
 logs/
 .vscode/
 **/__pycache__/
-app/deployments/old
-app/deployments/*/index/*/*
+
+app/deployments/*
+!app/deployments/template/
+!template.env
 langchain/
 content_aggregator/

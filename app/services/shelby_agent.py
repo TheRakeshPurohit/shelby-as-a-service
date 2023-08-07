@@ -528,7 +528,7 @@ class CEQAgent:
         pattern_num = r"\[\d\]"
         matches = re.findall(pattern_num, formatted_text)
         print(matches)
-
+        
         if not matches:
             self.shelby_agent.log.print_and_log("No supporting docs.")
             answer_obj = {
@@ -557,7 +557,7 @@ class CEQAgent:
                 if 0 <= doc_index < len(parsed_documents):
                     document = {
                         "doc_num": parsed_documents[doc_index]['doc_num'],
-                        "url": parsed_documents[doc_index]['url'],
+                        "url": parsed_documents[doc_index]['url'].replace(" ", "-"),
                         "title": parsed_documents[doc_index]['title']
                     }
                     answer_obj["documents"].append(document)
@@ -588,7 +588,12 @@ class CEQAgent:
 
         returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, data_domain_name)
         
-        if returned_documents:
+        def doc_handling(returned_documents):
+            # Need to rewrite all of this to make it more readable and build cases for when documentation is not being found.
+            if not returned_documents:
+                self.shelby_agent.log.print_and_log("No supporting documents after initial query!")
+                return None
+            
             returned_documents_list = []
             for returned_doc in returned_documents:
                 returned_documents_list.append(returned_doc['url'])
@@ -596,11 +601,13 @@ class CEQAgent:
             
             if self.config.ceq_doc_relevancy_check_enabled:
                 returned_documents = self.doc_relevancy_check(query, returned_documents)
-                if returned_documents:
-                    returned_documents_list = []
-                    for returned_doc in returned_documents:
-                        returned_documents_list.append(returned_doc['url'])
-                    self.shelby_agent.log.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
+                if not returned_documents:
+                    self.shelby_agent.log.print_and_log("No supporting documents after doc_relevancy_check!")
+                    return None
+                returned_documents_list = []
+                for returned_doc in returned_documents:
+                    returned_documents_list.append(returned_doc['url'])
+                self.shelby_agent.log.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
 
             parsed_documents = self.ceq_parse_documents(returned_documents)
             final_documents_list = []
@@ -609,15 +616,21 @@ class CEQAgent:
             self.shelby_agent.log.print_and_log(f"{len(parsed_documents)} documents returned after parsing: {final_documents_list}")
                   
             if not parsed_documents:
-                self.shelby_agent.log.print_and_log("No supporting documents after all checks!")
-            
-        prompt = self.ceq_main_prompt_template(query, parsed_documents)
+                self.shelby_agent.log.print_and_log("No supporting documents after parsing!")
+                return None
+            return parsed_documents
+        
+        prepared_documents = doc_handling(returned_documents)
+        
+        if not prepared_documents:
+            return "No supporting documents found. Currently we don't support queries without supporting context."
+        else:
+            prompt = self.ceq_main_prompt_template(query, prepared_documents)
 
         self.shelby_agent.log.print_and_log('Sending prompt to LLM')
         llm_response = self.ceq_main_prompt_llm(prompt)
-        # self.shelby_agent.log.print_and_log(f'LLM response: {llm_response}')
 
-        parsed_response = self.ceq_append_meta(llm_response, parsed_documents)
+        parsed_response = self.ceq_append_meta(llm_response, prepared_documents)
         self.shelby_agent.log.print_and_log(f"LLM response with appended metadata: {json.dumps(parsed_response, indent=4)}")
                     
         return parsed_response

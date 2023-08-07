@@ -1,8 +1,12 @@
-from models.models import DiscordModel, SlackModel
+from models.models import DiscordModel, SlackModel, DeploymentModel
 
 class DeploymentConfig:
     # Required #
     deployment_name: str = "template"
+    docker_registry = 'docker.io'
+    docker_username = 'username'
+    docker_repo = 'repo'
+    model = DeploymentModel
     class MonikerConfigs:
         class TemplateName1:
             # Populates description at run from index_description.yaml
