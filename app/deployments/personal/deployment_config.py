@@ -2,7 +2,7 @@ from models.models import DiscordModel, SlackModel, DeploymentModel
 
 class DeploymentConfig:
     # Required #
-    deployment_name: str = "template"
+    deployment_name: str = "personal"
     docker_registry = 'docker.io'
     docker_username = 'shelbyjenkins'
     docker_repo = 'shelby-as-a-service'
