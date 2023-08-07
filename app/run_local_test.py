@@ -2,7 +2,7 @@ import sys
 import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
-# from deployment_maker.make import DeploymentMaker
+from deployment_maker.make import DeploymentMaker
 from services.aggregator_service import Aggregator
 
 def main():
@@ -43,10 +43,11 @@ def main():
     # check if any arguments were provided
     if len(sys.argv) == 1:
         ### Add deployment name here if you're too lazy to use the CLI ###
-        # test_args = ["--make_deployment", "personal"]
-        test_args = ["--aggregate", "template"]
-        # test_args = ["--index_management", "personal"]
-        # test_args = ["--run", "personal"]
+        deployment_name = 'personal'
+        test_args = ["--make_deployment", deployment_name]
+        # test_args = ["--aggregate", deployment_name]
+        # test_args = ["--index_management", deployment_name]
+        # test_args = ["--run", deployment_name]
         args = parser.parse_args(test_args)
     else:
         # arguments were provided, parse them

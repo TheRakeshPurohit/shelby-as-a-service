@@ -636,7 +636,7 @@ class Aggregator:
             api_key=os.environ.get('OPENAI_API_KEY'),
             model=self.config.LLM_writing_model,
             messages=prompt_template,
-            max_tokens=40,
+            max_tokens=50,
         )
         checked_response = self.check_response(response)
         
@@ -669,11 +669,11 @@ class Aggregator:
     
     def create_post(self, summarized_stories, intro, hash_tags):
 
-        content = f"{intro}\n"
+        content = f"Potential post title: {intro}\n"
+        content += f"Potential hashtags: {hash_tags}\n"
         for summary in summarized_stories:
-            content += f"Alternative title: {summary['title']}\n"
             content += f"{summary['emoji']} {summary['summary']}\n"
-        content += f"Potential hashtags: {hash_tags}"
+            content += f"Alternative story title: {summary['title']}\n"
         with open(f'{self.run_output_dir}/6_output.md', 'w', encoding='UTF-8') as text_file:
             text_file.write(content)
             

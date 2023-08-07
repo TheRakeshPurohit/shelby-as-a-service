@@ -191,11 +191,12 @@ class CEQAgent:
             
         # If no domain found message is sent to sprite
         if data_domain_name == 0:
-            for key, value in self.data_domains.items():
-                self.config.ceq_data_domain_none_found_message += f"{key}: {value}\n"
-            self.shelby_agent.log_service.print_and_log(self.config.ceq_data_domain_none_found_message)
             response = self.config.ceq_data_domain_none_found_message
-            
+            response += '\n'
+            for key, value in self.data_domains.items():
+                response += f"{key}: {value}\n"
+            self.shelby_agent.log.print_and_log(response)
+
         return data_domain_name, response
             
     def keyword_generator(self, query):

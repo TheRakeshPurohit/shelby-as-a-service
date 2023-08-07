@@ -27,11 +27,11 @@ class DeploymentInstance(metaclass=SingletonMeta):
         ### Monikers
         self.monikers = {}
         self.load_index()
-        for moniker_name in config.DeploymentConfig.MonikerConfigs.__dict__:
-            if not moniker_name.startswith("_"):
-                moniker_config = getattr(config.DeploymentConfig.MonikerConfigs, moniker_name)
+        for moniker in config.DeploymentConfig.MonikerConfigs.__dict__:
+            if not moniker.startswith("_") and not moniker.endswith("_"):
+                moniker_config = getattr(config.DeploymentConfig.MonikerConfigs, moniker)
                 if moniker_config.enabled:
-                    self.monikers[moniker_name] = MonikerInstance(self, moniker_config, moniker_name)
+                    self.monikers[moniker] = MonikerInstance(self, moniker_config, moniker)
                     
         if run_index_management:
             self.index_agent = self.load_index_agent()
@@ -59,7 +59,7 @@ class DeploymentInstance(metaclass=SingletonMeta):
         
     def load_index_agent(self):
         self.index_config = IndexModel()
-        for secret in self.index_config._SECRETS:
+        for secret in self.index_config.SECRETS_:
             self.secrets[secret] = os.environ.get(f'{self.deployment_name.upper()}_{secret.upper()}')
         return IndexService(self)
         
@@ -84,7 +84,7 @@ class MonikerInstance:
                     sprite_name = self.match_sprite(config_name).__name__
                     self.sprites[sprite_name] = sprite_model
                     deployment_instance.used_sprites.add(self.match_sprite(config_name))
-                    for secret in sprite_config.model._SECRETS:
+                    for secret in sprite_config.model.SECRETS_:
                         deployment_instance.secrets[secret] = os.environ.get(f'{deployment_instance.deployment_name.upper()}_{secret.upper()}')
                         
     def load_sprite(self, config):
@@ -93,12 +93,12 @@ class MonikerInstance:
         config_class_fields = set(
             k
             for k, v in config.__dict__.items()
-            if not k.startswith("_") and not callable(v)
+            if not k.startswith("_") and not k.endswith("_") and not callable(v)
         )
         sprite_model_fields = set(
             k
             for k, v in sprite_model.__dict__.items()
-            if not k.startswith("_") and not callable(v)
+            if not k.startswith("_") and not k.endswith("_") and not callable(v)
         )
 
         # Accumulate all var names from required_services
@@ -107,7 +107,7 @@ class MonikerInstance:
             service_model_fields.update(
                 k
                 for k, v in service_model.__dict__.items()
-                if not k.startswith("_") and not callable(v)
+                if not k.startswith("_") and not k.endswith("_") and not callable(v)
             )
 
         # Now go through each field in the combined set of fields
