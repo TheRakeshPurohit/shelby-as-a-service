@@ -98,7 +98,7 @@ I made some huge changes this weekend, and ran out of time to update the documen
 
 Everything works though, and it should be pretty straight forward to figure it out!
 
-By the end of the week (2023/08/03) I should have the documentation updated to reflect the changes.
+By the end of the week (2023/08/13) I should have the documentation updated to reflect the changes.
 
 # Out of date!
 
