@@ -83,5 +83,4 @@ def main():
         Aggregator(args.aggregate)
         sys.exit()
 
-        
 main()

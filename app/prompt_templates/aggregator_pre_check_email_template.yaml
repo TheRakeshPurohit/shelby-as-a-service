@@ -1,0 +1,9 @@
+  - 
+    role: system
+    content: | 
+      If the text contains comprehensive and specific details pertaining to any of the provided keywords, indicative of relevant news stories, return '1'. 
+      If no such detailed information is found related to the keywords, return '0'.
+  -   
+    role: user
+    content: 
+

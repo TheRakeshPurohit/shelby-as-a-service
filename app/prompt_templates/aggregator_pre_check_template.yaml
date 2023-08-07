@@ -1,9 +1,0 @@
-  - 
-    role: system
-    content: | 
-      If the text contains any stories related to the keywords, return '1'.
-      Otherwise, return '0'.
-  -   
-    role: user
-    content: 
-

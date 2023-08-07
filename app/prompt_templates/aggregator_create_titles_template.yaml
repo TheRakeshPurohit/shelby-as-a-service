@@ -1,0 +1,8 @@
+  - 
+    role: system
+    content: | 
+      Given the story below, generate a 3 word title centering on proper nouns in the story.
+  -   
+    role: user
+    content: 
+

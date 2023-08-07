@@ -1,8 +1,8 @@
   - 
     role: system
     content: | 
-      If these two news stories are directly related, return '1'.
-      Otherwise, return '0'.
+      To determine if these two news stories discuss the same event, analyze their main events, key details, characters, and underlying themes. If you deduce that both stories cover the same main news event or situation, respond with '1'. 
+      If they focus on different news events or situations, respond with '0'.
   -   
     role: user
     content: 

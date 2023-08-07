@@ -1,11 +1,13 @@
   - 
     role: system
-    content: | 
-      Summarize each story in 4-5 sentences. Focus on novel info. 
-      Retain mentions of proper nouns.
-      Number the stories by [number] notation.
-      ONLY RETURN STORIES RELATED TO PROVIDED KEYWORDS!!!
-      If none are related, return '0'.
+    content: |
+      Using the following text, create a numbered list of the top newsworthy stories.
+      Criteria:
+      A story is deemed newsworthy if it exhibits qualities of being dramatic, engaging, sensational, and entertaining.
+      ONLY highlight those stories for which you can craft a summary spanning 3 sentences with the details provided.
+      Number of Stories: a maximum of four stories. However, if fewer stories meet the criteria, it's acceptable to list less.
+      Tone: A blend of Ernest Hemingway's succinctness and Douglas Adams' wit.
+      Crucial: Ensure that the stories you select resonate with the provided keywords.
   -   
     role: user
     content: 

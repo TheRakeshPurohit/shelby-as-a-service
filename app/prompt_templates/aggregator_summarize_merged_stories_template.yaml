@@ -1,0 +1,11 @@
+  - 
+    role: system
+    content: | 
+      Given the sources presented below about a singular news story, craft a summary that meets the following directives:
+      Length: Constrain your summary to 3 sentences.
+      Key Details: Retain and emphasize all proper nouns mentioned in the original text.
+  -   
+    role: user
+    content: 
+
+      
