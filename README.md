@@ -94,9 +94,12 @@
 ### Features
 
 # Out of date!
-I made some huge changes this weekend, and ran out of time to update the documentation. Everything works except the deployment maker script and obviously the documentation is out of date. 
+I made some huge changes this weekend, and ran out of time to update the documentation. 
 
-By the end of the week (2023/08/06) I should have everything back in order documentation updated to reflect the changes.
+Everything works though, and it should be pretty straight forward to figure it out!
+
+By the end of the week (2023/08/03) I should have the documentation updated to reflect the changes.
+
 # Out of date!
 
 The gulf between 'hello world' and something useful is what shelby-as-a-service (SaaS) solves. 
