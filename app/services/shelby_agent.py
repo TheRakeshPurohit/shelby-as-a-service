@@ -316,7 +316,7 @@ class CEQAgent:
 
         return returned_documents
 
-    def doc_relevancy_check(self, query, documents):
+    def doc_relevancy_check(self, query, documents=None):
 
         with open(os.path.join('app/prompt_templates/', 'ceq_doc_check.yaml'), 'r', encoding="utf-8") as stream:
             # Load the YAML data and print the result
@@ -324,6 +324,7 @@ class CEQAgent:
 
         doc_counter = 1
         content_strs = []
+        documents_str = ""
         for doc in documents:
             content_strs.append(f"{doc['title']} doc_number: [{doc_counter}]")
             documents_str = " ".join(content_strs)
@@ -372,7 +373,7 @@ class CEQAgent:
 
         return relevant_documents
 
-    def ceq_parse_documents(self, returned_documents):
+    def ceq_parse_documents(self, returned_documents=None):
 
         def _tiktoken_len(document):
             tokenizer = tiktoken.encoding_for_model(self.config.ceq_tiktoken_encoding_model)
@@ -475,7 +476,7 @@ class CEQAgent:
 
         return sorted_documents
 
-    def ceq_main_prompt_template(self, query, documents):
+    def ceq_main_prompt_template(self, query, documents=None):
 
         with open(os.path.join('app/prompt_templates/', 'ceq_main_prompt.yaml'), 'r', encoding="utf-8") as stream:
             # Load the YAML data and print the result
@@ -586,30 +587,30 @@ class CEQAgent:
         self.shelby_agent.log.print_and_log("Sparse and dense embeddings retrieved")
 
         returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, data_domain_name)
-        if not returned_documents:
-            pass
-            self.shelby_agent.log.print_and_log("No supporting documents found!")
-        returned_documents_list = []
-        for returned_doc in returned_documents:
-            returned_documents_list.append(returned_doc['url'])
-        self.shelby_agent.log.print_and_log(f"{len(returned_documents)} documents returned from vectorstore: {returned_documents_list}")
         
-        if self.config.ceq_doc_relevancy_check_enabled:
-            returned_documents = self.doc_relevancy_check(query, returned_documents)
-            if not returned_documents:
-                pass
-                self.shelby_agent.log.print_and_log("No supporting documents after doc_check!")
+        if returned_documents:
             returned_documents_list = []
             for returned_doc in returned_documents:
                 returned_documents_list.append(returned_doc['url'])
-            self.shelby_agent.log.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
+            self.shelby_agent.log.print_and_log(f"{len(returned_documents)} documents returned from vectorstore: {returned_documents_list}")
+            
+            if self.config.ceq_doc_relevancy_check_enabled:
+                returned_documents = self.doc_relevancy_check(query, returned_documents)
+                if returned_documents:
+                    returned_documents_list = []
+                    for returned_doc in returned_documents:
+                        returned_documents_list.append(returned_doc['url'])
+                    self.shelby_agent.log.print_and_log(f"{len(returned_documents)} documents returned from doc_check: {returned_documents_list}")
 
-        parsed_documents = self.ceq_parse_documents(returned_documents)
-        final_documents_list = []
-        for parsed_document in parsed_documents:
-            final_documents_list.append(parsed_document['url'])
-        self.shelby_agent.log.print_and_log(f"{len(parsed_documents)} documents returned after parsing: {final_documents_list}")
-
+            parsed_documents = self.ceq_parse_documents(returned_documents)
+            final_documents_list = []
+            for parsed_document in parsed_documents:
+                final_documents_list.append(parsed_document['url'])
+            self.shelby_agent.log.print_and_log(f"{len(parsed_documents)} documents returned after parsing: {final_documents_list}")
+                  
+            if not parsed_documents:
+                self.shelby_agent.log.print_and_log("No supporting documents after all checks!")
+            
         prompt = self.ceq_main_prompt_template(query, parsed_documents)
 
         self.shelby_agent.log.print_and_log('Sending prompt to LLM')
