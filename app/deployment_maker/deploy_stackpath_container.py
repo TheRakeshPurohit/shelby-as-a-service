@@ -69,43 +69,43 @@ def main(deployment_name):
     with open(
         "app/deployment_maker/sp-2_container_request_template.json", "r", encoding="utf-8"
     ) as f:
-        config = json.load(f)
+        request_template = json.load(f)
 
     # Add env vars to the environment variables of the container
-    config["payload"]["workload"]["spec"]["containers"]["webserver"][
+    request_template["payload"]["workload"]["spec"]["containers"]["webserver"][
         "image"
     ] = docker_image_path
-    config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
+    request_template["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
         "server"
     ] = docker_server
-    config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
+    request_template["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
         "username"
     ] = config.DeploymentConfig.docker_username
-    config["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
+    request_template["payload"]["workload"]["spec"]["imagePullCredentials"][0]["dockerRegistry"][
         "password"
     ] = os.environ.get(f"{deployment_name.upper()}_DOCKER_TOKEN")
 
-    config["payload"]["workload"]["name"] = workload_name
-    config["payload"]["workload"]["slug"] = slug_name
+    request_template["payload"]["workload"]["name"] = workload_name
+    request_template["payload"]["workload"]["slug"] = slug_name
 
-    if "env" not in config["payload"]["workload"]["spec"]["containers"]["webserver"]:
-        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"] = {}
+    if "env" not in request_template["payload"]["workload"]["spec"]["containers"]["webserver"]:
+        request_template["payload"]["workload"]["spec"]["containers"]["webserver"]["env"] = {}
 
     for secret in required_secrets_list:
         var = f"{deployment_name.upper()}_{secret.upper()}"
         val = os.environ.get(var)
-        config["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
+        request_template["payload"]["workload"]["spec"]["containers"]["webserver"]["env"].update(
             {var: {"secretValue": val}}
         )
 
-    print(config)
+    print(request_template)
     url = f"https://gateway.stackpath.com/workload/v1/stacks/{stack_slug}/workloads"
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
         "authorization": f"Bearer {bearer_token}",
     }
-    payload = config["payload"]
+    payload = request_template["payload"]
     
     # Define a timeout value (in seconds)
     timeout = 5
