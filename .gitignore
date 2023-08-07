@@ -6,8 +6,10 @@ logs/
 .vscode/
 **/__pycache__/
 
+app/deployments/*/index/*/*
 app/deployments/*
 !app/deployments/template/
+!app/deployments/tatum/
 !template.env
 langchain/
 content_aggregator/
