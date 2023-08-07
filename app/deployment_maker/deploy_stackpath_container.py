@@ -21,7 +21,7 @@ def main(deployment_name):
     workload_name = f"{deployment_name}-workload"
     slug_name = f"{deployment_name}-slug"
     docker_image_path = f"{config.DeploymentConfig.docker_username}/{config.DeploymentConfig.docker_repo}:{deployment_name}-latest"
-    docker_server = f"{config.DeploymentConfig.docker_registry}/{config.DeploymentConfig.docker_username}{config.DeploymentConfig.docker_repo}"
+    docker_server = f"{config.DeploymentConfig.docker_registry}/{config.DeploymentConfig.docker_username}/{config.DeploymentConfig.docker_repo}"
 
     headers = {"accept": "application/json", "content-type": "application/json"}
     payload = {
@@ -113,7 +113,7 @@ def main(deployment_name):
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=timeout)
         if response.status_code == 200:
-            print(f"{workload} created : {response.text}")
+            print(f"{workload_name} created : {response.text}")
         else:
             print(f"Something went wrong creating the workload: {response.text}")
     except requests.Timeout as t:
