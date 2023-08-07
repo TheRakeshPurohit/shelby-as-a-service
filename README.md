@@ -194,7 +194,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Shelby Jenkins - Here or Linkedin https://www.linkedin.com/in/jshelbyj/
+Shelby Jenkins - Here or Linkedin https://www.linkedin.com/company/shelby-as-a-service/
 
 Project Link: [https://github.com/ShelbyJenkins/shelby-as-a-service](https://github.com/ShelbyJenkins/shelby-as-a-service)
 
@@ -214,7 +214,7 @@ Project Link: [https://github.com/ShelbyJenkins/shelby-as-a-service](https://git
 [license-shield]: https://img.shields.io/github/license/ShelbyJenkins/shelby-as-a-service.svg?style=for-the-badge
 [license-url]: https://github.com/ShelbyJenkins/shelby-as-a-service/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/in/jshelbyj/
+[linkedin-url]: https://www.linkedin.com/company/shelby-as-a-service/
 
 [discord-screenshot]: documentation/discord-example.png
 [slack-screenshot]: documentation/slack-example.png
