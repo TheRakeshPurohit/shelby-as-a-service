@@ -1,0 +1,9 @@
+  - 
+    role: system
+    content: | 
+      If this sample of a text is an advertisement, return '1'.
+      Otherwise, return '0'. 
+  -   
+    role: user
+    content: 
+

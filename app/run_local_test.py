@@ -3,7 +3,7 @@ import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
 from deployment_maker.make import DeploymentMaker
-from services.aggregator_service import Aggregator
+from services.aggregator_service import TextEmailAggregator
 
 def main():
     """
@@ -43,9 +43,9 @@ def main():
     # check if any arguments were provided
     if len(sys.argv) == 1:
         ### Add deployment name here if you're too lazy to use the CLI ###
-        deployment_name = 'personal'
-        test_args = ["--make_deployment", deployment_name]
-        # test_args = ["--aggregate", deployment_name]
+        deployment_name = 'tatum'
+        # test_args = ["--make_deployment", deployment_name]
+        test_args = ["--aggregate", deployment_name]
         # test_args = ["--index_management", deployment_name]
         # test_args = ["--run", deployment_name]
         args = parser.parse_args(test_args)
@@ -81,7 +81,7 @@ def main():
         DeploymentMaker(args.make_deployment)
         sys.exit()
     elif args.aggregate:
-        Aggregator(args.aggregate)
+        TextEmailAggregator(args.aggregate)
         sys.exit()
 
 main()

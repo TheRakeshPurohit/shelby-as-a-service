@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime, timedelta
 from dateutil.tz import tzutc
 import yaml
@@ -7,12 +8,12 @@ import random
 from importlib import import_module
 import openai
 from dotenv import load_dotenv
-import tiktoken
+
 from services.tiny_jmap_library.tiny_jmap_library import TinyJMAPClient
-from services.index_service import CustomPreProcessor
+from services.data_processing_service import TextProcessing
 from bs4 import BeautifulSoup
 
-class Aggregator:
+class TextEmailAggregator:
     def __init__(self, service_name):
         load_dotenv()
         self.total_prompt_tokens = 0
@@ -21,23 +22,30 @@ class Aggregator:
         self.service_name = service_name
         self.today = datetime.now().strftime('%Y_%m_%d')
         self.moniker_dir = f'app/content_aggregator/{self.service_name}'
-        
+        self.prompt_path = 'app/prompt_templates/aggregator/'
         config_module_path = f"content_aggregator.{service_name}.config"
         self.config = import_module(config_module_path).MonikerAggregatorConfig
         
         self.run_output_dir = self.create_folder()
         incoming_emails = self.get_emails()
         relevant_emails = self.pre_check_email(incoming_emails)
+        
         summarized_stories = self.split_summarize(relevant_emails)
         summarized_stories = self.create_titles(summarized_stories)
         summarized_stories = self.create_emojis(summarized_stories)
+        
         merged_stories = self.merge_stories(summarized_stories)
         summarized_merged_stories = self.summarize_merged_stories(merged_stories)
+        
         # top_stories = self.get_top_stories(summarized_stories)
         intro = self.create_intro(summarized_merged_stories)
+        
         hash_tags = self.create_hash_tags(summarized_merged_stories)
+        
         post = self.create_post(summarized_merged_stories, intro, hash_tags)
         
+        self.archive_emails(relevant_emails)
+
         print(f"Total cost: ${self.calculate_cost()}")
         
     def create_folder(self):
@@ -157,23 +165,14 @@ class Aggregator:
             else:
                 continue  # Skip this email if neither htmlBody nor textBody is present
             body_content = email["bodyValues"][body_part_id]["value"]
-
-            soup = BeautifulSoup(body_content, 'html.parser')
-            bs4_text_content = soup.get_text()
             
-            # Removes excessive whitespace chars
-            text_content = CustomPreProcessor.strip_excess_whitespace(self, bs4_text_content)
-            text_content = self.remove_footer(text_content)
-            email_token_count = self.tiktoken_len(text_content)
-            if email_token_count > self.config.email_token_count_max:
-                print(f"Email with subject {email['subject']} exceded email_token_count_max")
-                continue
             email_info = {
+                'email_id': email['id'],
                 'subject': email['subject'],
                 'number': email_count,
                 'from': email['from'][0]['email'],
                 'received_at': email['receivedAt'],
-                'text': text_content,
+                'text': body_content,
                 'links': [''],  # Placeholder for future implementation
             }
             incoming_emails.append(email_info)
@@ -185,9 +184,61 @@ class Aggregator:
         
         return incoming_emails
     
-    def remove_footer(self, text_content):
-        chars_to_remove = min(len(text_content), self.config.email_footer_removed_chars)
-        return text_content[:-chars_to_remove]
+    def archive_emails(self, incoming_emails):
+        
+        client = TinyJMAPClient(
+            hostname="api.fastmail.com",
+            username=os.environ.get("JMAP_USERNAME"),
+            token=os.environ.get("JMAP_TOKEN")
+        )
+        account_id = client.get_account_id()
+
+        # Query for the mailbox ID
+        inbox_res = client.make_jmap_call(
+            {
+                "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                "methodCalls": [
+                    [
+                        "Mailbox/query",
+                        {
+                            "accountId": account_id,
+                            "filter": {"name": self.config.email_ingested_folder},
+                        },
+                        "a",
+                    ]
+                ],
+            }
+        )
+        inbox_id = inbox_res["methodResponses"][0][1]["ids"][0]
+        assert len(inbox_id) > 0
+        
+        email_ids = [email['email_id'] for email in incoming_emails]
+        updates = {email_id: {"mailboxIds": {inbox_id: True}} for email_id in email_ids}
+        email_query_res = client.make_jmap_call(
+            {
+                "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                "methodCalls": [
+                    [
+                        "Email/set",
+                        {
+                            "accountId": account_id,
+                            "update": updates
+                        },
+                        "0"
+                    ]
+                ]
+            }
+        )
+        response_data = email_query_res['methodResponses'][0][1]
+
+        for email_id in email_ids:
+            if 'updated' in response_data and email_id in response_data['updated']:
+                print(f"Email with ID {email_id} moved to {self.config.email_ingested_folder}!")
+            elif 'notUpdated' in response_data and email_id in response_data['notUpdated']:
+                error = response_data['notUpdated'][email_id]['type']
+                print(f"Email with ID {email_id} update failed with error: {error}")
+            else:
+                print(f"Unexpected response for email with ID {email_id}!")
 
     def check_response(self, response):
         # Check if keys exist in dictionary
@@ -203,14 +254,6 @@ class Aggregator:
 
         return parsed_response
     
-    def tiktoken_len(self, document):
-        tokenizer = tiktoken.encoding_for_model(self.config.tiktoken_encoding_model)
-        tokens = tokenizer.encode(
-            document,
-            disallowed_special=()
-        )
-        return len(tokens)
-    
     def calculate_cost(self):
         prompt_cost = 0.03 * (self.total_prompt_tokens / 1000)
         completion_cost = 0.06 * (self.total_completion_tokens / 1000)
@@ -218,9 +261,12 @@ class Aggregator:
         # total_cost = math.ceil(total_cost * 100) / 100
         return total_cost
         
-    def pre_check_email(self, incoming_emails):
+    def pre_check_email(self, incoming_emails=None):
+        if not incoming_emails:
+            print('No emails in inbox.')
+            sys.exit()
         
-        with open(os.path.join('app/prompt_templates/', 'aggregator_pre_check_email_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_pre_check_email_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
             
         logit_bias_weight = 100
@@ -229,19 +275,47 @@ class Aggregator:
         email_count = 0
         
         for email in incoming_emails:
-            email_token_count = self.tiktoken_len(email['text'])
-            print(f"email token count: {email_token_count}")
-            
-            if not (200 < email_token_count < 1500):
-                print("email token count too small or large")
+            if email_count >= self.config.email_max_per_run:
                 continue
+            soup = BeautifulSoup(email['text'], 'html.parser')
+            bs4_text_content = soup.get_text()
+            # Removes excessive whitespace chars
+            text_content = TextProcessing.strip_excess_whitespace(bs4_text_content)
+            # Removes start/end of the string
+            chars_to_remove = min(len(text_content), self.config.email_footer_removed_chars)
+            text_content = text_content[:-chars_to_remove]
+            chars_to_remove = min(len(text_content), self.config.email_footer_removed_chars)
+            text_content = text_content[chars_to_remove:]
             
-            content = f"Keywords: {self.config.topic_keywords}\n Text: {email['text']}"
-        
-            # Loop over the list of dictionaries in data['prompt_template']
-            for role in prompt_template:
-                if role['role'] == 'user':  # If the 'role' is 'user'
-                    role['content'] = content  # Replace the 'content' with 'prompt_message'
+            tok = TextProcessing.tiktoken_len(text_content)
+            
+            print(f"email token count: {tok}")
+            
+            match tok:
+                case _ if tok > self.config.email_token_count_max:
+                    print(f"{email['subject']}\n exceded email_token_count_max!")
+                    self.archive_emails([email])
+                    continue
+                case _ if tok > 2500:
+                    email_pre_check_window = 0.48
+                case _ if tok > 2000:
+                    email_pre_check_window = 0.45
+                case _ if tok > 1500:
+                    email_pre_check_window = 0.40
+                case _ if tok > 1000:
+                    email_pre_check_window = 0.35
+                case _ if tok > 500:
+                    email_pre_check_window = 0.30
+                case _ if tok < 200: 
+                    print(f"{email['subject']}\ntoo short!")
+                    self.archive_emails([email])
+                    continue
+            
+            length = len(text_content)
+            start_index = int(length * email_pre_check_window)
+            end_index = int(length * (1 - email_pre_check_window))
+
+            prompt_template[1]['content'] = text_content[start_index:end_index]
 
             response = openai.ChatCompletion.create(
                 api_key=os.environ.get('OPENAI_API_KEY'),
@@ -252,18 +326,22 @@ class Aggregator:
             )
 
             checked_response = self.check_response(response)
-            if checked_response == '1':
-                print(f"{email['subject']} checks out!")
+            if checked_response == '0':
+                print(f"{email['subject']}\n LLM thinks it's not ad. Keeping it!")
                 email_info = {
+                    'email_id': email['email_id'],
                     'subject': email['subject'],
                     'number': email_count,
                     'from': email['from'],
                     'received_at': email['received_at'],
-                    'text': email['text'],
+                    'text': text_content,
                     'links': [''],  # Placeholder for future implementation
                 }
                 relevant_emails.append(email_info)
                 email_count += 1
+            else:
+                print(f"{email['subject']}\n LLM thinks it's an ad. Rejected!")
+                self.archive_emails([email])
                 
         # Writing the dictionary into a YAML file
         with open(f'{self.run_output_dir}/2_relevant_emails.yaml', 'w', encoding='UTF-8') as yaml_file:
@@ -272,21 +350,18 @@ class Aggregator:
         return relevant_emails
     
     def split_summarize(self, relevant_emails):
-        with open(os.path.join('app/prompt_templates/', 'aggregator_split_summarize_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_split_summarize_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
         
         pre_split_output = []
         split_summarized_stories = []
         stories_count = 0
-        email_count = 0
+
         
         for email in relevant_emails:
-            if email_count >= self.config.email_max_per_run:
-                continue
-            email_count += 1
-            content = f"Keywords: {self.config.topic_keywords}\n Text: {email['text']}"
             
-            print(f"Now splitting and summarizing: {email['subject']}")
+            content = f"{email['text']}"
+            print(f"\nNow splitting and summarizing: {email['subject']}")
             
             # Loop over the list of dictionaries in data['prompt_template']
             for role in prompt_template:
@@ -297,12 +372,12 @@ class Aggregator:
                 api_key=os.environ.get('OPENAI_API_KEY'),
                 model=self.config.LLM_writing_model,
                 messages=prompt_template,
-                max_tokens=500,
+                max_tokens=750,
             )
 
             checked_response = self.check_response(response)
             
-            print(f'split_summarize response token count: {self.tiktoken_len(checked_response)}')
+            print(f'split_summarize response token count: {TextProcessing.tiktoken_len(checked_response)}')
             pre_split_response = {
                 'subject': email['subject'],
                 'story_number': email['number'],
@@ -330,8 +405,8 @@ class Aggregator:
             # Print each part
             for story in splits:
                 
-                story = CustomPreProcessor.remove_all_white_space_except_space(self, story)
-                story_token_count = self.tiktoken_len(story)
+                story = TextProcessing.remove_all_white_space_except_space(story)
+                story_token_count = TextProcessing.tiktoken_len(story)
                 
                 if  story_token_count > self.config.story_token_count_min:
                     story_info = {
@@ -355,7 +430,7 @@ class Aggregator:
         return split_summarized_stories
     
     def create_titles(self, list_of_stories):
-        with open(os.path.join('app/prompt_templates/', 'aggregator_create_titles_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_create_titles_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
         
         for story in list_of_stories:
@@ -377,7 +452,7 @@ class Aggregator:
         return list_of_stories
             
     def merge_stories(self, split_summarized_stories_titles):
-        with open(os.path.join('app/prompt_templates/', 'aggregator_merge_stories_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_merge_stories_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
         
         logit_bias_weight = 100
@@ -455,7 +530,7 @@ class Aggregator:
         return merged_stories
     
     def summarize_merged_stories(self, merged_stories):       
-        with open(os.path.join('app/prompt_templates/', 'aggregator_summarize_merged_stories_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_summarize_merged_stories_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
 
         summarized_stories = []
@@ -505,7 +580,7 @@ class Aggregator:
                 active_summary['summary'] = checked_response
                 
                 # Creates title from summary. 
-                with open(os.path.join('app/prompt_templates/', 'aggregator_create_titles_template.yaml'), 'r', encoding="utf-8") as stream:
+                with open(os.path.join(self.prompt_path, 'aggregator_create_titles_template.yaml'), 'r', encoding="utf-8") as stream:
                     title_template = yaml.safe_load(stream)
         
                 for role in title_template:
@@ -553,7 +628,7 @@ class Aggregator:
         number_multi_source_stories = len(multiple_items_summaries)
         number_stories_required = self.config.post_max_stories - number_multi_source_stories
             
-        with open(os.path.join('app/prompt_templates/', 'aggregator_get_top_stories_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_get_top_stories_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
 
         # Remove at random to reduce to less than 9. Need to rewrite to extend logit bias options
@@ -591,7 +666,7 @@ class Aggregator:
             
     def create_intro(self, summarized_stories):
 
-        with open(os.path.join('app/prompt_templates/', 'aggregator_create_intro_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_create_intro_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
             
         content = f"Username: {self.config.moniker_name}\n"
@@ -621,7 +696,7 @@ class Aggregator:
         # ' '
         logit_bias["220"] = logit_bias_weight
         
-        with open(os.path.join('app/prompt_templates/', 'aggregator_create_hash_tags_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_create_hash_tags_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
             
         content = f"Keyowrds: {self.config.topic_keywords}"
@@ -645,7 +720,7 @@ class Aggregator:
         return filtered
         
     def create_emojis(self, summarized_stories):
-        with open(os.path.join('app/prompt_templates/', 'aggregator_create_emojis_template.yaml'), 'r', encoding="utf-8") as stream:
+        with open(os.path.join(self.prompt_path, 'aggregator_create_emojis_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
             
         for summary in summarized_stories:
@@ -678,3 +753,6 @@ class Aggregator:
             text_file.write(content)
             
         return content
+    
+class GenerateTextPost:
+    pass

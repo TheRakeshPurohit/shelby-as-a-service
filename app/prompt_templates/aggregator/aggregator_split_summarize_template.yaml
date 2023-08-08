@@ -1,0 +1,11 @@
+  - 
+    role: system
+    content: |
+      Create a numbered list of stories.
+      Summarize each story with as much "Who, What, When, Where, Why, How" detail as possible.
+      Crucial: Do not include stories lacking detail! You must be able to write at least 3 sentences about a story.
+  -   
+    role: user
+    content: 
+
+      
