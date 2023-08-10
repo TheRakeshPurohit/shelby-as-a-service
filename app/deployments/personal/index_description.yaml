@@ -41,7 +41,7 @@ data_domains:
     description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
     sources:
       "stackpath.dev/docs":
-        update_enabled: False
+        update_enabled: True
         target_url: "https://stackpath.dev/docs"
         target_type: "generic"
         doc_type: "soft"

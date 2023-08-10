@@ -164,14 +164,14 @@ class IndexModel:
     index_embedding_batch_size: int = 100
     index_vectorstore_dimension: int = 1536
     index_vectorstore_upsert_batch_size: int = 20
-    index_vectorstore_metric: str = "dotproduct"
+    index_vectorstore_metric: str = "cosine"
     index_vectorstore_pod_type: str = "p1"
     index_preprocessor_min_length: int = 150
     index_text_splitter_goal_length: int = 1500
     index_text_splitter_max_length: int = 2000
     index_text_splitter_chunk_overlap: int = 300
     index_openai_timeout_seconds: float = 180.0
-    index_indexed_metadata = ["data_domain_name", "data_source_name", "doc_type", "target_type", "indexed_date"]
+    index_indexed_metadata = ["data_domain_name", "data_source_name", "doc_type", "target_type", "date_indexed"]
 
     SECRETS_ = [
         "openai_api_key",

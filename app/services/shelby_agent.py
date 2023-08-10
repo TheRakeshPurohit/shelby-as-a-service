@@ -236,13 +236,16 @@ class CEQAgent:
         dense_embedding = embedding_retriever.embed_query(query)
 
 
-        bm25_encoder = BM25Encoder()
-        bm25_encoder.fit(query)
-        sparse_embedding = bm25_encoder.encode_documents(query)
+        # bm25_encoder = BM25Encoder()
+        # bm25_encoder.fit(query)
+        # sparse_embedding = bm25_encoder.encode_documents(query)
 
-        return dense_embedding, sparse_embedding
+        # return dense_embedding, sparse_embedding
+    
+        return dense_embedding
 
-    def query_vectorstore(self, dense_embedding, sparse_embedding, data_domain_name=None):
+    def query_vectorstore(self, dense_embedding, data_domain_name=None):
+    # def query_vectorstore(self, dense_embedding, sparse_embedding, data_domain_name=None):
 
         pinecone.init(api_key=self.secrets['pinecone_api_key'], environment=self.shelby_agent.index_env)
         index = pinecone.Index(self.shelby_agent.index_name)
@@ -278,8 +281,8 @@ class CEQAgent:
             namespace=self.shelby_agent.deployment_name,
             include_metadata=True,
             filter=soft_filter,
-            vector=dense_embedding,
-            sparse_vector=sparse_embedding
+            vector=dense_embedding
+            # sparse_vector=sparse_embedding
         )
         hard_query_response = index.query(
             top_k=self.config.ceq_docs_to_retrieve,
@@ -287,8 +290,8 @@ class CEQAgent:
             namespace=self.shelby_agent.deployment_name,
             include_metadata=True,
             filter=hard_filter,
-            vector=dense_embedding,
-            sparse_vector=sparse_embedding
+            vector=dense_embedding
+            # sparse_vector=sparse_embedding
         )
 
         # Destructures the QueryResponse object the pinecone library generates.
@@ -581,12 +584,15 @@ class CEQAgent:
         if self.config.ceq_keyword_generator_enabled:
             generated_keywords = self.keyword_generator(query)
             self.shelby_agent.log.print_and_log(f"ceq_keyword_generator response: {generated_keywords}")
-            dense_embedding, sparse_embedding = self.get_query_embeddings(generated_keywords)
+            # dense_embedding, sparse_embedding = self.get_query_embeddings(generated_keywords)
+            dense_embedding = self.get_query_embeddings(generated_keywords)
         else:
-            dense_embedding, sparse_embedding = self.get_query_embeddings(query)
-        self.shelby_agent.log.print_and_log("Sparse and dense embeddings retrieved")
+            # dense_embedding, sparse_embedding = self.get_query_embeddings(query)
+            dense_embedding = self.get_query_embeddings(query)
+        self.shelby_agent.log.print_and_log("Embeddings retrieved")
 
-        returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, data_domain_name)
+        # returned_documents = self.query_vectorstore(dense_embedding, sparse_embedding, data_domain_name)
+        returned_documents = self.query_vectorstore(dense_embedding, data_domain_name)
         
         def doc_handling(returned_documents):
             # Need to rewrite all of this to make it more readable and build cases for when documentation is not being found.

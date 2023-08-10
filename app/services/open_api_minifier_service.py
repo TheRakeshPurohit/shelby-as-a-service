@@ -362,8 +362,14 @@ class OpenAPIMinifierService:
             
             endpoint['doc_number'] = self.operationID_counter
             
-            title = f"{endpoint['server_url']}"
-            endpoint['title'] = title
+            
+            parsed = urlparse(endpoint['server_url'])
+            if parsed.scheme and parsed.netloc:
+                # Strip away the https:// and main TLD portion
+                endpoint['title'] = re.sub(r'https?://[^/]+/', '', endpoint['server_url'])
+       
+            else:
+                endpoint['title'] = {endpoint['server_url']}
             
             filename = f"{tag_number}_{endpoint['tag']}_{endpoint['operation_id']}_{self.operationID_counter}"
             endpoint['filename'] = filename

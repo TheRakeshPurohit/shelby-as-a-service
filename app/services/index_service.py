@@ -110,9 +110,9 @@ class IndexService:
 
                     # Get sparse_embeddings
                     # Pretrain "corpus"
-                    data_source.bm25_encoder.fit(text_chunks)
-                    sparse_embeddings = data_source.bm25_encoder.encode_documents(text_chunks)
-                    self.log.print_and_log(f'Embeddings created. Dense: {len(dense_embeddings)} Sparse: {len(sparse_embeddings)}')
+                    # data_source.bm25_encoder.fit(text_chunks)
+                    # sparse_embeddings = data_source.bm25_encoder.encode_documents(text_chunks)
+                    # self.log.print_and_log(f'Embeddings created. Dense: {len(dense_embeddings)} Sparse: {len(sparse_embeddings)}')
                     
 
                     # If the "resource" already has vectors delete the existing vectors before upserting new vectors
@@ -134,9 +134,14 @@ class IndexService:
                         prepared_vector = {
                             "id": f"id-{data_source.data_source_name}-{vector_counter}",
                             "values": dense_embeddings[i],  
-                            "metadata": document_chunk,  
-                            'sparse_values': sparse_embeddings[i]
+                            "metadata": document_chunk
                         }
+                        # prepared_vector = {
+                        #     "id": f"id-{data_source.data_source_name}-{vector_counter}",
+                        #     "values": dense_embeddings[i],  
+                        #     "metadata": document_chunk,  
+                        #     'sparse_values': sparse_embeddings[i]
+                        # }
                         vector_counter += 1
                         vectors_to_upsert.append(prepared_vector)
 

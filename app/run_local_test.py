@@ -3,7 +3,7 @@ import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
 from deployment_maker.make import DeploymentMaker
-from services.aggregator_service import TextEmailAggregator
+# from services.aggregator_service import Aggregator
 
 def main():
     """
@@ -30,6 +30,9 @@ def main():
     )
     group.add_argument(
         "--aggregate", help="Run aggregate service."
+    )
+    group.add_argument(
+        "--create_content", help="Makes a newsletter."
     )
     group.add_argument(
         "--run",
@@ -84,7 +87,7 @@ def main():
         DeploymentMaker(args.make_deployment)
         sys.exit()
     elif args.aggregate:
-        TextEmailAggregator(args.aggregate)
+        Aggregator(args.aggregate)
         sys.exit()
 
 main()
