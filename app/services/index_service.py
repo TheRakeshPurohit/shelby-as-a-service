@@ -1,5 +1,5 @@
 # region Imports
-import os, shutil, traceback
+import os, shutil, traceback, sys
 from typing import List, Union, Iterator
 import re, string, yaml, json
 from urllib.parse import urlparse
@@ -174,14 +174,11 @@ class IndexService:
         
     def delete_index(self):
         
-        res = self.enabled_data_sources[0].vectorstore.describe_index_stats()
-        self.log.print_and_log(res)
-        res = pinecone.delete_index(self.deployment.index_name)
-        self.log.print_and_log(res)
-        res = self.enabled_data_sources[0].vectorstore.describe_index_stats()
-        self.log.print_and_log(res)
-        
-        return res
+        self.log.print_and_log(f"Deleting index {self.index_name}")
+        stats = self.vectorstore.describe_index_stats()
+        self.log.print_and_log(stats)
+        pinecone.delete_index(self.index_name)
+        self.log.print_and_log(self.vectorstore.describe_index_stats())
 
     def clear_index(self):
         self.log.print_and_log('Deleting all vectors in index.')
@@ -210,7 +207,7 @@ class IndexService:
         # Prepare log message
         log_message = (
             f"Creating new index with the following configuration:\n"
-            f" - Index Name: {self.deployment.index_name}\n"
+            f" - Index Name: {self.index_name}\n"
             f" - Dimension: {self.config.index_vectorstore_dimension}\n"
             f" - Metric: {self.config.index_vectorstore_metric}\n"
             f" - Pod Type: {self.config.index_vectorstore_pod_type}\n"
@@ -220,7 +217,7 @@ class IndexService:
         self.log.print_and_log(log_message)
         
         pinecone.create_index(
-            name=self.deployment.index_name, 
+            name=self.index_name, 
             dimension=self.config.index_vectorstore_dimension, 
             metric=self.config.index_vectorstore_metric,
             pod_type=self.config.index_vectorstore_pod_type,
@@ -254,6 +251,7 @@ class DataSourceConfig:
         self.filter_url: str = source.get('filter_url')
         self.update_enabled: bool = source.get('update_enabled')
         self.load_all_paths: bool = source.get('load_all_paths')
+        self.skip_paths: bool = source.get('skip_paths')
         self.target_url: str = source.get('target_url')
         self.target_type: str = source.get('target_type')
         self.doc_type: str = source.get('doc_type')
@@ -276,7 +274,8 @@ class DataSourceConfig:
             case 'gitbook':
                 self.scraper = GitbookLoader(
                     web_page=self.target_url,
-                    load_all_paths=self.load_all_paths
+                    load_all_paths=self.load_all_paths,
+                    skip_paths=self.skip_paths
                     )
                 self.content_type = "text"
                 

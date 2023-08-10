@@ -306,6 +306,8 @@ class TextEmailAggregator:
                     email_pre_check_window = 0.35
                 case _ if tok > 500:
                     email_pre_check_window = 0.30
+                case _ if tok < 500:
+                    email_pre_check_window = 0.25
                 case _ if tok < 200: 
                     print(f"{email['subject']}\ntoo short!")
                     self.archive_emails([email])

@@ -5,19 +5,20 @@ data_domains:
     description: "Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API."
     sources:
       "docs.tatum.io":
-        update_enabled: False
+        update_enabled: True
         load_all_paths: True
+        skip_paths: "/docs/rpc/"
         target_url: "https://docs.tatum.io/"
         target_type: "gitbook"
         doc_type: "soft"
       "docs-v3.tatum.io":
-        update_enabled: True
+        update_enabled: False
         load_all_paths: True
         target_url: "https://docs-v3.tatum.io/"
         target_type: "gitbook"
         doc_type: "soft"
       "api.tatum.io":
-        update_enabled: True
+        update_enabled: False
         target_url: "app/deployments/template/index/inputs/input_open_api_specs/tatum"
         target_type: "open_api_spec"
         doc_type: "hard"

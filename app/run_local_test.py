@@ -45,8 +45,8 @@ def main():
         ### Add deployment name here if you're too lazy to use the CLI ###
         deployment_name = 'tatum'
         # test_args = ["--make_deployment", deployment_name]
-        test_args = ["--aggregate", deployment_name]
-        # test_args = ["--index_management", deployment_name]
+        # test_args = ["--aggregate", deployment_name]
+        test_args = ["--index_management", deployment_name]
         # test_args = ["--run", deployment_name]
         args = parser.parse_args(test_args)
     else:
@@ -76,6 +76,9 @@ def main():
         
         # Removes all documents across all deployments
         # deployment.index_agent.clear_index()
+        
+        # Deletes index requiring a complete reboot
+        # deployment.index_agent.delete_index()
             
     elif args.make_deployment:
         DeploymentMaker(args.make_deployment)

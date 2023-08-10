@@ -171,7 +171,7 @@ class IndexModel:
     index_text_splitter_max_length: int = 2000
     index_text_splitter_chunk_overlap: int = 300
     index_openai_timeout_seconds: float = 180.0
-    index_indexed_metadata: List[str] = field(default_factory=lambda: ["data_domain_name", "data_source_name", "doc_type", "target_type"]) 
+    index_indexed_metadata = ["data_domain_name", "data_source_name", "doc_type", "target_type", "indexed_date"]
 
     SECRETS_ = [
         "openai_api_key",

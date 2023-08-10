@@ -362,9 +362,12 @@ class OpenAPIMinifierService:
             
             endpoint['doc_number'] = self.operationID_counter
             
-            title = f"{tag_number}_{endpoint['tag']}_{endpoint['operation_id']}_{self.operationID_counter}"
-            
+            title = f"{endpoint['server_url']}"
             endpoint['title'] = title
+            
+            filename = f"{tag_number}_{endpoint['tag']}_{endpoint['operation_id']}_{self.operationID_counter}"
+            endpoint['filename'] = filename
+            
             
             self.operationID_counter += 1
 
@@ -538,7 +541,14 @@ class OpenAPIMinifierService:
             # Skip overly long chunks
             if self.tiktoken_len(text_chunk) > self.config.index_text_splitter_max_length:
                 continue
-            file_name = document_chunk['title']
+            if 'filename' in document_chunk:
+                # Do something if 'filename' exists in the dictionary
+                file_name = document_chunk['filename']
+                # Your code here
+            else:
+                # Handle the case where 'filename' does not exist
+                file_name = document_chunk['title']
+
             file_path = f"{folder_path}/{file_name}.txt"
             with open(file_path, 'w') as f:
                 json.dump(document_chunk, f, indent=4)
