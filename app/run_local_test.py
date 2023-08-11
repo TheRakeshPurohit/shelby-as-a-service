@@ -3,7 +3,7 @@ import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
 from deployment_maker.make import DeploymentMaker
-# from services.aggregator_service import Aggregator
+from services.aggregator_service import Aggregator, CreateNewsletter
 
 def main():
     """
@@ -32,7 +32,7 @@ def main():
         "--aggregate", help="Run aggregate service."
     )
     group.add_argument(
-        "--create_content", help="Makes a newsletter."
+        "--create_newsletter", help="Makes a newsletter."
     )
     group.add_argument(
         "--run",
@@ -46,11 +46,15 @@ def main():
     # check if any arguments were provided
     if len(sys.argv) == 1:
         ### Add deployment name here if you're too lazy to use the CLI ###
-        deployment_name = 'tatum'
-        # test_args = ["--make_deployment", deployment_name]
+        deployment_name = 'saas'
         # test_args = ["--aggregate", deployment_name]
-        test_args = ["--index_management", deployment_name]
+        test_args = ["--create_newsletter", deployment_name]
+        
+        # test_args = ["--index_management", deployment_name]
+        
         # test_args = ["--run", deployment_name]
+        
+        # test_args = ["--make_deployment", deployment_name]
         args = parser.parse_args(test_args)
     else:
         # arguments were provided, parse them
@@ -67,7 +71,6 @@ def main():
         config_module_path = f"deployments.{service_name}.deployment_config"
         config_module = import_module(config_module_path)
         deployment = DeploymentInstance(config_module, run_index_management)
-
         
         ### Right now we don't have index_agent set up for anything but manual input ###
 
@@ -87,7 +90,10 @@ def main():
         DeploymentMaker(args.make_deployment)
         sys.exit()
     elif args.aggregate:
-        Aggregator(args.aggregate)
+        Aggregator(args.aggregate).aggregate_email_newsletters()
+        sys.exit()
+    elif args.create_newsletter:
+        Aggregator(args.create_newsletter).create_newsletter()
         sys.exit()
 
 main()

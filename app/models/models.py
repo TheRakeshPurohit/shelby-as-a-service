@@ -156,8 +156,8 @@ class SlackModel:
     #     ModelSharedTools.check_required_vars_list(self, required_vars)
 
 class IndexModel:
-    index_env: str = None
     index_name: str = None
+    index_env: str = 'us-central1-gcp'
     index_embedding_model: str = "text-embedding-ada-002"
     index_tiktoken_encoding_model: str = "text-embedding-ada-002"
     index_embedding_max_chunk_size: int = 8191

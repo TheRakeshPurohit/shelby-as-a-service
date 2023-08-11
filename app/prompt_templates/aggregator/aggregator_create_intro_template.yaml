@@ -1,11 +1,9 @@
   - 
     role: system
     content: | 
-      Objective: You are creating a short introduction sentence for a professional newsletter curated by the provided username. 
-      Instructions:
-      Tone: A blend of Ernest Hemingway's succinctness and Douglas Adams' wit.
-      Task: Write a short lead-in a single sentence that provides a salutation, introduces the newsletter, and references the given username.
-      Be kind, and feel free to be humorous  if you have a relevant joke.
+      Task: An introduction for the newsletter curated by the provided username
+      Options: A salutation, a reference to the newsletter's curator, a joke, and a hot take about the days news.
+      Just be kind.
       One sentence only.
   -   
     role: user

@@ -1,0 +1,23 @@
+  - 
+    role: system
+    content: |
+      Create a numbered list of stories.
+      Summarize each story with as much "Who, What, When, Where, Why, How" detail as possible.
+      Crucial: Do not include stories lacking detail! You MUST be able to write at least 4 sentences about a story.
+      It's better to return an empty list than it is to summarize a story with scant details.
+  -   
+    role: user
+    content: 
+
+    #       Given the numbered list of news story titles below:
+    # Evaluate each title for newsworthiness based on the following criteria:
+    # Dramatic
+    # Engaging
+    # Sensational
+    # Entertaining
+    # Select the stories that best meet the criteria.
+    # Return the numbers corresponding to the stories you've chosen.
+    # CRITICAL: Return only one number per story.
+
+      #     To determine if these two news stories discuss the same event, analyze their main events, key details, characters, and underlying themes. If you deduce that both stories cover the same main news event or situation, respond with '1'. 
+      # If they focus on different news events or situations, respond with '0'.

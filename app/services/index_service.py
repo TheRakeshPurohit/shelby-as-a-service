@@ -386,7 +386,7 @@ class CustomPreProcessor:
             doc.page_content = self.strip_excess_whitespace(doc.page_content)
             doc.metadata['title'] = self.strip_excess_whitespace(doc.metadata['title'])
             
-            self.index_agent.log.print_and_log(f"Doc number: {i}\n Title: {doc.metadata['title']}")
+            self.index_agent.log.print_and_log(f"Preprocessing doc number: {i}\n Title: {doc.metadata['title']}")
             
             # Skip if too small
             if self.tiktoken_len(doc.page_content) < self.data_source_config.config.index_preprocessor_min_length:
