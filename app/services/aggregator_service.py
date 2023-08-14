@@ -27,9 +27,9 @@ class Aggregator:
         
         self.total_prompt_tokens = 0
         self.total_completion_tokens = 0
-        self.moniker_dir = f'app/content_aggregator/{self.service_name}'
+        self.service_dir = 'app/content_aggregator/'
         self.prompt_path = 'app/prompt_templates/aggregator/'
-        config_module_path = f"content_aggregator.{service_name}.config"
+        config_module_path = f"content_aggregator.config"
         self.config = import_module(config_module_path).MonikerAggregatorConfig
         self.vector_db = VectorIndex(self)
         
@@ -80,8 +80,14 @@ class Aggregator:
         # total_cost = math.ceil(total_cost * 100) / 100
         return total_cost   
     
-    def create_folder(self):
-        aggregations_path = f'{self.moniker_dir}/aggregations'
+
+class AggregateEmailNewsletter:
+    def __init__(self, main_ag: Aggregator):
+        self.main_ag = main_ag
+        self.run_output_dir = self.create_ag_folder()
+    
+    def create_ag_folder(self):
+        aggregations_path = f'{self.main_ag.service_dir}/aggregations'
         today = datetime.now().strftime('%Y_%m_%d')
         # Initialize run number
         run_num = 1
@@ -99,11 +105,6 @@ class Aggregator:
         
         return run_output_dir
     
-class AggregateEmailNewsletter:
-    def __init__(self, main_ag: Aggregator):
-        self.main_ag = main_ag
-        self.run_output_dir = main_ag.create_folder()
-        
     def get_emails(self):
         
         # Get the current UTC date and time
@@ -463,7 +464,7 @@ class VectorIndex:
             chunk_size=self.index_config.index_embedding_batch_size,
             request_timeout=self.index_config.index_openai_timeout_seconds
         )
-        
+    
     def upsert_email_text(self, content):
         self.main_ag.log.print_and_log(f'Initial index stats: {self.vectorstore.describe_index_stats()}\n')
         index_resource_stats = self.vectorstore.describe_index_stats(
@@ -615,8 +616,27 @@ class CreateNewsletter:
     def __init__(self, main_ag: Aggregator):
         self.main_ag = main_ag
         self.target_type = 'email_text'
-        self.run_output_dir = main_ag.create_folder() 
+        self.run_output_dir = self.create_newsletter_folder()
+    
+    def create_newsletter_folder(self):
+        aggregations_path = f'{self.main_ag.service_dir}/newsletter/{self.main_ag.config.moniker_name}/'
+        today = datetime.now().strftime('%Y_%m_%d')
+        # Initialize run number
+        run_num = 1
         
+        # Construct initial directory path
+        run_output_dir = os.path.join(aggregations_path, f"{today}_run_{run_num}")
+
+        # While a directory with the current run number exists, increment the run number
+        while os.path.exists(run_output_dir):
+            run_num += 1
+            run_output_dir = os.path.join(aggregations_path, f"{today}_run_{run_num}")
+
+        # Create the directory
+        os.makedirs(run_output_dir, exist_ok=True)
+        
+        return run_output_dir
+    
     def find_top_stories(self):
         all_topics_similar_stories = []
         # For each topic
@@ -693,6 +713,8 @@ class CreateNewsletter:
                 max_tokens=25,
             )
             checked_response = self.main_ag.check_response(response)
+            checked_response = checked_response.strip('"')
+            checked_response = checked_response.strip("'")
             story['title'] = checked_response
         
         return summarized_stories
@@ -766,21 +788,22 @@ class CreateNewsletter:
         )
         checked_response = self.main_ag.check_response(response)
         
-        filtered = re.sub(r'[^a-z #]', '', checked_response.lower())
-        
+        filtered = re.sub(r'[^a-z#]', '', checked_response.lower())
+        filtered = re.sub(r'(?<=\w)#', ' #', filtered)
         return filtered
         
     def create_post(self, summarized_stories, intro_text, hash_tags):
-
-        content = f"Potential post title: {intro_text}\n"
-        content += f"Potential hashtags: {hash_tags}\n"
-        dots = ['🔵','🟢','🟡','🟠','🟣','🟤','⚪️','⚫️','🔴']
+        content = intro_text
+        content += '\n\n'
+        dots = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
+        # dots = ['①','② ','③ ','④',' ⑤ ','⑥ ','⑦','⑧','⑨']
+        # dots = ['🔵','🟢','🟡','🟠','🟣','🟤','⚪️','⚫️','🔴']
         for i, summary in enumerate(summarized_stories):
             if i <= len(dots):
-                content += f"{dots[i]} {summary['summary']} {summary['emoji']}\n"
+                content += f"{dots[i]} {summary['title']} — {summary['summary']} {summary['emoji']}\n\n"
             else:
-                content += f"{summary['summary']} {summary['emoji']}\n"
-            content += f"Alternative story title: {summary['title']}\n"
+                content += f"{summary['title']} — {summary['summary']} {summary['emoji']}\n\n"
+        content += hash_tags
         with open(f'{self.run_output_dir}/6_output.md', 'w', encoding='UTF-8') as text_file:
             text_file.write(content)
             

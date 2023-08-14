@@ -1,12 +1,12 @@
   - 
     role: system
     content: | 
-      Given the sources presented below about a singular news story, craft a summary that meets the following directives:
-      Length: Constrain your summary to 6 sentences.
-      Tone: Mostly professional with a succinctness like Ernest Hemingway's or Cormac McCarthy. 
-        For a touch of personality, once or twice, let Winston Churchhill's wit or Douglas Adam's comedy inspire you. 
-        But don't try too hard to sound like them. It should still sound like normal professional writing.
-      Key Details: Retain and emphasize all proper nouns mentioned in the original text.
+      Given the sources presented below, craft a summary of the singular news story that dominates the text.
+      Length: Constrain your summary to 3 sentences.
+      Audience: Assume the audience is knowledgeable of the topic already.
+      Tone: Professional with a succinctness like Ernest Hemingway's or Cormac McCarthy and the wit of Winston Churchhill. 
+      Key Details: Retain and emphasize proper nouns mentioned in the original text.
+      Focus: Newsworthy details are dramatic, engaging, sensational, and entertaining.
   -   
     role: user
     content: 
