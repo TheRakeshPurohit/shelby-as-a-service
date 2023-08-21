@@ -82,7 +82,7 @@
 
 <!-- ABOUT THE PROJECT -->
 
-## Production-ready LLM Agents. Just add API keys
+## GPT + your docs. Pre-built and configured bots. Just add API keys.
 
 <div style="text-align: center;">
     <img src="documentation/discord-example.png" alt="Discord Screen Shot" style="width: 40%; display: inline-block;">
@@ -93,44 +93,16 @@
 
 ### Features
 
-# Out of date!
-I made some huge changes this weekend, and ran out of time to update the documentation. 
-
-Everything works though, and it should be pretty straight forward to figure it out!
-
-By the end of the week (2023/08/13) I should have the documentation updated to reflect the changes.
-
-# Out of date!
-
-The gulf between 'hello world' and something useful is what shelby-as-a-service (SaaS) solves. 
-* Easy:
-  * Configuration requires only API keys.
-  * Step-by-step guides.
-  * Automatically builds dockerfile and github actions workflow to deploy to container.
-* Context enriched queries, retrieval augmented generation (RAG), prompt stuffing, questions on docs, etc
-  * Automatically scrapes, processes, and uploads data from websites, gitbooks, sitemaps, and OpenAPI specs.
-  * Superior Document retrieval.
-    * Performs semantic search with sparse/dense embeddings by default.
-    * Generates additional search keywords for better semantic search results.
-    * Checks if documents are relevant by asking GPT, "Which of these documents are relevant?"
-    * Superior document pre-processing with BalancedRecursiveCharacterTextSplitter and thoughtful parsing.
-* Pre-configured Slack and Discord bots (lets call them 'Sprites' for this project).
-* Tweaking not required, but all the knobs are at your disposal in the configuration folder.
-  * All configuration variables are stored and loaded through app/deployments/<your_deployment_name>/deployment_config.py
-  * All data sources are managed through app/deployments/<your_deployment_name>/index_description.yaml
-  * All prompts are easily accessbile through prompt_template folder
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- ROADMAP -->
-## Roadmap
-
-* Enable memory for conversational queries
-* Enable the bot to make request to *any* API with an OpenAPI spec
-* Improve and add additional document sources
-* Speech to text job interview agent
-* Add service providers
-* Installable via PIP
+The 'hello world' of the AI world is question and answers on docs. But there is difference between a PoC notebook and something actually useful. This project has been used successfully in production for a ~2 months and has happily answered hundreds of user queries.
+* Easy step-by-step guides to deploy Discord and Slack bots to production
+* `index_service` automatically scrapes, processes, chunks, and upserts to documents to vector index. Supports:
+  * generic websites
+  * gitbooks
+  * sitemaps
+  * OpenAPI specs
+* Superior Document retrieval with keyword generation, metadata filtering, doc relevancy checks, and document pre/post processing
+* No configuration required, but you can configure anything easily; from the length of response from GPT to the tone of the response. 
+  * An example of a setting to play with is the main prompt that ends with, `Be kind, and feel free to be humourous if you have a relevant joke.`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -138,11 +110,13 @@ The gulf between 'hello world' and something useful is what shelby-as-a-service 
 ## Getting Started
 
 ### Step-by-step guide
-1. [Install Shelby-as-a-service](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/installation.md)
-2. [Configure your deployment](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/configuration.md)
-3. Special steps for:
-   1. [Discord](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/deploying_to_discord.md)
-   2. [Slack](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/deploying_to_slack.md)
+1. [Install Shelby-as-a-Service](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/1_installation.md)
+2. [Initial local setup](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/2_local_setup.md)
+3. [Document index configuration](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/3_document_index_configuration.md)
+4. Special steps for:
+   1. [Deploying to Discord](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/4a_deploying_to_discord.md)
+   2. [Deploying to Slack](https://github.com/ShelbyJenkins/shelby-as-a-service/blob/main/documentation/4b_deploying_to_slack.md)
+
 
 ### Prerequisites
 
@@ -162,6 +136,16 @@ Paid:
   * More providers TBD
 
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ROADMAP -->
+## Roadmap
+
+* Better Retrival from technical keywords: Keyword and plaintext search may improve retrival vs pure semantic search.
+* Non-deterministic function calling on open API specs: Minificication and indexing of API specs done. When presented an index of API endpoints and a user request GPT can select the correct API endpoint to call. I just need to implement building the API call.
+* Github repos as a document source: Crucial.
+* Memory: ChatGPT has memory which preserves context in between requests and responses. Currently memory is not implemented with the bots which can be frustrating when it comes to asking follow ups. 
+  
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->

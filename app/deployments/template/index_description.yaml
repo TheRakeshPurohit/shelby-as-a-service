@@ -1,43 +1,16 @@
-index_name: "shelby-as-a-service"
-index_env: "us-central1-gcp"
+index_name: "shelby-as-a-service" # Pinecone index name
+index_env: "us-central1-gcp" # GCP region your pinecone index lives in
 data_domains:
-  - name: "deepgram"
-    description: "Advanced AI services including, speech-to-text, translation, and sentiment analysis."
+  - name: "deepgram" # a data_domain is a named space for specific orgs
+    description: "Advanced AI services including, speech-to-text, translation, and sentiment analysis." # Used for keyword generation
     sources:
-      "developers.deepgram.com/reference":
-        update_enabled: True
-        target_url: "app/deployments/template/index/inputs/input_open_api_specs/deepgram"
-        target_type: "open_api_spec"
-        doc_type: "hard"
-        api_url_format: "https://developers.deepgram.com/reference/{operationId}"
-      "developers.deepgram.com/docs":
-        update_enabled: True
-        target_url: "https://developers.deepgram.com/sitemap.xml"
-        filter_url: "https://developers.deepgram.com/docs/"
-        target_type: "sitemap"
-        doc_type: "soft"
-  - name: "tatum"
-    description: "Blockchain and web3 infrastructure and services like RPC, NFTs, and Wallets. Supporting 70 blockchain networks with JS and C# SDKs, and an API."
-    sources:
-      "docs.tatum.io":
-        update_enabled: False
-        load_all_paths: True
-        target_url: "https://docs.tatum.io/"
-        target_type: "gitbook"
-        doc_type: "soft"
-      "docs-v3.tatum.io":
-        update_enabled: True
-        load_all_paths: True
-        target_url: "https://docs-v3.tatum.io/"
-        target_type: "gitbook"
-        doc_type: "soft"
-      "api.tatum.io":
-        update_enabled: False
-        target_url: "app/deployments/template/index/inputs/input_open_api_specs/tatum"
-        target_type: "open_api_spec"
-        doc_type: "hard"
-        api_url_format: "https://apidoc.tatum.io/tag/{tag}#operation/{operationId}"
-  - name: "stackpath"
+      "developers.deepgram.com/reference": # A data_source is a specific source within a data_domain
+        update_enabled: True # Set to true when running index managment to update
+        target_url: "app/deployments/template/index/inputs/input_open_api_specs/deepgram" # Either URL or location of open api spec docs
+        target_type: "open_api_spec" 
+        doc_type: "hard" # A metadata tag used in pinecone to select between technical documentation and marketing/sales documents
+        api_url_format: "https://developers.deepgram.com/reference/{operationId}" # Specific for open api spec docs to properly link to the online documents correctly
+  - name: "stackpath" # Stackpath example
     description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
     sources:
       "stackpath.dev/docs":

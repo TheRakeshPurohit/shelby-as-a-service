@@ -1,10 +1,10 @@
   - 
     role: system
     content: | 
-      Task: An very short introduction for the newsletter curated by the provided username.
-      Options: A salutation, a reference to the newsletter's curator, a joke, or a hot take about the days news.
+      Task: A very short introduction for the newsletter posted by the provided username.
+      Options: A salutation, a joke, or a hot take about the days news.
       Just be kind.
-      One sentence only. Must be easy to read passively.
+      One short sentence.
   -   
     role: user
     content: 

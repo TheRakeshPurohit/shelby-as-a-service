@@ -109,7 +109,7 @@ class AggregateEmailNewsletter:
         
         # Get the current UTC date and time
         now = datetime.now(timezone.utc) 
-        start_time = now - timedelta(hours=72)
+        start_time = now - timedelta(hours=self.main_ag.config.email_look_back_hours)
         # This date format required
         now_str = now.strftime("%Y-%m-%dT%H:%M:%SZ")
         start_time_str = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -216,10 +216,6 @@ class AggregateEmailNewsletter:
             }
             incoming_emails.append(email_info)
             email_count += 1
-
-        # Writing the dictionary into a YAML file
-        with open(f'{self.run_output_dir}/1_incoming_emails.yaml', 'w', encoding='UTF-8') as yaml_file:
-            yaml.dump(incoming_emails, yaml_file, default_flow_style=False)
         
         return incoming_emails
     
@@ -228,6 +224,8 @@ class AggregateEmailNewsletter:
         if not incoming_emails:
             self.main_ag.log.print_and_log('No emails in inbox.')
             sys.exit()
+            
+        self.main_ag.log.print_and_log(f"Got: {len(incoming_emails)} emails")
         
         with open(os.path.join(self.main_ag.prompt_path, 'aggregator_pre_check_email_template.yaml'), 'r', encoding="utf-8") as stream:
             prompt_template = yaml.safe_load(stream)
@@ -235,11 +233,10 @@ class AggregateEmailNewsletter:
         logit_bias_weight = 100
         logit_bias = {str(k): logit_bias_weight for k in range(15, 15 + 2)}
         relevant_emails = []
+        incoming_emails_text = []
         email_count = 0
         
         for email in incoming_emails:
-            if email_count >= self.main_ag.config.email_max_per_run:
-                continue
             soup = BeautifulSoup(email['text'], 'html.parser')
             bs4_text_content = soup.get_text()
             # Removes excessive whitespace chars
@@ -253,6 +250,10 @@ class AggregateEmailNewsletter:
             tok = TextProcessing.tiktoken_len(text_content)
             
             self.main_ag.log.print_and_log(f"email token count: {tok}")
+
+            
+            if email_count >= self.main_ag.config.email_max_per_run:
+                continue
             
             match tok:
                 case _ if tok > self.main_ag.config.email_token_count_max:
@@ -290,23 +291,30 @@ class AggregateEmailNewsletter:
                 logit_bias=logit_bias
             )
 
-            checked_response = self.main_ag.check_response(response)
-            if checked_response == '0':
-                self.main_ag.log.print_and_log(f"{email['subject']}\n LLM thinks it's not ad. Keeping it!")
+            email['text'] = text_content
+            email['relevant_email_number'] = email_count
 
-                email['text'] = text_content
-                email['relevant_email_number'] = email_count
+            checked_response = self.main_ag.check_response(response)
+            if checked_response == '1':
+                self.main_ag.log.print_and_log(f"🟢 {email['subject']}: LLM thinks it's newsworthy. Keeping it!")
                 
                 relevant_emails.append(email)
                 email_count += 1
             else:
-                self.main_ag.log.print_and_log(f"{email['subject']}\n LLM thinks it's an ad. Rejected!")
+                self.main_ag.log.print_and_log(f"🔴 {email['subject']}: LLM thinks it's not newsworthy. Rejected!")
                 self.archive_emails([email])
-                
+        
+            incoming_emails_text.append(email)
+            
+        # Writing the dictionary into a YAML file
+        with open(f'{self.run_output_dir}/1_incoming_emails.yaml', 'w', encoding='UTF-8') as yaml_file:
+            yaml.dump(incoming_emails_text, yaml_file, default_flow_style=False)
         # Writing the dictionary into a YAML file
         with open(f'{self.run_output_dir}/2_relevant_emails.yaml', 'w', encoding='UTF-8') as yaml_file:
             yaml.dump(relevant_emails, yaml_file, default_flow_style=False)
-
+            
+        self.main_ag.log.print_and_log(f"Found: {len(incoming_emails)} relevant emails")
+        
         return relevant_emails
     
     def split_email(self, relevant_emails):
@@ -793,14 +801,19 @@ class CreateNewsletter:
         return filtered
         
     def create_post(self, summarized_stories, intro_text, hash_tags):
+        dots1 = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
+        dots2 = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨']
+        dots3 = ['🔵','🟢','🟡','🟠','🟣','🟤','⚪️','⚫️','🔴']
+        dots4 = ['🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘']
+        all_dots = [dots1, dots2, dots3, dots4]
+        selected_dots = random.choice(all_dots)
+        
         content = intro_text
         content += '\n\n'
-        dots = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
-        # dots = ['①','② ','③ ','④',' ⑤ ','⑥ ','⑦','⑧','⑨']
-        # dots = ['🔵','🟢','🟡','🟠','🟣','🟤','⚪️','⚫️','🔴']
+        
         for i, summary in enumerate(summarized_stories):
-            if i <= len(dots):
-                content += f"{dots[i]} {summary['title']} — {summary['summary']} {summary['emoji']}\n\n"
+            if i <= len(selected_dots):
+                content += f"{selected_dots[i]} {summary['title']} — {summary['summary']} {summary['emoji']}\n\n"
             else:
                 content += f"{summary['title']} — {summary['summary']} {summary['emoji']}\n\n"
         content += hash_tags

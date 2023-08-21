@@ -2,16 +2,16 @@ from models.models import DiscordModel, SlackModel, DeploymentModel
 
 class DeploymentConfig:
     # Required #
-    deployment_name: str = "template"
+    deployment_name: str = "template" # What are you calling this deploment
     docker_registry = 'docker.io'
     docker_username = 'username'
-    docker_repo = 'repo'
+    docker_repo = 'repo' # Your personal docker repo
     model = DeploymentModel
     class MonikerConfigs:
-        class TemplateName1:
+        class TemplateName1: # Can be named whatever you want, but can also be left the same
             # Populates description at run from index_description.yaml
             # Required #
-            enabled_data_domains: list = ["tatum", "stackpath", "deepgram"]
+            enabled_data_domains: list = ["tatum", "stackpath", "deepgram"] # Domains for which queries are active from index_description.yaml
             enabled: bool = True
             class DiscordConfig:
                 # Required #

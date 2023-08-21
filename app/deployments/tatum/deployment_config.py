@@ -6,6 +6,7 @@ class DeploymentConfig:
     docker_registry = 'docker.io'
     docker_username = 'shelbyjenkins'
     docker_repo = 'shelby-as-a-service'
+    # Default
     model = DeploymentModel
     class MonikerConfigs:
         class TemplateName1:
