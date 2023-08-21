@@ -187,36 +187,18 @@ Project Link: [https://github.com/ShelbyJenkins/shelby-as-a-service](https://git
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/shelbyjenkins/shelby-as-a-service.svg?style=for-the-badge
-[contributors-url]: https://github.com/ShelbyJenkins/shelby-as-a-service/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/ShelbyJenkins/shelby-as-a-service.svg?style=for-the-badge
-[forks-url]: https://github.com/ShelbyJenkins/shelby-as-a-service/network/members
-[stars-shield]: https://img.shields.io/github/stars/ShelbyJenkins/shelby-as-a-service.svg?style=for-the-badge
-[stars-url]: https://github.com/ShelbyJenkins/shelby-as-a-service/stargazers
-[issues-shield]: https://img.shields.io/github/issues/ShelbyJenkins/shelby-as-a-service.svg?style=for-the-badge
-[issues-url]: https://github.com/ShelbyJenkins/shelby-as-a-service/issues
-[license-shield]: https://img.shields.io/github/license/ShelbyJenkins/shelby-as-a-service.svg?style=for-the-badge
-[license-url]: https://github.com/ShelbyJenkins/shelby-as-a-service/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/shelby-as-a/shelby-as-a-service.svg?style=for-the-badge
+[contributors-url]: https://github.com/shelby-as-a/shelby-as-a-service/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/shelby-as-a/shelby-as-a-service.svg?style=for-the-badge
+[forks-url]: https://github.com/shelby-as-a/shelby-as-a-service/network/members
+[stars-shield]: https://img.shields.io/github/stars/shelby-as-a/shelby-as-a-service.svg?style=for-the-badge
+[stars-url]: https://github.com/shelby-as-a/shelby-as-a-service/stargazers
+[issues-shield]: https://img.shields.io/github/issues/shelby-as-a/shelby-as-a-service.svg?style=for-the-badge
+[issues-url]: https://github.com/shelby-as-a/shelby-as-a-service/issues
+[license-shield]: https://img.shields.io/github/license/shelby-as-a/shelby-as-a-service.svg?style=for-the-badge
+[license-url]: https://github.com/shelby-as-a/shelby-as-a-service/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/company/shelby-as-a-service/
 
 [discord-screenshot]: documentation/discord-example.png
 [slack-screenshot]: documentation/slack-example.png
-
-[python]: https://img.shields.io/badge/python-000000?style=for-the-badge&logo=python&logoColor=white
-[python-url]: https://www.python.org/
-[langchain]: https://img.shields.io/badge/langchain-20232A?style=for-the-badge&logo=langchain&logoColor=61DAFB
-[langchain-url]: https://python.langchain.com/
-[haystack]: https://img.shields.io/badge/haystack-35495E?style=for-the-badge&logo=haystack&logoColor=4FC08D
-[haystack-url]: https://github.com/deepset-ai/haystack
-[discord.py]: https://img.shields.io/badge/discord.py-DD0031?style=for-the-badge&logo=discord.py&logoColor=white
-[discord.py-url]: https://github.com/Rapptz/discord.py
-[slack-bolt]: https://img.shields.io/badge/slack-bolt-4A4A55?style=for-the-badge&logo=slack-bolt&logoColor=FF3E00
-[slack-bolt-url]: https://github.com/slackapi/bolt-python
-
-
-* [![python][python]][python-url]
-* [![langchain][langchain]][langchain-url]
-* [![haystack][haystack]][haystack-url]
-* [![discord.py][discord.py]][discord.py-url]
-* [![slack-bolt][slack-bolt]][slack-bolt-url]
