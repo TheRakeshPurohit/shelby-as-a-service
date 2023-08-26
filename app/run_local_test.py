@@ -2,7 +2,7 @@ import sys
 import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
-from deployments.deployment_maker.make import DeploymentMaker
+from deployment_maker.make import DeploymentMaker
 from services.aggregator_service import Aggregator, CreateNewsletter
 
 def main():
