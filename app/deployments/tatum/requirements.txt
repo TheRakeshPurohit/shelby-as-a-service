@@ -3,10 +3,10 @@ yarl==1.9.2
 python-dateutil==2.8.2
 wget==3.2
 six==1.16.0
+langchain==0.0.273
 langchainplus-sdk==0.0.20
 charset-normalizer==3.2.0
 pinecone-client==2.2.2
-git+https://github.com/ShelbyJenkins/langchain
 mypy-extensions==1.0.0
 pydantic==1.10.11
 SQLAlchemy==2.0.18

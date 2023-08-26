@@ -1,6 +1,7 @@
 import json
 import requests
 
+
 class TinyJMAPClient:
     """The tiniest JMAP client you can imagine."""
 

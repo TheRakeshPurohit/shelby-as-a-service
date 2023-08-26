@@ -8,6 +8,7 @@ from sprites.slack_sprite import SlackSprite
 from services.index_service import IndexService
 from models.models import IndexModel
 
+
 class SingletonMeta(type):
     _instances = {}
 
@@ -15,6 +16,7 @@ class SingletonMeta(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class DeploymentInstance(metaclass=SingletonMeta):
     def __init__(self, config, run_index_management=None):
@@ -29,19 +31,22 @@ class DeploymentInstance(metaclass=SingletonMeta):
         self.load_index()
         for moniker in config.DeploymentConfig.MonikerConfigs.__dict__:
             if not moniker.startswith("_") and not moniker.endswith("_"):
-                moniker_config = getattr(config.DeploymentConfig.MonikerConfigs, moniker)
+                moniker_config = getattr(
+                    config.DeploymentConfig.MonikerConfigs, moniker
+                )
                 if moniker_config.enabled:
-                    self.monikers[moniker] = MonikerInstance(self, moniker_config, moniker)
-                    
+                    self.monikers[moniker] = MonikerInstance(
+                        self, moniker_config, moniker
+                    )
+
         if run_index_management:
             self.index_agent = self.load_index_agent()
         else:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 for SpriteClass in self.used_sprites:
-                        executor.submit(SpriteClass(self).run_sprite)
-        
+                    executor.submit(SpriteClass(self).run_sprite)
+
     def load_index(self):
-        
         with open(
             f"app/deployments/{self.deployment_name}/index_description.yaml",
             "r",
@@ -52,18 +57,20 @@ class DeploymentInstance(metaclass=SingletonMeta):
         self.index_data_domains = {}
         # Iterate over each domain in the yaml file
         for domain in self.index_description_file["data_domains"]:
-            self.index_data_domains[domain['name']] = domain['description']
-            
+            self.index_data_domains[domain["name"]] = domain["description"]
+
         self.index_name: str = self.index_description_file["index_name"]
         self.index_env: str = self.index_description_file["index_env"]
-        
+
     def load_index_agent(self):
         self.index_config = IndexModel()
         for secret in self.index_config.SECRETS_:
-            self.secrets[secret] = os.environ.get(f'{self.deployment_name.upper()}_{secret.upper()}')
+            self.secrets[secret] = os.environ.get(
+                f"{self.deployment_name.upper()}_{secret.upper()}"
+            )
         return IndexService(self)
-        
-        
+
+
 class MonikerInstance:
     ### We'll create an instance of each monikers required service config as a child of the moniker
     def __init__(self, deployment_instance, moniker_config, moniker_name):
@@ -72,9 +79,9 @@ class MonikerInstance:
         self.enabled: bool = moniker_config.enabled
         self.moniker_data_domains: dict = {}
         for domain in deployment_instance.index_description_file["data_domains"]:
-            if domain['name'] in moniker_config.enabled_data_domains:
-                self.moniker_data_domains[domain['name']] = domain['description']
-                
+            if domain["name"] in moniker_config.enabled_data_domains:
+                self.moniker_data_domains[domain["name"]] = domain["description"]
+
         # Get enabled sprites
         self.sprites: dict = {}
         for config_name, sprite_config in moniker_config.__dict__.items():
@@ -85,8 +92,10 @@ class MonikerInstance:
                     self.sprites[sprite_name] = sprite_model
                     deployment_instance.used_sprites.add(self.match_sprite(config_name))
                     for secret in sprite_config.model.SECRETS_:
-                        deployment_instance.secrets[secret] = os.environ.get(f'{deployment_instance.deployment_name.upper()}_{secret.upper()}')
-                        
+                        deployment_instance.secrets[secret] = os.environ.get(
+                            f"{deployment_instance.deployment_name.upper()}_{secret.upper()}"
+                        )
+
     def load_sprite(self, config):
         sprite_model = config.model()
         # Load all var names from SpriteConfig
@@ -131,10 +140,9 @@ class MonikerInstance:
 
     def match_sprite(self, sprite_name):
         match sprite_name:
-            case 'DiscordConfig':
+            case "DiscordConfig":
                 return DiscordSprite
-            case 'SlackConfig':
+            case "SlackConfig":
                 return SlackSprite
             case _:
                 print("Error loading sprite!")
-            

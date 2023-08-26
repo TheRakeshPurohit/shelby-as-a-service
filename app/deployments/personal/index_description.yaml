@@ -11,7 +11,7 @@ data_domains:
         doc_type: "hard"
         api_url_format: "https://developers.deepgram.com/reference/{operationId}"
       "developers.deepgram.com/docs":
-        update_enabled: False
+        update_enabled: True
         target_url: "https://developers.deepgram.com/sitemap.xml"
         filter_url: "https://developers.deepgram.com/docs/"
         target_type: "sitemap"
@@ -41,12 +41,12 @@ data_domains:
     description: "cloud infrastructure such as CDN, WAF, VMs, serverless javascript, and containers"
     sources:
       "stackpath.dev/docs":
-        update_enabled: True
+        update_enabled: False
         target_url: "https://stackpath.dev/docs"
         target_type: "generic"
         doc_type: "soft"
       "stackpath.dev/reference":
-        update_enabled: True
+        update_enabled: False
         target_url: "app/deployments/template/index/inputs/input_open_api_specs/stackpath"
         target_type: "open_api_spec"
         doc_type: "hard"

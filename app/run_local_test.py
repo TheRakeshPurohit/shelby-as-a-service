@@ -2,7 +2,7 @@ import sys
 import argparse
 from importlib import import_module
 from services.deployment_service import DeploymentInstance
-from deployment_maker.make import DeploymentMaker
+from deployments.deployment_maker.make import DeploymentMaker
 from services.aggregator_service import Aggregator, CreateNewsletter
 
 def main():
@@ -20,7 +20,6 @@ def main():
         python your_script.py --index_management [deployment_name]
         python your_script.py --run [deployment_name]
 
-    If no arguments are passed, the script defaults to: "--run template"
     """
 
     parser = argparse.ArgumentParser()
@@ -46,11 +45,11 @@ def main():
     # check if any arguments were provided
     if len(sys.argv) == 1:
         ### Add deployment name here if you're too lazy to use the CLI ###
-        deployment_name = 'saas'
+        deployment_name = 'personal'
         # test_args = ["--aggregate", deployment_name]
-        test_args = ["--create_newsletter", deployment_name]
+        # test_args = ["--create_newsletter", deployment_name]
         
-        # test_args = ["--index_management", deployment_name]
+        test_args = ["--index_management", deployment_name]
         
         # test_args = ["--run", deployment_name]
         

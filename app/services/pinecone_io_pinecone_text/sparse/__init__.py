@@ -27,4 +27,5 @@ from typing import Union, Dict, List
 SparseVector = Dict[str, Union[List[int], List[float]]]
 
 from .bm25_encoder import BM25Encoder
+
 # from pinecone_text.sparse.splade_encoder import SpladeEncoder

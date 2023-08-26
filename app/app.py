@@ -4,10 +4,11 @@ from importlib import import_module
 from services.deployment_service import DeploymentInstance
 from deployment_maker import deploy_stackpath_container
 
+
 def main():
     """
     This script runs shelby-as-a-serice when deployed to a container.
-    
+
     Usage:
         None. Deployment will be configured via automation.
     """
@@ -32,5 +33,6 @@ def main():
     elif args.deploy_container:
         deployment_name = args.deploy_container
         deploy_stackpath_container.main(deployment_name)
+
 
 main()

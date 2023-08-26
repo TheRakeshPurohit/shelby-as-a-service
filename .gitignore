@@ -1,15 +1,14 @@
 .env
 *.env
 shelby-as-a-service.code-workspace
-installed_packages.txt
 logs/
 .vscode/
 **/__pycache__/
 
 app/deployments/*/index/*/*
 app/deployments/*
+!app/deployments/deployment_maker/
 !app/deployments/template/
 !app/deployments/tatum/
 !template.env
-langchain/
 content_aggregator/

@@ -9,7 +9,9 @@ from typing import List, Optional, Dict, Union, Tuple
 from collections import Counter
 
 from services.pinecone_io_pinecone_text.sparse import SparseVector
-from services.pinecone_io_pinecone_text.sparse.base_sparse_encoder import BaseSparseEncoder
+from services.pinecone_io_pinecone_text.sparse.base_sparse_encoder import (
+    BaseSparseEncoder,
+)
 from services.pinecone_io_pinecone_text.sparse.bm25_tokenizer import BM25Tokenizer
 
 
