@@ -8,6 +8,7 @@ import random
 from importlib import import_module
 import openai
 from dotenv import load_dotenv
+import time
 
 from services.tiny_jmap_library.tiny_jmap_library import TinyJMAPClient
 from services.data_processing_service import TextProcessing
@@ -419,17 +420,35 @@ class AggregateEmailNewsletter:
             email["summary"] = checked_response
             pre_split_output.append(email)
 
-            # Detect if LLM returned a numbered list or [n] notation and split with appropriate pattern
             # Split the text by patterns of numbered lists like n.
             list_pattern = r"\s+\d\.(?!\d)\s+"
             list_matches = re.findall(list_pattern, checked_response)
+
             # Split the text by patterns of [n], (n)
             brackets_pattern = r"\[\d+\]|\(\d+\)"
             brackets_matches = re.findall(brackets_pattern, checked_response)
-            if len(list_matches) > len(brackets_matches):
+
+            # Split the text by patterns of .n.
+            dot_pattern = r"\.\d+\."
+            dot_matches = re.findall(dot_pattern, checked_response)
+
+            # Check which pattern has the most matches
+            pattern_counts = {
+                'list': len(list_matches),
+                'brackets': len(brackets_matches),
+                'dot': len(dot_matches)
+            }
+
+            most_common_pattern = max(pattern_counts, key=pattern_counts.get)
+
+            if most_common_pattern == 'list':
                 # Removes the first item in the linked list if it starts with "n. "
                 checked_response = re.sub(r"^\d\.\s", "", checked_response)
                 splits = re.split(list_pattern, checked_response)
+            elif most_common_pattern == 'dot':
+                # Removes the first item if it starts with ".n. "
+                checked_response = re.sub(r"^\.\d+\.\s", "", checked_response)
+                splits = re.split(dot_pattern, checked_response)
             else:
                 splits = re.split(brackets_pattern, checked_response)
 
@@ -465,7 +484,7 @@ class AggregateEmailNewsletter:
 
         return stories
 
-    def archive_emails(self, incoming_emails):
+    def archive_emails(self, relevant_emails):
         client = TinyJMAPClient(
             hostname="api.fastmail.com",
             username=os.environ.get("JMAP_USERNAME"),
@@ -494,7 +513,7 @@ class AggregateEmailNewsletter:
         inbox_id = inbox_res["methodResponses"][0][1]["ids"][0]
         assert len(inbox_id) > 0
 
-        email_ids = [email["email_id"] for email in incoming_emails]
+        email_ids = [email["email_id"] for email in relevant_emails]
         updates = {email_id: {"mailboxIds": {inbox_id: True}} for email_id in email_ids}
         email_query_res = client.make_jmap_call(
             {
@@ -803,17 +822,28 @@ class CreateNewsletter:
 
         for story in story_strings:
             prompt_template[1]["content"] = story
-
-            response = openai.ChatCompletion.create(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                model=self.main_ag.config.LLM_writing_model,
-                messages=prompt_template,
-                max_tokens=self.main_ag.config.story_length,
-            )
-            checked_response = self.main_ag.check_response(response)
-            summarized_story = {}
-            summarized_story["summary"] = checked_response
-            summarized_stories.append(summarized_story)
+            
+            retries = 3
+            success = False
+            
+            while retries > 0 and not success:
+                try:
+                    response = openai.ChatCompletion.create(
+                        api_key=os.environ.get("OPENAI_API_KEY"),
+                        model=self.main_ag.config.LLM_writing_model,
+                        messages=prompt_template,
+                        max_tokens=self.main_ag.config.story_length,
+                    )
+                    checked_response = self.main_ag.check_response(response)
+                    summarized_story = {}
+                    summarized_story["summary"] = checked_response
+                    summarized_stories.append(summarized_story)
+                    success = True
+                except Exception as e:
+                    retries -= 1
+                    if retries == 0:  # If no more retries left, raise the exception
+                        raise e
+                    time.sleep(20)  # Timeout before retrying
 
         with open(
             f"{self.run_output_dir}/5_summarized_stories.yaml", "w", encoding="UTF-8"
@@ -831,24 +861,36 @@ class CreateNewsletter:
             encoding="utf-8",
         ) as stream:
             prompt_template = yaml.safe_load(stream)
-
+        
         for story in summarized_stories:
             prompt_template[1]["content"] = f"Story: {story['summary']}"
 
-            response = openai.ChatCompletion.create(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                model=self.main_ag.config.LLM_writing_model,
-                messages=prompt_template,
-                max_tokens=25,
-            )
-            checked_response = self.main_ag.check_response(response)
-            checked_response = checked_response.strip('"')
-            checked_response = checked_response.strip("'")
-            story["title"] = checked_response
+            retries = 3
+            success = False
+            
+            while retries > 0 and not success:
+                try:
+                    response = openai.ChatCompletion.create(
+                        api_key=os.environ.get("OPENAI_API_KEY"),
+                        model=self.main_ag.config.LLM_writing_model,
+                        messages=prompt_template,
+                        max_tokens=25,
+                    )
+                    checked_response = self.main_ag.check_response(response)
+                    checked_response = checked_response.strip('"')
+                    checked_response = checked_response.strip("'")
+                    story["title"] = checked_response
+                    success = True
+                except Exception as e:
+                    retries -= 1
+                    if retries == 0:  # If no more retries left, raise the exception
+                        raise e
+                    time.sleep(20)  # Timeout before retrying
 
         return summarized_stories
 
     def create_emojis(self, summarized_stories):
+        
         with open(
             os.path.join(
                 self.main_ag.prompt_path, "aggregator_create_emojis_template.yaml"
@@ -860,16 +902,29 @@ class CreateNewsletter:
 
         for summary in summarized_stories:
             prompt_template[1]["content"] = f"Story: {summary['title']}\n"
+            
+            retries = 3
+            success = False
+            
+            while retries > 0 and not success:
+                try:
+                    response = openai.ChatCompletion.create(
+                        api_key=os.environ.get("OPENAI_API_KEY"),
+                        model=self.main_ag.config.LLM_writing_model,
+                        messages=prompt_template,
+                        max_tokens=3,
+                    )
+                    checked_response = self.main_ag.check_response(response)
 
-            response = openai.ChatCompletion.create(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                model=self.main_ag.config.LLM_writing_model,
-                messages=prompt_template,
-                max_tokens=3,
-            )
-            checked_response = self.main_ag.check_response(response)
-
-            summary["emoji"] = checked_response
+                    # If no exception was raised, the call was successful
+                    summary["emoji"] = checked_response
+                    success = True
+                    
+                except Exception as e:
+                    retries -= 1
+                    if retries == 0:  # If no more retries left, raise the exception
+                        raise e
+                    time.sleep(20)  # Timeout before retrying
 
         return summarized_stories
 
@@ -888,14 +943,25 @@ class CreateNewsletter:
             content += f"Story title: {summary['title']}\n"
 
         prompt_template[1]["content"] = content
-
-        response = openai.ChatCompletion.create(
-            api_key=os.environ.get("OPENAI_API_KEY"),
-            model=self.main_ag.config.LLM_writing_model,
-            messages=prompt_template,
-            max_tokens=50,
-        )
-        checked_response = self.main_ag.check_response(response)
+        retries = 3
+        success = False
+        
+        while retries > 0 and not success:
+            try:
+                response = openai.ChatCompletion.create(
+                    api_key=os.environ.get("OPENAI_API_KEY"),
+                    model=self.main_ag.config.LLM_writing_model,
+                    messages=prompt_template,
+                    max_tokens=50,
+                )
+                checked_response = self.main_ag.check_response(response)
+                success = True
+                    
+            except Exception as e:
+                retries -= 1
+                if retries == 0:  
+                    raise e
+                time.sleep(20)  
 
         return checked_response
 

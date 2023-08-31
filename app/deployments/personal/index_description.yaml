@@ -1,6 +1,14 @@
 index_name: "shelby-as-a-service"
 index_env: "us-central1-gcp"
 data_domains:
+  - name: "test"
+    description: "For testing text processor and chunks."
+    sources:
+      "local_text_test":
+        update_enabled: False
+        target_url: "app/deployments/personal/index/inputs/text/"
+        target_type: "local_text"
+        doc_type: "hard"
   - name: "deepgram"
     description: "Advanced AI services including, speech-to-text, translation, and sentiment analysis."
     sources:
@@ -11,7 +19,7 @@ data_domains:
         doc_type: "hard"
         api_url_format: "https://developers.deepgram.com/reference/{operationId}"
       "developers.deepgram.com/docs":
-        update_enabled: True
+        update_enabled: False
         target_url: "https://developers.deepgram.com/sitemap.xml"
         filter_url: "https://developers.deepgram.com/docs/"
         target_type: "sitemap"
@@ -26,7 +34,7 @@ data_domains:
         target_type: "gitbook"
         doc_type: "soft"
       "docs-v3.tatum.io":
-        update_enabled: False
+        update_enabled: True
         load_all_paths: True
         target_url: "https://docs-v3.tatum.io/"
         target_type: "gitbook"

@@ -164,9 +164,12 @@ class IndexModel:
     index_vectorstore_metric: str = "cosine"
     index_vectorstore_pod_type: str = "p1"
     index_preprocessor_min_length: int = 150
-    index_text_splitter_goal_length: int = 1500
-    index_text_splitter_max_length: int = 2000
-    index_text_splitter_chunk_overlap: int = 300
+    # index_text_splitter_goal_length: int = 500
+    index_text_splitter_goal_length: int = 1000
+    # index_text_splitter_max_length: int = 750
+    index_text_splitter_max_length: int = 1500
+    # index_text_splitter_chunk_overlap: int = 100
+    index_text_splitter_chunk_overlap: int = 200
     index_openai_timeout_seconds: float = 180.0
     index_indexed_metadata = [
         "data_domain_name",

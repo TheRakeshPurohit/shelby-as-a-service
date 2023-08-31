@@ -31,6 +31,8 @@ class DeploymentMaker:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
+            os.makedirs(os.path.join(dir_path, "index/inputs"))
+            
             source1 = "app/deployments/template/deployment_config.py"
             dest1 = os.path.join(dir_path, "deployment_config.py")
             shutil.copy(source1, dest1)
