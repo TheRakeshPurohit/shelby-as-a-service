@@ -431,26 +431,41 @@ class AggregateEmailNewsletter:
             # Split the text by patterns of .n.
             dot_pattern = r"\.\d+\."
             dot_matches = re.findall(dot_pattern, checked_response)
+            
+            # Split the text by patterns of n)
+            num_bracket_pattern = r"\d+\)"
+            num_bracket_matches = re.findall(num_bracket_pattern, checked_response)
 
             # Check which pattern has the most matches
             pattern_counts = {
                 'list': len(list_matches),
                 'brackets': len(brackets_matches),
-                'dot': len(dot_matches)
+                'dot': len(dot_matches),
+                'num_bracket': len(num_bracket_matches),
             }
 
             most_common_pattern = max(pattern_counts, key=pattern_counts.get)
 
-            if most_common_pattern == 'list':
-                # Removes the first item in the linked list if it starts with "n. "
-                checked_response = re.sub(r"^\d\.\s", "", checked_response)
-                splits = re.split(list_pattern, checked_response)
-            elif most_common_pattern == 'dot':
-                # Removes the first item if it starts with ".n. "
-                checked_response = re.sub(r"^\.\d+\.\s", "", checked_response)
-                splits = re.split(dot_pattern, checked_response)
-            else:
-                splits = re.split(brackets_pattern, checked_response)
+            # Using match-case statement for better readability and structuref
+            match most_common_pattern:
+                case 'list':
+                    # Removes the first item in the list if it starts with "n. "
+                    checked_response = re.sub(r"^\d\.\s", "", checked_response)
+                    splits = re.split(list_pattern, checked_response)
+                case 'dot':
+                    # Removes the first item if it starts with ".n. "
+                    checked_response = re.sub(r"^\.\d+\.\s", "", checked_response)
+                    splits = re.split(dot_pattern, checked_response)
+                case 'brackets':
+                    # Removes the first item if it starts with "[n] "
+                    checked_response = re.sub(r"^\[\d+\]\s|^\(\d+\)\s", "", checked_response)
+                    splits = re.split(brackets_pattern, checked_response)
+                case 'num_bracket':  # Assuming you would like to handle this case similarly to 'brackets'
+                    # Removes the first item if it starts with "n) "
+                    checked_response = re.sub(r"^\d+\)\s", "", checked_response)
+                    splits = re.split(num_bracket_pattern, checked_response)
+                case _:
+                    break
 
             # self.log.print_and_log each part
             for story in splits:

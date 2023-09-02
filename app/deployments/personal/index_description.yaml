@@ -5,8 +5,8 @@ data_domains:
     description: "For testing text processor and chunks."
     sources:
       "local_text_test":
-        update_enabled: False
-        target_url: "app/deployments/personal/index/inputs/text/"
+        update_enabled: True
+        target_url: "app/deployments/tatum/index/outputs/tatum/docs-v3.tatum.io"
         target_type: "local_text"
         doc_type: "hard"
   - name: "deepgram"
@@ -34,7 +34,7 @@ data_domains:
         target_type: "gitbook"
         doc_type: "soft"
       "docs-v3.tatum.io":
-        update_enabled: True
+        update_enabled: False
         load_all_paths: True
         target_url: "https://docs-v3.tatum.io/"
         target_type: "gitbook"
