@@ -45,8 +45,7 @@ class DeploymentMaker:
             dest3 = os.path.join(dir_path, ".env")
             shutil.copy(source3, dest3)
             print(f"Set your settings now in the templates created here: {dir_path}")
-            sys.exit()
-
+            
     def load_moniker_requirments(self):
         for moniker in self.config.DeploymentConfig.MonikerConfigs.__dict__:
             if not moniker.startswith("_") and not moniker.endswith("_"):
@@ -87,7 +86,7 @@ COPY ./ ./
 RUN pip install --no-cache-dir -r app/deployments/{self.deployment_name}/requirements.txt
 
 # Run Deployment
-CMD ["python", "app/app.py", "--run", "{self.deployment_name}"]
+CMD ["python", "app/app.py", "--run_container_deployment", "{self.deployment_name}"]
         """
         with open(
             f"app/deployments/{self.deployment_name}/Dockerfile", "w", encoding="utf-8"

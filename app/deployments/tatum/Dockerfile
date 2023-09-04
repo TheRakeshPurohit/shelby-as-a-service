@@ -14,5 +14,5 @@ COPY ./ ./
 RUN pip install --no-cache-dir -r app/deployments/tatum/requirements.txt
 
 # Run Deployment
-CMD ["python", "app/app.py", "--run", "tatum"]
+CMD ["python", "app/app.py", "--run_container_deployment", "tatum"]
         

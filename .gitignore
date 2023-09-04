@@ -12,3 +12,5 @@ app/deployments/*
 !app/deployments/tatum/
 !template.env
 content_aggregator/
+
+gradio_cached_examples/

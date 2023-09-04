@@ -1,6 +1,7 @@
 import sys
 import argparse
 from importlib import import_module
+import uvicorn
 from services.deployment_service import DeploymentInstance
 from deployment_maker.make import DeploymentMaker
 from services.aggregator_service import Aggregator, CreateNewsletter
@@ -21,9 +22,12 @@ def main():
         python your_script.py --run [deployment_name]
 
     """
-
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--local_web", action="store_true", 
+        help="Run the local web interface for testing."
+    )
     group.add_argument(
         "--index_management", help="Run index_agent."
     )
@@ -45,11 +49,12 @@ def main():
     # check if any arguments were provided
     if len(sys.argv) == 1:
         ### Add deployment name here if you're too lazy to use the CLI ###
-        deployment_name = 'personal'
+        deployment_name = 'test'
+        
         # test_args = ["--aggregate", deployment_name]
         # test_args = ["--create_newsletter", deployment_name]
         
-        test_args = ["--index_management", deployment_name]
+        # test_args = ["--index_management", deployment_name]
         
         # test_args = ["--run", deployment_name]
         
@@ -59,6 +64,8 @@ def main():
         # arguments were provided, parse them
         args = parser.parse_args()
         
+
+
     if args.index_management or args.run:
         if args.index_management:
             run_index_management=True
@@ -94,5 +101,6 @@ def main():
     elif args.create_newsletter:
         Aggregator(args.create_newsletter).create_newsletter()
         sys.exit()
-
-main()
+        
+if __name__ == "__main__":
+    main()

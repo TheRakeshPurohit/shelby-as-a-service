@@ -13,9 +13,10 @@ class DeploymentConfig:
             # Required #
             enabled_data_domains: list = ["tatum", "stackpath", "deepgram"] # Domains for which queries are active from index_description.yaml
             enabled: bool = True
+                
             class DiscordConfig:
                 # Required #
-                enabled: bool = True
+                enabled: bool = False
                 discord_enabled_servers: list[int] = [1132125546340421733]
                 # Optional #
                 discord_specific_channels_enabled: bool = True
@@ -58,7 +59,7 @@ class DeploymentConfig:
                 api_agent_populate_function_llm_model: str = None
             class SlackConfig:
                 # Required #
-                enabled: bool = True
+                enabled: bool = False
                 slack_enabled_teams: list[str] = ["T02RLSL27L5"]
                 # Optional #
                 slack_welcome_message: str = None
